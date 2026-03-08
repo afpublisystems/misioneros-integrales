@@ -1,0 +1,214 @@
+# PROJECT CONTEXT — Misioneros Integrales
+> Documento vivo. Actualizar después de cada sesión de trabajo.
+> Compartir con todos los agentes IA al inicio de cada conversación.
+> **Última actualización: 2026-03-08 | Versión: 1.2**
+
+---
+
+## 1. DESCRIPCIÓN DEL PROYECTO
+
+Sistema web para la gestión integral del Programa de Formación de Misioneros Integrales:
+- Registro y seguimiento de **aspirantes** (hasta 40 participantes por ciclo)
+- Gestión del **itinerario de 8 meses** por sedes
+- **Dashboard del candidato** para seguimiento de su proceso de selección
+- **Rendición de cuentas** pública: galería multimedia + estadísticas de impacto
+
+**Lema:** *"De la formación a la misión: Transforma, Multiplica e Impacta"*
+**Versículo:** Mateo 13:23
+**Organización:** CNBV / DIME
+**Dominio objetivo:** misionerosintegrales.com
+
+---
+
+## 2. STACK TECNOLÓGICO
+
+| Componente     | Tecnología                        |
+|----------------|-----------------------------------|
+| Entorno        | Docker Desktop (Windows)          |
+| Backend        | PHP 8.2-apache                    |
+| Base de datos  | MySQL 8.0                         |
+| Arquitectura   | MVC (PHP puro, sin framework)     |
+| Frontend       | HTML + CSS (Montserrat)           |
+| Puerto web     | localhost:8080                    |
+| Puerto MySQL   | 3306 (o 3307 si hay conflicto)    |
+| Ruta local     | C:\xampp\htdocs\misioneros-integrales\ |
+| Carpeta fuente | ./src/ (mapeada a /var/www/html)  |
+
+---
+
+## 3. IDENTIDAD VISUAL
+
+| Elemento       | Valor                              |
+|----------------|------------------------------------|
+| Azul principal | #00528F                            |
+| Verde misión   | #78B428                            |
+| Naranja        | #F7941D                            |
+| Fondo          | Blanco                             |
+| Fuente         | Montserrat (Google Fonts)          |
+| Logos          | CNBV y DIME (archivos locales)     |
+
+---
+
+## 4. ITINERARIO (Ciclo 1 — Julio 2026 a Febrero 2027)
+
+| # | Mes              | Sede          | Duración                                          |
+|---|------------------|---------------|---------------------------------------------------|
+| 1 | Julio            | Los Teques    | Mes completo                                      |
+| 2 | Agosto           | Maracay       | Mes completo                                      |
+| 3 | Septiembre       | San Felipe    | Mes completo                                      |
+| 4 | Octubre          | Valencia      | Mes completo                                      |
+| 5 | Noviembre        | Acarigua      | Mes completo                                      |
+| 6 | Diciembre-Enero  | Barquisimeto  | 15 días c/u (consolidado por temporada navideña)  |
+| 7 | Febrero          | Trujillo      | Mes completo                                      |
+| **Total** |         |               | **8 meses**                                       |
+
+---
+
+## 5. SITEMAP (Arquitectura de Información)
+
+### I. Nivel Público (Front-end)
+- **Home:** Hero banner, visión, CTA "Postularse ahora"
+- **El Programa:** Propósito, cronograma itinerante (8 meses/7 sedes), ejes formativos
+- **Requisitos:** Perfil del aspirante, documentos necesarios
+- **Galería:** Álbumes por sede (fotos + videos YouTube/Vimeo embed)
+- **Impacto:** Dashboard público de estadísticas (iglesias, personas, proyectos)
+- **Contacto:** Formulario y redes sociales
+- **Login/Registro:** Acceso para candidatos
+
+### II. Nivel Candidato (Dashboard privado)
+- **Mi Perfil:** Datos personales y eclesiales
+- **Estatus de Postulación:** Flujo visual (Solicitud → Documentos → Test → Entrevista → Resultado)
+- **Documentación:** Subida de PDFs (carta pastoral, título, etc.)
+
+### III. Nivel Administrativo (Back-office DIME-CNBV)
+- **Panel de Control:** KPIs (candidatos totales, aprobados, pendientes)
+- **Gestión de Candidatos:** CRUD completo, filtros, cambio de estatus
+- **Módulo de Evaluación:** Formulario de entrevista, historial de notas
+- **Gestión de Logística:** Calendario itinerante, lista de 40 participantes
+- **CMS Multimedia:** Subida de fotos, álbumes por sede
+- **CMS de Impacto:** Editor de estadísticas públicas
+- **Reportes:** Exportación Excel/PDF para la junta directiva
+
+---
+
+## 6. BASE DE DATOS
+
+### Tablas definidas
+| Tabla                   | Propósito                                       |
+|-------------------------|-------------------------------------------------|
+| sedes                   | Ciudades del itinerario con fechas y estado     |
+| aspirantes              | Registro de candidatos                          |
+| usuarios                | Autenticación (admins y candidatos)             |
+| flujo_proceso           | Estados del proceso de selección por aspirante  |
+| documentos              | Archivos subidos por los aspirantes             |
+| multimedia              | Galería de fotos/videos por sede                |
+| impacto_estadisticas    | Métricas y resultados del programa              |
+| configuracion_impacto   | Tabla clave-valor para contadores públicos      |
+
+### Esquema SQL
+> PENDIENTE: Gemini debe entregar los CREATE TABLE completos
+> Nota de Gemini: tabla configuracion_impacto con campos (id, clave, valor)
+> Nota de Gemini: tabla multimedia con campos (id, titulo, sede_id, fecha, thumb_url)
+
+---
+
+## 7. ESTRUCTURA DE CARPETAS (MVC)
+
+```
+C:\xampp\htdocs\misioneros-integrales\
+├── docker-compose.yml
+├── Dockerfile
+└── src/                           <- Todo el código va aquí
+    ├── index.php                  <- Punto de entrada único (router)
+    ├── app/
+    │   ├── controllers/
+    │   ├── models/
+    │   ├── views/
+    │   │   ├── layouts/
+    │   │   └── partials/
+    │   └── config/
+    │       └── db.php             <- PRÓXIMO A CREAR (Claude)
+    └── public/
+        ├── css/
+        ├── js/
+        └── assets/
+            ├── img/
+            └── logos/             <- Logos CNBV y DIME
+```
+
+---
+
+## 8. ROLES DE LOS AGENTES IA
+
+| Agente | Rol        | Responsabilidades                                                    |
+|--------|------------|----------------------------------------------------------------------|
+| Gemini | Arquitecto | Define reglas de negocio, flujos, esquemas SQL, identidad de marca   |
+| Claude | Ejecutor   | Escribe código PHP, implementa MVC, modelos, vistas, corrige errores |
+
+---
+
+## 9. REGLAS DE ORO (No negociables)
+
+1. PDO obligatorio en toda interacción con MySQL
+2. Videos -> YouTube/Vimeo embed (no subir localmente)
+3. Fotos -> Estructura de carpetas en servidor o cloud
+4. Estadísticas públicas -> Editables via tabla configuracion_impacto
+5. MVC estricto: lógica solo en Modelos, presentación solo en Vistas
+6. Nomenclatura en español para tablas y campos
+7. Pregunta clave en formulario: "¿Tiene algún compromiso ineludible que le impida trasladarse mensualmente entre julio y febrero?"
+
+---
+
+## 10. ESTADO ACTUAL DEL ENTORNO
+
+| Componente              | Estado       | Notas                                        |
+|-------------------------|--------------|----------------------------------------------|
+| Docker Desktop          | ✅ Activo    | Contenedor misioneros-inte con punto verde   |
+| Servidor Apache (PHP)   | ✅ Activo    | Responde en http://localhost:8080            |
+| MySQL 8.0               | ✅ Activo    | Puerto 3306 o 3307                           |
+| index.php de prueba     | ✅ Listo     | En src/, visible en navegador                |
+| Estructura MVC          | ⏳ Pendiente | Claude debe crear la estructura base         |
+| db.php (conexión PDO)   | ⏳ Pendiente | Claude debe crearlo                          |
+| Esquema SQL             | ⏳ Pendiente | Gemini debe entregar los CREATE TABLE        |
+
+---
+
+## 11. DECISIONES TOMADAS
+
+| Fecha      | Decisión                                                           | Por           |
+|------------|--------------------------------------------------------------------|---------------|
+| 2026-03-08 | Dic-Ene consolidado en Barquisimeto (15 días c/u)                  | José + Gemini |
+| 2026-03-08 | Videos via embed externo (YouTube/Vimeo)                           | Gemini        |
+| 2026-03-08 | PHP puro con MVC (sin Laravel ni frameworks)                       | Gemini        |
+| 2026-03-08 | Puerto web: 8080, Puerto MySQL: 3306 (o 3307 si hay conflicto)    | Gemini        |
+| 2026-03-08 | Carpeta src/ como raíz del código (mapeada a /var/www/html)       | Gemini        |
+| 2026-03-08 | Estadísticas públicas editables via configuracion_impacto          | Gemini        |
+| 2026-03-08 | 40 participantes máximo por ciclo                                  | José + Gemini |
+
+---
+
+## 12. PENDIENTES / PRÓXIMOS PASOS
+
+- [ ] Gemini: Entregar esquema SQL completo (CREATE TABLE de las 8 tablas)
+- [ ] Claude: Crear src/app/config/db.php con conexión PDO
+- [ ] Claude: Crear estructura MVC base de carpetas en src/
+- [ ] Claude: Crear src/index.php como router principal
+- [ ] José: Confirmar puerto MySQL definitivo (3306 o 3307)
+- [ ] José: Colocar logos CNBV y DIME en src/public/assets/logos/
+- [ ] Definir campos completos del formulario de inscripción
+- [ ] Definir roles de autenticación (admin, evaluador, candidato)
+
+---
+
+## 13. CÓMO USAR ESTE DOCUMENTO
+
+**Al iniciar sesión con cualquier agente IA:**
+1. Adjunta o pega el contenido de este archivo
+2. Di: "Retomamos el proyecto Misioneros Integrales. Este es el contexto actualizado."
+3. El agente tendrá todo el historial sin re-explicar nada
+
+**Al terminar una sesión:**
+1. Actualiza Decisiones Tomadas con lo acordado
+2. Actualiza Estado actual del entorno
+3. Marca completados con OK, agrega nuevos pendientes
+4. Cambia la fecha de Última actualización al inicio

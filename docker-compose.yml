@@ -1,0 +1,15 @@
+services:
+  web:
+    image: php:8.2-apache
+    volumes:
+      - ./src:/var/www/html
+    ports:
+      - "8080:80"
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: misioneros_integrales_db
+      MYSQL_ROOT_PASSWORD: secret_password
+    ports:
+      - "3306:3306"

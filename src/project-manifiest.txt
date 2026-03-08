@@ -1,0 +1,26 @@
+PROYECTO: Misioneros Integrales
+Descripción: Sistema web para gestión de aspirantes, itinerario de 8 meses y rendición de cuentas (galería/estadísticas).
+
+Stack Tecnológico:
+
+Entorno: Docker (PHP 8.2-apache, MySQL 8.0).
+
+Arquitectura: MVC (Modelo-Vista-Controlador).
+
+Base de Datos: MySQL (Tablas: sedes, aspirantes, multimedia, impacto_estadisticas).
+
+Estilos/UI: Colores (#00528F, #78B428, #F7941D), Fuente (Montserrat).
+
+Roles:
+
+Gemini (Arquitecto): Define reglas de negocio, flujo de usuario, esquemas SQL y coherencia con la identidad de marca (CNBV/DIME).
+
+Claude (Ejecutor): Escribe el código PHP, implementa los modelos/clases, refactoriza y corrige errores de sintaxis.
+
+Reglas de Oro:
+
+Todo código debe usar PDO para evitar inyecciones SQL.
+
+Las imágenes/videos no se almacenan localmente si son pesados (usar embed o enlaces).
+
+El itinerario es de 8 meses: Los Teques, Maracay, San Felipe, Valencia, Acarigua, Barquisimeto, Trujillo.
