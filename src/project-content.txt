@@ -116,10 +116,12 @@ Sistema web para la gestión integral del Programa de Formación de Misioneros I
 
 ```
 C:\xampp\htdocs\misioneros-integrales\
-├── docker-compose.yml
-├── Dockerfile
+├── docker-compose.yml   ✅
+├── Dockerfile           ✅ (nuevo - instala pdo_mysql + mod_rewrite)
+├── PROJECT_CONTEXT.md   ✅
+├── README.md            ✅
 └── src/                           <- Todo el código va aquí
-    ├── index.php                  <- Punto de entrada único (router)
+    ├── index.php        ✅
     ├── app/
     │   ├── controllers/
     │   ├── models/
@@ -127,7 +129,7 @@ C:\xampp\htdocs\misioneros-integrales\
     │   │   ├── layouts/
     │   │   └── partials/
     │   └── config/
-    │       └── db.php             <- PRÓXIMO A CREAR (Claude)
+    │       └── db.php   ✅
     └── public/
         ├── css/
         ├── js/
@@ -161,15 +163,15 @@ C:\xampp\htdocs\misioneros-integrales\
 
 ## 10. ESTADO ACTUAL DEL ENTORNO
 
-| Componente              | Estado       | Notas                                        |
-|-------------------------|--------------|----------------------------------------------|
 | Docker Desktop          | ✅ Activo    | Contenedor misioneros-inte con punto verde   |
 | Servidor Apache (PHP)   | ✅ Activo    | Responde en http://localhost:8080            |
-| MySQL 8.0               | ✅ Activo    | Puerto 3306 o 3307                           |
-| index.php de prueba     | ✅ Listo     | En src/, visible en navegador                |
-| Estructura MVC          | ⏳ Pendiente | Claude debe crear la estructura base         |
-| db.php (conexión PDO)   | ⏳ Pendiente | Claude debe crearlo                          |
-| Esquema SQL             | ⏳ Pendiente | Gemini debe entregar los CREATE TABLE        |
+| MySQL 8.0               | ✅ Activo    | Puerto 3308 (externo) / 3306 (interno)       |
+| pdo_mysql               | ✅ Instalado | Vía Dockerfile personalizado                 |
+| Red Docker compartida   | ✅ Activa    | misioneros_net (bridge)                      |
+| index.php de prueba     | ✅ Listo     | En src/                                      |
+| db.php (conexión PDO)   | ✅ Completo  | En src/app/config/db.php                     |
+| Estructura MVC          | ⏳ Pendiente | Fase 1 - próximo paso                        |
+| Esquema SQL             | ⏳ Pendiente | Fase 1 - próximo paso                        |
 
 ---
 
@@ -184,19 +186,27 @@ C:\xampp\htdocs\misioneros-integrales\
 | 2026-03-08 | Carpeta src/ como raíz del código (mapeada a /var/www/html)       | Gemini        |
 | 2026-03-08 | Estadísticas públicas editables via configuracion_impacto          | Gemini        |
 | 2026-03-08 | 40 participantes máximo por ciclo                                  | José + Gemini |
-
+| 2026-03-08 | Dockerfile personalizado para agregar pdo_mysql y mod_rewrite | Claude |
+| 2026-03-08 | Red Docker: misioneros_net (bridge) para comunicación entre servicios | Claude |
+| 2026-03-08 | Puerto MySQL externo: 3308 (interno sigue siendo 3306) | docker-compose |
+| 2026-03-08 | Conexión PDO verificada y funcional | Claude + José |
 ---
 
 ## 12. PENDIENTES / PRÓXIMOS PASOS
 
-- [ ] Gemini: Entregar esquema SQL completo (CREATE TABLE de las 8 tablas)
-- [ ] Claude: Crear src/app/config/db.php con conexión PDO
+- [X] Gemini: Entregar esquema SQL completo (CREATE TABLE de las 8 tablas)
+- [X] Claude: Crear src/app/config/db.php con conexión PDO ← COMPLETADO
+- [x] José: Confirmar puerto MySQL definitivo (3308 externo) ← COMPLETADO
 - [ ] Claude: Crear estructura MVC base de carpetas en src/
 - [ ] Claude: Crear src/index.php como router principal
 - [ ] José: Confirmar puerto MySQL definitivo (3306 o 3307)
 - [ ] José: Colocar logos CNBV y DIME en src/public/assets/logos/
 - [ ] Definir campos completos del formulario de inscripción
 - [ ] Definir roles de autenticación (admin, evaluador, candidato)
+- [ ] Claude: Fase 1 — Estructura MVC base (router, autoloader, layouts)
+- [ ] Claude: Fase 1 — Schema SQL completo (todas las tablas)
+- [ ] Claude: Fase 1 — Clase Model base
+- [ ] Claude: Fase 2 — Sistema de autenticación (login, sesiones, roles)
 
 ---
 

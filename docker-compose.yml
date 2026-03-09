@@ -1,10 +1,15 @@
 services:
   web:
-    image: php:8.2-apache
+    build: .
     volumes:
       - ./src:/var/www/html
     ports:
       - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - misioneros_net
+
   db:
     image: mysql:8.0
     restart: always
@@ -12,4 +17,22 @@ services:
       MYSQL_DATABASE: misioneros_integrales_db
       MYSQL_ROOT_PASSWORD: secret_password
     ports:
-      - "3306:3306"
+      - "3308:3306"
+    networks:
+      - misioneros_net
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+    depends_on:
+      - db
+    networks:
+      - misioneros_net
+
+networks:
+  misioneros_net:
+    driver: bridge
