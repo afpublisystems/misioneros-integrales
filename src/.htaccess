@@ -1,0 +1,9 @@
+Options -Indexes
+RewriteEngine On
+
+# No redirigir archivos y carpetas que existan físicamente
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Todo lo demás va al router
+RewriteRule ^(.*)$ index.php [QSA,L]
