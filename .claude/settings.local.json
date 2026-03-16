@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker ps:*)",
+      "Bash(docker exec:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/requisitos)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/galeria)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/impacto)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/contacto)",
+      "Bash(find /c/xampp/htdocs/misioneros-integrales -type f \\\\\\(-name *.txt -o -name *.pdf -o -name *.docx -o -name *.doc -o -name *.xlsx -o -name *.csv -o -name *.json \\\\\\))",
+      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\misioneros-integrales\\\\src\\\\app\\\\views\\\\candidato\")",
+      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\misioneros-integrales\"\" /B)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(Start-Process \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")",
+      "Bash(docker compose:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/admin/galeria)",
+      "Bash(grep -n \"$_SESSION\\\\[''flash''\\\\]\" C:/xampp/htdocs/misioneros-integrales/src/app/controllers/AdminController.php)",
+      "Bash(1:*)",
+      "Bash(wc -l /c/xampp/htdocs/misioneros-integrales/src/app/views/publico/*.php)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8080/admin/colaboradores\" -b \"PHPSESSID=test\")",
+      "Bash(php -l \"C:\\\\xampp\\\\htdocs\\\\misioneros-integrales\\\\src\\\\app\\\\controllers\\\\AdminController.php\")",
+      "Bash(grep -rni \"7 meses\\\\|licenciatura\\\\|licenciado\\\\|200+\" /c/xampp/htdocs/misioneros-integrales/src/app/views --include=*.php)"
+    ]
+  }
+}

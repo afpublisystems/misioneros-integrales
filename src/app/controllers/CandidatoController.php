@@ -128,7 +128,114 @@ class CandidatoController extends Controller {
 
     public function test(): void {
         $this->requireAuth('candidato');
-        $this->render('candidato/test', ['titulo' => 'Test Vocacional']);
+
+        $aspirante = $this->aspirantes->porUsuario($_SESSION['usuario_id']);
+        if (!$aspirante) {
+            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Debes completar tu perfil antes de acceder al test vocacional.'];
+            $this->redirigir('/candidato/perfil');
+            return;
+        }
+
+        $db   = Database::getConnection();
+        $stmt = $db->prepare("SELECT * FROM test_vocacional WHERE aspirante_id = ?");
+        $stmt->execute([$aspirante['id']]);
+        $test = $stmt->fetch() ?: null;
+
+        $respuestas = [];
+        if ($test && !empty($test['respuestas'])) {
+            $respuestas = json_decode($test['respuestas'], true) ?: [];
+        }
+
+        // Recuperar la parte donde se quedó (desde sesión temporal)
+        $parte_inicial = 1;
+        if (isset($_SESSION['test_parte_actual'])) {
+            $parte_inicial = (int)$_SESSION['test_parte_actual'];
+            unset($_SESSION['test_parte_actual']);
+        }
+
+        $this->render('candidato/test', [
+            'titulo'        => 'Test Vocacional',
+            'aspirante'     => $aspirante,
+            'test'          => $test,
+            'respuestas'    => $respuestas,
+            'parte_inicial' => $parte_inicial,
+        ]);
+    }
+
+    public function guardarTest(): void {
+        $this->requireAuth('candidato');
+
+        $aspirante = $this->aspirantes->porUsuario($_SESSION['usuario_id']);
+        if (!$aspirante) {
+            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Debes completar tu perfil primero.'];
+            $this->redirigir('/candidato/perfil');
+            return;
+        }
+
+        $db = Database::getConnection();
+
+        // Verificar si ya existe y si está completado
+        $stmt = $db->prepare("SELECT id, completado FROM test_vocacional WHERE aspirante_id = ?");
+        $stmt->execute([$aspirante['id']]);
+        $existente = $stmt->fetch();
+
+        if ($existente && $existente['completado']) {
+            $_SESSION['flash'] = ['tipo' => 'info', 'msg' => 'Tu test ya fue enviado. Contacta al equipo coordinador si necesitas realizar cambios.'];
+            $this->redirigir('/candidato/test');
+            return;
+        }
+
+        $completado = isset($_POST['completado']) && $_POST['completado'] == '1' ? 1 : 0;
+        $respuestas = $_POST['respuestas'] ?? [];
+        $json       = json_encode($respuestas, JSON_UNESCAPED_UNICODE);
+
+        if ($existente) {
+            $stmt2 = $db->prepare("
+                UPDATE test_vocacional
+                SET respuestas = ?, completado = ?, fecha_cierre = IF(? = 1, NOW(), fecha_cierre)
+                WHERE aspirante_id = ?
+            ");
+            $stmt2->execute([$json, $completado, $completado, $aspirante['id']]);
+        } else {
+            $stmt2 = $db->prepare("
+                INSERT INTO test_vocacional (aspirante_id, respuestas, completado, fecha_inicio, fecha_cierre)
+                VALUES (?, ?, ?, NOW(), IF(? = 1, NOW(), NULL))
+            ");
+            $stmt2->execute([$aspirante['id'], $json, $completado, $completado]);
+        }
+
+        // Guardar parte actual para volver al mismo lugar
+        $_SESSION['test_parte_actual'] = (int)($_POST['parte_actual'] ?? 1);
+
+        if ($completado) {
+            // Fase 7b: marcar etapa test_vocacional → en_proceso en flujo_proceso
+            $db->prepare("
+                INSERT INTO flujo_proceso (aspirante_id, etapa, estatus, fecha_inicio)
+                VALUES (?, 'test_vocacional', 'en_proceso', NOW())
+                ON DUPLICATE KEY UPDATE
+                    estatus      = IF(estatus = 'pendiente', 'en_proceso', estatus),
+                    fecha_inicio = COALESCE(fecha_inicio, NOW()),
+                    updated_at   = NOW()
+            ")->execute([$aspirante['id']]);
+
+            // Fase 7b: marcar solicitud_formal → aprobado si estaba pendiente
+            $db->prepare("
+                INSERT INTO flujo_proceso (aspirante_id, etapa, estatus, fecha_inicio, fecha_cierre)
+                VALUES (?, 'solicitud_formal', 'aprobado', NOW(), NOW())
+                ON DUPLICATE KEY UPDATE
+                    estatus      = IF(estatus = 'pendiente', 'aprobado', estatus),
+                    fecha_inicio = COALESCE(fecha_inicio, NOW()),
+                    fecha_cierre = IF(estatus = 'pendiente', NOW(), fecha_cierre),
+                    updated_at   = NOW()
+            ")->execute([$aspirante['id']]);
+
+            $_SESSION['flash'] = ['tipo' => 'exito', 'msg' => '¡Test vocacional enviado exitosamente! El equipo coordinador lo revisará pronto.'];
+            $_SESSION['test_parte_actual'] = 1;
+        } else {
+            $_SESSION['flash'] = ['tipo' => 'exito', 'msg' => 'Progreso guardado. Puedes continuar en otro momento desde donde lo dejaste.'];
+        }
+
+        $this->redirigir('/candidato/test');
     }
 
     // Calcular el progreso de las 5 etapas

@@ -86,4 +86,36 @@ class Controller {
     protected function get(string $campo, string $default = ''): string {
         return htmlspecialchars(trim($_GET[$campo] ?? $default), ENT_QUOTES, 'UTF-8');
     }
+
+    /**
+     * Establecer mensaje flash de sesión
+     */
+    protected function flash(string $tipo, string $msg): void {
+        $_SESSION['flash'] = ['tipo' => $tipo, 'msg' => $msg];
+    }
+
+    /**
+     * Verificar que el usuario tenga uno de los roles indicados
+     */
+    protected function requireAnyRole(array $roles): void {
+        if (empty($_SESSION['usuario_id'])) {
+            $this->redirigir('/login');
+        }
+        if (!in_array($_SESSION['usuario_rol'] ?? '', $roles)) {
+            http_response_code(403);
+            require APP_PATH . '/views/errors/403.php';
+            exit;
+        }
+    }
+
+    /**
+     * Validar y sanear una URL de redirección interna (previene open-redirect)
+     */
+    protected function safeRedirect(string $url, string $fallback = '/'): string {
+        // Solo permite rutas internas: empiezan con / pero no con //
+        if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+            return $url;
+        }
+        return $fallback;
+    }
 }

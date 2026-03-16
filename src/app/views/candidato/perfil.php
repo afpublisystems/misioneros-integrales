@@ -296,7 +296,7 @@
                         <i class="fas fa-graduation-cap"></i>
                         <div>
                             <strong>Nota:</strong> Al completar los 3 ciclos del programa recibirás la
-                            <strong>Licenciatura en Teología — Mención Misiones</strong>.
+                            <strong>Certificación Ministerial — Mención Misiones (CNBV)</strong>.
                             El título de Bachiller es requisito de ingreso indispensable.
                         </div>
                     </div>

@@ -39,7 +39,7 @@
             <i class="fas fa-graduation-cap"></i>
             <div>
                 <strong>Certificación al completar los 3 ciclos:</strong>
-                Licenciatura en Teología — Mención Misiones
+                Certificación Ministerial — Mención Misiones (CNBV)
             </div>
         </div>
 
@@ -81,7 +81,7 @@
         <div class="impacto-grid">
             <?php
             $impacto = [
-                ['num'=>'200+', 'icono'=>'fa-user-graduate', 'titulo'=>'Misioneros Capacitados',
+                ['num'=>'120',  'icono'=>'fa-user-graduate', 'titulo'=>'Misioneros Capacitados',
                  'desc'=>'Multiplicadores del evangelio en comunidades vulnerables a lo largo del país'],
                 ['num'=>'200+', 'icono'=>'fa-church', 'titulo'=>'Iglesias Plantadas / Revitalizadas',
                  'desc'=>'Discipulado activo, ministerios vivos y transformación espiritual sostenida'],
@@ -165,73 +165,64 @@
 </section>
 
 <!-- ═══════════════════════════════════════════════════════
-     ESTRUCTURA — Fondo verde, semana + itinerario 8 meses
+     ESTRUCTURA — Teaser: 3 números + 3 ejes + CTA
+     (El detalle completo vive en /programa)
      ═══════════════════════════════════════════════════════ -->
 <section class="seccion seccion--verde estructura-seccion">
     <div class="container">
         <div class="seccion-header">
             <span class="tag-label tag-label--dorado"><i class="fas fa-map-signs"></i> Ciclo 1 · 2026–2027</span>
             <h2 class="seccion__titulo">Estructura del Programa</h2>
-            <p class="seccion__subtitulo">8 meses · 3 ciclos anuales · Recorriendo Venezuela ciudad a ciudad</p>
+            <p class="seccion__subtitulo">Un modelo formativo único: itinerante, integral y misional</p>
         </div>
 
-        <!-- Semana típica -->
-        <div class="semana-wrap">
-            <h3 class="semana-titulo"><i class="fas fa-calendar-week"></i> Semana Típica</h3>
-            <div class="semana-grid">
-                <div class="semana-dia-card semana-dia-card--descanso">
-                    <div class="semana-dia-card__dia">Lunes</div>
-                    <i class="fas fa-moon semana-dia-card__icono"></i>
-                    <div class="semana-dia-card__act">Descanso y vida devocional</div>
+        <!-- Tres números impactantes -->
+        <div class="est-stats">
+            <div class="est-stat">
+                <span class="est-stat__num">8</span>
+                <span class="est-stat__label">Meses de<br>formación intensiva</span>
+            </div>
+            <div class="est-stat est-stat--dorado">
+                <span class="est-stat__num">45</span>
+                <span class="est-stat__label">Materias en<br>3 ciclos anuales</span>
+            </div>
+            <div class="est-stat">
+                <span class="est-stat__num">7</span>
+                <span class="est-stat__label">Ciudades de<br>Venezuela sede</span>
+            </div>
+        </div>
+
+        <!-- Vista previa de los 3 ejes -->
+        <div class="est-ejes">
+            <div class="est-eje">
+                <div class="est-eje__icono"><i class="fas fa-bible"></i></div>
+                <div class="est-eje__texto">
+                    <strong>Teológica y Ministerial</strong>
+                    <span>Hermenéutica, Missiología, Liderazgo pastoral y Teología Sistemática</span>
                 </div>
-                <div class="semana-dia-card semana-dia-card--clases">
-                    <div class="semana-dia-card__dia">Martes – Jueves</div>
-                    <i class="fas fa-chalkboard-teacher semana-dia-card__icono"></i>
-                    <div class="semana-dia-card__act">Clases teológicas y talleres productivos</div>
+            </div>
+            <div class="est-eje">
+                <div class="est-eje__icono"><i class="fas fa-seedling"></i></div>
+                <div class="est-eje__texto">
+                    <strong>Habilidades Autosustentables</strong>
+                    <span>Microemprendimiento, autosostenibilidad e impacto económico comunitario</span>
                 </div>
-                <div class="semana-dia-card semana-dia-card--practicas">
-                    <div class="semana-dia-card__dia">Viernes – Domingo</div>
-                    <i class="fas fa-hands-helping semana-dia-card__icono"></i>
-                    <div class="semana-dia-card__act">Prácticas misioneras en iglesias locales</div>
+            </div>
+            <div class="est-eje">
+                <div class="est-eje__icono"><i class="fas fa-hands-helping"></i></div>
+                <div class="est-eje__texto">
+                    <strong>Prácticas Misioneras</strong>
+                    <span>Plantación de iglesias, evangelismo real en cada ciudad sede cada semana</span>
                 </div>
             </div>
         </div>
 
-        <!-- Itinerario — ruta visual -->
-        <div class="ruta-wrap">
-            <h3 class="semana-titulo"><i class="fas fa-route"></i> Ruta del 1er Ciclo — Julio 2026 a Febrero 2027</h3>
-            <div class="ruta-timeline">
-                <?php
-                $ruta = [
-                    ['n'=>1,'mes'=>'Julio',      'ciudad'=>'Los Teques',   'estado'=>'Miranda',   'sede'=>'STBV', 'inicio'=>true],
-                    ['n'=>2,'mes'=>'Agosto',     'ciudad'=>'Maracay',      'estado'=>'Aragua',    'sede'=>''],
-                    ['n'=>3,'mes'=>'Septiembre', 'ciudad'=>'San Felipe',   'estado'=>'Yaracuy',   'sede'=>''],
-                    ['n'=>4,'mes'=>'Octubre',    'ciudad'=>'Valencia',     'estado'=>'Carabobo',  'sede'=>'CBCC'],
-                    ['n'=>5,'mes'=>'Noviembre',  'ciudad'=>'Acarigua',     'estado'=>'Portuguesa','sede'=>''],
-                    ['n'=>6,'mes'=>'Dic – Ene',  'ciudad'=>'Barquisimeto', 'estado'=>'Lara',      'sede'=>'15 días c/u'],
-                    ['n'=>7,'mes'=>'Febrero',    'ciudad'=>'Trujillo',     'estado'=>'Trujillo',  'sede'=>'', 'fin'=>true],
-                ];
-                foreach ($ruta as $i => $s): ?>
-                <div class="ruta-stop <?= ($s['inicio'] ?? false) ? 'ruta-stop--inicio' : '' ?> <?= ($s['fin'] ?? false) ? 'ruta-stop--fin' : '' ?>">
-                    <div class="ruta-stop__num"><?= $s['n'] ?></div>
-                    <div class="ruta-stop__card">
-                        <div class="ruta-stop__mes"><?= $s['mes'] ?></div>
-                        <div class="ruta-stop__ciudad"><?= $s['ciudad'] ?></div>
-                        <div class="ruta-stop__estado"><?= $s['estado'] ?></div>
-                        <?php if ($s['sede']): ?>
-                        <div class="ruta-stop__sede"><?= $s['sede'] ?></div>
-                        <?php endif; ?>
-                    </div>
-                    <?php if ($i < count($ruta)-1): ?>
-                    <div class="ruta-stop__flecha"><i class="fas fa-arrow-right"></i></div>
-                    <?php endif; ?>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <p class="ruta-nota">
-                <i class="fas fa-info-circle"></i>
-                <strong>Total: 8 meses</strong> — Los meses de Diciembre y Enero se realizan en Barquisimeto (15 días cada uno) para adaptarse a la temporada navideña.
-            </p>
+        <!-- CTA al programa completo -->
+        <div class="est-cta">
+            <a href="/programa" class="btn-est-detalle">
+                Ver la estructura completa del programa
+                <i class="fas fa-arrow-right"></i>
+            </a>
         </div>
     </div>
 </section>
@@ -313,6 +304,102 @@
 </section>
 
 <!-- ═══════════════════════════════════════════════════════
+     COLABORA CON NOSOTROS — Únete Como Colaborador
+     ═══════════════════════════════════════════════════════ -->
+<section class="seccion colabora-seccion" id="colabora">
+    <div class="container">
+        <div class="seccion-header">
+            <span class="tag-label tag-label--dorado"><i class="fas fa-hands-helping"></i> Colabora con Nosotros</span>
+            <h2 class="seccion__titulo">Sé Parte del Movimiento</h2>
+            <p class="seccion__subtitulo">Tu apoyo hace posible que más misioneros sean formados y enviados a transformar Venezuela</p>
+        </div>
+
+        <!-- Tarjetas de tipo de colaboración -->
+        <div class="colabora-tipos">
+            <div class="colabora-tipo-card">
+                <div class="colabora-tipo-card__icono">💰</div>
+                <h3>Apoyo Económico</h3>
+                <p>Contribuye financieramente al sostenimiento del programa, becas y materiales de formación.</p>
+            </div>
+            <div class="colabora-tipo-card colabora-tipo-card--destacado">
+                <div class="colabora-tipo-card__icono">📦</div>
+                <h3>Donación en Especie</h3>
+                <p>Dona alimentos, materiales, equipos o insumos que los misioneros necesitan durante su formación.</p>
+            </div>
+            <div class="colabora-tipo-card">
+                <div class="colabora-tipo-card__icono">🛠</div>
+                <h3>Servicios Profesionales</h3>
+                <p>Ofrece tus habilidades: diseño, contabilidad, medicina, tecnología, capacitación y más.</p>
+            </div>
+            <div class="colabora-tipo-card">
+                <div class="colabora-tipo-card__icono">🤝</div>
+                <h3>Voluntariado</h3>
+                <p>Dedica tu tiempo sirviendo directamente en actividades del programa o en las sedes locales.</p>
+            </div>
+        </div>
+
+        <!-- Formulario de registro de colaborador -->
+        <div class="colabora-form-wrap">
+            <div class="colabora-form-header">
+                <h3><i class="fas fa-envelope-open-text"></i> Regístrate como Colaborador</h3>
+                <p>Déjanos tus datos y nos pondremos en contacto contigo para coordinar tu forma de apoyo.</p>
+            </div>
+
+            <?php if (!empty($_SESSION['flash_colabora'])): ?>
+            <div class="colabora-flash <?= $_SESSION['flash_colabora']['tipo'] === 'exito' ? 'colabora-flash--exito' : 'colabora-flash--error' ?>">
+                <i class="fas <?= $_SESSION['flash_colabora']['tipo'] === 'exito' ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
+                <?= htmlspecialchars($_SESSION['flash_colabora']['mensaje']) ?>
+            </div>
+            <?php unset($_SESSION['flash_colabora']); ?>
+            <?php endif; ?>
+
+            <form action="/colaborar" method="POST" class="colabora-form" novalidate>
+                <div class="colabora-form__fila">
+                    <div class="colabora-form__grupo">
+                        <label for="col_nombre"><i class="fas fa-user"></i> Nombre completo <span class="req">*</span></label>
+                        <input type="text" id="col_nombre" name="nombre" placeholder="Tu nombre completo" required maxlength="200">
+                    </div>
+                    <div class="colabora-form__grupo">
+                        <label for="col_email"><i class="fas fa-envelope"></i> Correo electrónico <span class="req">*</span></label>
+                        <input type="email" id="col_email" name="email" placeholder="tucorreo@ejemplo.com" required maxlength="200">
+                    </div>
+                </div>
+                <div class="colabora-form__fila">
+                    <div class="colabora-form__grupo">
+                        <label for="col_organizacion"><i class="fas fa-building"></i> Organización / Iglesia <span class="opcional">(opcional)</span></label>
+                        <input type="text" id="col_organizacion" name="organizacion" placeholder="Nombre de tu iglesia u organización" maxlength="200">
+                    </div>
+                    <div class="colabora-form__grupo">
+                        <label for="col_tipo"><i class="fas fa-tags"></i> Tipo de colaboración <span class="req">*</span></label>
+                        <select id="col_tipo" name="tipo" required>
+                            <option value="">— Selecciona una opción —</option>
+                            <option value="economico">💰 Apoyo Económico</option>
+                            <option value="especie">📦 Donación en Especie</option>
+                            <option value="servicios">🛠 Servicios Profesionales</option>
+                            <option value="voluntariado">🤝 Voluntariado</option>
+                            <option value="otro">✨ Otro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="colabora-form__grupo colabora-form__grupo--full">
+                    <label for="col_mensaje"><i class="fas fa-comment-alt"></i> Mensaje <span class="opcional">(opcional)</span></label>
+                    <textarea id="col_mensaje" name="mensaje" rows="3" placeholder="Cuéntanos cómo deseas colaborar o cualquier detalle adicional..." maxlength="1000"></textarea>
+                </div>
+                <div class="colabora-form__submit">
+                    <button type="submit" class="btn-colaborar">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Enviar mi interés</span>
+                    </button>
+                    <p class="colabora-form__privacidad">
+                        <i class="fas fa-lock"></i> Tu información es confidencial y solo será usada para coordinar tu colaboración.
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
      CARRUSEL DE ORGANIZACIONES ALIADAS
      ═══════════════════════════════════════════════════════ -->
 <section class="aliados-seccion">
@@ -333,11 +420,11 @@
             // Si tienen logo: ['nombre' => '...', 'logo' => '/public/assets/logos/org-xxx.png']
             // Si solo texto:  ['nombre' => '...', 'logo' => null]
             $aliados = [
-                ['nombre' => 'CNBV',          'siglas' => 'Convención Nacional Bautista de Venezuela',     'logo' => '/public/assets/logos/logo-cnbv-t.png'],
+                ['nombre' => 'CNBV',           'siglas' => 'Convención Nacional Bautista de Venezuela',     'logo' => '/public/assets/logos/logo-cnbv-t.png'],
                 ['nombre' => 'DIME',           'siglas' => 'Dirección de Misiones y Evangelización',        'logo' => '/public/assets/logos/logo-dime-t.png'],
-                ['nombre' => 'STBV',           'siglas' => 'Seminario Teológico Bautista de Venezuela',     'logo' => null],
-                ['nombre' => 'FBCC',           'siglas' => 'Federación Bautista',                            'logo' => null],
-                ['nombre' => 'Asociación Lara','siglas' => 'Asociación Bautista del Estado Lara',           'logo' => null],
+                ['nombre' => 'STBV',           'siglas' => 'Seminario Teológico Bautista de Venezuela',     'logo' => '/public/assets/logos/Seminario_Teologico_Bautista.png'],
+                ['nombre' => 'FBCC',           'siglas' => 'Fundación Bautista Campo Carabobo',             'logo' => '/public/assets/logos/Fundacion_Bautista_Campo_Carabobo.jpg'],
+                ['nombre' => 'ASIBEL',         'siglas' => 'Asociación Iglesias Bautistas Edo. Lara',       'logo' => '/public/assets/logos/ASIBEL.png'],
                 ['nombre' => 'Asoc. Miranda',  'siglas' => 'Asociación Bautista del Estado Miranda',        'logo' => null],
                 ['nombre' => 'CBCC',           'siglas' => 'Convención Bautista del Centro y Carabobo',     'logo' => null],
                 ['nombre' => 'Asoc. Yaracuy',  'siglas' => 'Asociación Bautista de Yaracuy',                'logo' => null],
@@ -357,7 +444,6 @@
                         <?= mb_substr($aliado['nombre'], 0, 2) ?>
                     </div>
                 <?php endif; ?>
-                <div class="carrusel-item__nombre"><?= $aliado['nombre'] ?></div>
                 <div class="carrusel-item__siglas"><?= $aliado['siglas'] ?></div>
             </div>
             <?php endforeach; ?>
@@ -623,77 +709,65 @@
 }
 .eje__lista i { color: var(--verde); flex-shrink: 0; }
 
-/* ── ESTRUCTURA / RUTA ────────────────────────────────────── */
-.semana-wrap { margin-bottom: 3rem; }
-.semana-titulo {
-    color: var(--dorado); font-size: 0.9rem;
-    font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1px; margin-bottom: 1rem;
-    display: flex; align-items: center; gap: 0.5rem;
+/* ── ESTRUCTURA TEASER ────────────────────────────────────── */
+.est-stats {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 1.5rem; margin: 2.5rem 0 2.5rem;
 }
-.semana-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
-}
-.semana-dia-card {
+.est-stat {
     background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 16px; padding: 1.5rem;
+    border-radius: 20px; padding: 2rem 1.5rem;
     text-align: center; transition: var(--transicion);
 }
-.semana-dia-card:hover { background: rgba(255,255,255,0.18); transform: translateY(-3px); }
-.semana-dia-card__dia {
-    font-size: 0.78rem; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 1px;
-    color: var(--dorado); margin-bottom: 0.75rem;
+.est-stat:hover { background: rgba(255,255,255,0.16); transform: translateY(-4px); }
+.est-stat--dorado { background: rgba(206,162,55,0.18); border-color: rgba(206,162,55,0.4); }
+.est-stat__num {
+    display: block; font-size: 3.5rem; font-weight: 900;
+    color: var(--dorado); line-height: 1;
+    text-shadow: 0 2px 12px rgba(206,162,55,0.4);
 }
-.semana-dia-card__icono { font-size: 2rem; color: rgba(255,255,255,0.7); margin-bottom: 0.6rem; }
-.semana-dia-card__act { font-size: 0.85rem; color: rgba(255,255,255,0.85); line-height: 1.4; }
+.est-stat--dorado .est-stat__num { color: #fff; text-shadow: none; }
+.est-stat__label {
+    display: block; font-size: 0.85rem; color: rgba(255,255,255,0.75);
+    line-height: 1.4; margin-top: 0.5rem; font-weight: 500;
+}
 
-/* Ruta timeline — horizontal scroll en móvil */
-.ruta-timeline {
-    display: flex; align-items: flex-start; gap: 0;
-    overflow-x: auto; padding-bottom: 1rem;
-    scrollbar-width: thin; scrollbar-color: var(--dorado) transparent;
+.est-ejes {
+    display: flex; flex-direction: column; gap: 1rem;
+    margin-bottom: 2.5rem;
 }
-.ruta-stop {
-    display: flex; align-items: center; flex-shrink: 0;
-}
-.ruta-stop__num {
-    width: 36px; height: 36px; background: var(--dorado);
-    border-radius: 50%; display: flex; align-items: center;
-    justify-content: center; font-weight: 900; font-size: 0.85rem;
-    color: var(--verde-dark); flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(206,162,55,0.4);
-}
-.ruta-stop--inicio .ruta-stop__num,
-.ruta-stop--fin    .ruta-stop__num {
-    width: 42px; height: 42px; font-size: 0.9rem;
-    background: var(--naranja);
-}
-.ruta-stop__card {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 12px; padding: 0.85rem 1rem;
-    text-align: center; min-width: 120px; margin: 0 0.25rem;
+.est-eje {
+    display: flex; align-items: center; gap: 1.25rem;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px; padding: 1.1rem 1.5rem;
     transition: var(--transicion);
 }
-.ruta-stop__card:hover { background: rgba(255,255,255,0.22); transform: translateY(-3px); }
-.ruta-stop__mes    { font-size: 0.62rem; color: var(--dorado); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-.ruta-stop__ciudad { font-size: 0.95rem; font-weight: 800; margin: 0.25rem 0 0.15rem; }
-.ruta-stop__estado { font-size: 0.68rem; color: rgba(255,255,255,0.6); }
-.ruta-stop__sede   { font-size: 0.62rem; color: var(--dorado); font-weight: 600; margin-top: 0.25rem; }
-.ruta-stop__flecha { color: rgba(255,255,255,0.3); font-size: 0.9rem; padding: 0 0.25rem; flex-shrink: 0; }
-
-.ruta-nota {
-    background: rgba(206,162,55,0.15);
-    border: 1px solid rgba(206,162,55,0.3);
-    border-radius: var(--radio); padding: 0.85rem 1.25rem;
-    font-size: 0.83rem; color: rgba(255,255,255,0.85);
-    margin-top: 1.25rem;
-    display: flex; align-items: flex-start; gap: 0.6rem;
+.est-eje:hover { background: rgba(255,255,255,0.13); }
+.est-eje__icono {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: rgba(206,162,55,0.2); border: 1px solid rgba(206,162,55,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: var(--dorado); flex-shrink: 0;
 }
-.ruta-nota i { color: var(--dorado); flex-shrink: 0; margin-top: 2px; }
-.ruta-nota strong { color: var(--dorado); }
+.est-eje__texto { display: flex; flex-direction: column; gap: 0.25rem; }
+.est-eje__texto strong { font-size: 1rem; font-weight: 700; color: #fff; }
+.est-eje__texto span { font-size: 0.85rem; color: rgba(255,255,255,0.65); line-height: 1.4; }
+
+.est-cta { text-align: center; }
+.btn-est-detalle {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    background: var(--dorado); color: var(--verde-dark);
+    font-weight: 800; font-size: 0.95rem;
+    padding: 0.9rem 2rem; border-radius: 50px;
+    text-decoration: none; transition: var(--transicion);
+    box-shadow: 0 6px 20px rgba(206,162,55,0.35);
+}
+.btn-est-detalle:hover {
+    background: #d4a830; transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(206,162,55,0.5);
+}
 
 /* ── PERFIL + INVERSIÓN ───────────────────────────────────── */
 .perfil-seccion { background: var(--blanco); }
@@ -784,7 +858,9 @@
     .impacto-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 900px) {
-    .ejes-grid, .semana-grid, .perfil-wrap { grid-template-columns: 1fr; }
+    .ejes-grid, .est-stats, .perfil-wrap { grid-template-columns: 1fr; }
+    .est-stat { padding: 1.5rem 1rem; }
+    .est-stat__num { font-size: 2.8rem; }
     .hero__logo-principal { max-width: 520px; }
     .hero { background-attachment: scroll; }
     .cta-final { background-attachment: scroll; }
@@ -873,5 +949,191 @@
 .carrusel-item__siglas {
     font-size: 0.72rem; color: rgba(255,255,255,0.6);
     line-height: 1.4;
+}
+
+/* ── COLABORA CON NOSOTROS ────────────────────────────── */
+.colabora-seccion {
+    background: linear-gradient(160deg, var(--verde-dark) 0%, var(--verde) 60%, #1a9070 100%);
+    color: var(--blanco);
+    padding: 5rem 0;
+}
+.colabora-seccion .seccion-header { color: var(--blanco); }
+.colabora-seccion .seccion__titulo { color: var(--blanco); }
+.colabora-seccion .seccion__subtitulo { color: rgba(255,255,255,0.8); }
+
+/* Tarjetas de tipo */
+.colabora-tipos {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 3.5rem;
+}
+.colabora-tipo-card {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 18px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    transition: var(--transicion);
+    cursor: default;
+}
+.colabora-tipo-card:hover {
+    background: rgba(255,255,255,0.18);
+    transform: translateY(-5px);
+    border-color: rgba(206,162,55,0.5);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+}
+.colabora-tipo-card--destacado {
+    background: rgba(206,162,55,0.2);
+    border-color: rgba(206,162,55,0.45);
+}
+.colabora-tipo-card--destacado:hover {
+    background: rgba(206,162,55,0.3);
+}
+.colabora-tipo-card__icono {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    display: block;
+    line-height: 1;
+}
+.colabora-tipo-card h3 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--dorado);
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.colabora-tipo-card p {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.6;
+}
+
+/* Formulario */
+.colabora-form-wrap {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 24px;
+    padding: 2.5rem 2.5rem 2rem;
+    backdrop-filter: blur(4px);
+}
+.colabora-form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.colabora-form-header h3 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--dorado);
+    margin-bottom: 0.4rem;
+}
+.colabora-form-header h3 i { margin-right: 0.4rem; }
+.colabora-form-header p {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.75);
+}
+
+.colabora-flash {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 1rem 1.25rem; border-radius: 12px;
+    font-size: 0.9rem; font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+.colabora-flash i { font-size: 1.1rem; flex-shrink: 0; }
+.colabora-flash--exito {
+    background: rgba(40,200,120,0.2);
+    border: 1px solid rgba(40,200,120,0.4);
+    color: #a0f0c8;
+}
+.colabora-flash--error {
+    background: rgba(220,50,50,0.2);
+    border: 1px solid rgba(220,50,50,0.35);
+    color: #f5b4b4;
+}
+
+.colabora-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.colabora-form__fila {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
+}
+.colabora-form__grupo {
+    display: flex; flex-direction: column; gap: 0.4rem;
+}
+.colabora-form__grupo--full { grid-column: 1 / -1; }
+
+.colabora-form label {
+    font-size: 0.8rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.85);
+}
+.colabora-form label i { color: var(--dorado); margin-right: 0.3rem; }
+.colabora-form .req { color: var(--naranja); font-size: 0.85rem; }
+.colabora-form .opcional { color: rgba(255,255,255,0.45); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+.colabora-form input,
+.colabora-form select,
+.colabora-form textarea {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    color: var(--blanco);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.3s, background 0.3s;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+.colabora-form input::placeholder,
+.colabora-form textarea::placeholder { color: rgba(255,255,255,0.4); }
+.colabora-form select option { background: var(--verde-dark); color: var(--blanco); }
+.colabora-form input:focus,
+.colabora-form select:focus,
+.colabora-form textarea:focus {
+    border-color: var(--dorado);
+    background: rgba(255,255,255,0.18);
+    box-shadow: 0 0 0 3px rgba(206,162,55,0.2);
+}
+.colabora-form textarea { resize: vertical; min-height: 90px; }
+
+.colabora-form__submit {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+.btn-colaborar {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    background: var(--naranja); color: var(--blanco);
+    border: none; border-radius: 12px;
+    padding: 1rem 2.5rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800; font-size: 1rem;
+    cursor: pointer; transition: all 0.3s;
+    letter-spacing: 0.3px;
+}
+.btn-colaborar:hover {
+    background: var(--naranja-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(247,148,29,0.45);
+}
+.colabora-form__privacidad {
+    font-size: 0.75rem; color: rgba(255,255,255,0.5);
+    display: flex; align-items: center; gap: 0.4rem;
+    text-align: center;
+}
+.colabora-form__privacidad i { color: var(--dorado); }
+
+/* Responsive colabora */
+@media (max-width: 1024px) {
+    .colabora-tipos { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .colabora-form-wrap { padding: 1.75rem 1.25rem 1.5rem; }
+    .colabora-form__fila { grid-template-columns: 1fr; }
+    .colabora-tipos { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 500px) {
+    .colabora-tipos { grid-template-columns: 1fr; }
 }
 </style>

@@ -23,6 +23,9 @@
         <a href="/admin/galeria" class="admin-nav__item <?= $uri === '/admin/galeria' ? 'activo' : '' ?>">
             <i class="fas fa-images"></i> Galería
         </a>
+        <a href="/admin/colaboradores" class="admin-nav__item <?= str_starts_with($uri, '/admin/colaboradores') ? 'activo' : '' ?>">
+            <i class="fas fa-handshake"></i> Colaboradores
+        </a>
         <?php endif; ?>
 
         <a href="/admin/perfil" class="admin-nav__item <?= str_starts_with($uri, '/admin/perfil') ? 'activo' : '' ?>">

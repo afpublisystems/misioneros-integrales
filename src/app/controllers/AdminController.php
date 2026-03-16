@@ -68,6 +68,17 @@ class AdminController extends Controller {
     public function candidatos(): void {
         $this->requireAdminOEvaluador();
 
+        // Si viene ?ver=ID delegamos al detalle
+        if (isset($_GET['ver'])) {
+            // Si además viene ?test=1, mostramos el test vocacional
+            if (isset($_GET['test'])) {
+                $this->verTest();
+            } else {
+                $this->verCandidato();
+            }
+            return;
+        }
+
         $filtro_estatus = $_GET['estatus'] ?? '';
         $busqueda       = trim($_GET['q'] ?? '');
         $db             = Database::getConnection();
@@ -104,12 +115,12 @@ class AdminController extends Controller {
         ], 'admin');
     }
 
-    // ── GET /admin/candidato/{id} — ver detalle ───────────────
+    // ── GET /admin/candidatos?ver=ID — ver detalle ───────────────
     public function verCandidato(): void {
         $this->requireAdminOEvaluador();
 
-        $id        = (int) ($_GET['id'] ?? 0);
-        $db        = Database::getConnection();
+        $id = (int) ($_GET['ver'] ?? 0);
+        $db = Database::getConnection();
 
         $stmt = $db->prepare("
             SELECT a.*, u.email, u.ultimo_acceso
@@ -126,27 +137,75 @@ class AdminController extends Controller {
 
         // Documentos
         require_once APP_PATH . '/models/DocumentoModel.php';
-        $docModel  = new DocumentoModel();
+        $docModel   = new DocumentoModel();
         $documentos = $docModel->porAspirante($id);
 
         // Flujo del proceso
-        $stmt2 = $db->prepare(
-            "SELECT * FROM flujo_proceso WHERE aspirante_id = :id ORDER BY etapa"
-        );
+        $stmt2 = $db->prepare("SELECT * FROM flujo_proceso WHERE aspirante_id = :id ORDER BY etapa");
         $stmt2->execute([':id' => $id]);
         $flujo = $stmt2->fetchAll();
+
+        // Test vocacional
+        $stmt3 = $db->prepare("SELECT * FROM test_vocacional WHERE aspirante_id = ? LIMIT 1");
+        $stmt3->execute([$id]);
+        $test = $stmt3->fetch() ?: null;
 
         $this->render('admin/ver_candidato', [
             'titulo'     => $aspirante['nombres'] . ' ' . $aspirante['apellidos'],
             'aspirante'  => $aspirante,
             'documentos' => $documentos,
             'flujo'      => $flujo,
+            'test'       => $test,
+        ], 'admin');
+    }
+
+    // ── GET /admin/candidatos?ver=ID&test=1 — ver test vocacional ──
+    public function verTest(): void {
+        $this->requireAdminOEvaluador();
+
+        $id = (int) ($_GET['ver'] ?? 0);
+        $db = Database::getConnection();
+
+        $stmt = $db->prepare("
+            SELECT a.*, u.email
+            FROM aspirantes a
+            LEFT JOIN usuarios u ON u.id = a.usuario_id
+            WHERE a.id = :id LIMIT 1
+        ");
+        $stmt->execute([':id' => $id]);
+        $aspirante = $stmt->fetch();
+
+        if (!$aspirante) {
+            $this->redirigir('/admin/candidatos');
+            return;
+        }
+
+        $stmt2 = $db->prepare("SELECT * FROM test_vocacional WHERE aspirante_id = ? LIMIT 1");
+        $stmt2->execute([$id]);
+        $test = $stmt2->fetch() ?: null;
+
+        $respuestas = [];
+        if ($test && !empty($test['respuestas'])) {
+            $respuestas = json_decode($test['respuestas'], true) ?: [];
+        }
+
+        $this->render('admin/ver_test', [
+            'titulo'     => 'Test Vocacional — ' . $aspirante['nombres'] . ' ' . $aspirante['apellidos'],
+            'aspirante'  => $aspirante,
+            'test'       => $test,
+            'respuestas' => $respuestas,
         ], 'admin');
     }
 
     // ── POST /admin/candidatos — cambiar estatus ──────────────
     public function actualizarEstatus(): void {
         $this->requireAdminOEvaluador();
+
+        // Si viene accion=flujo, delegamos al gestor de etapas
+        if (($_POST['accion'] ?? '') === 'flujo') {
+            $this->actualizarFlujo();
+            return;
+        }
 
         $id        = (int) ($_POST['id'] ?? 0);
         $estatus   = $_POST['estatus'] ?? '';
@@ -158,10 +217,198 @@ class AdminController extends Controller {
                 'estatus'       => $estatus,
                 'nota_evaluador'=> $nota,
             ]);
-            $_SESSION['flash'] = ['tipo' => 'exito', 'msg' => 'Estatus actualizado correctamente.'];
+            $this->flash('exito', 'Estatus actualizado correctamente.');
         }
 
-        $this->redirigir('/admin/candidatos');
+        // Redirigir al detalle si viene del modal de ver_candidato
+        $redirect = $this->safeRedirect($_POST['_redirect'] ?? '', '/admin/candidatos');
+        $this->redirigir($redirect);
+    }
+
+    // ── POST /admin/candidatos (accion=flujo) — actualizar etapa ──
+    public function actualizarFlujo(): void {
+        $this->requireAdminOEvaluador();
+
+        $aspirante_id    = (int) ($_POST['aspirante_id'] ?? 0);
+        $etapa           = $_POST['etapa']   ?? '';
+        $estatus         = $_POST['estatus'] ?? '';
+        $notas           = trim($_POST['notas'] ?? '');
+
+        $etapas_validas  = [
+            'solicitud_formal', 'evaluacion_documental', 'test_vocacional',
+            'entrevista_personal', 'confirmacion_admision',
+        ];
+        $estatuses_validos = ['pendiente', 'en_proceso', 'aprobado', 'rechazado'];
+
+        if ($aspirante_id && in_array($etapa, $etapas_validas) && in_array($estatus, $estatuses_validos)) {
+            $db = Database::getConnection();
+
+            $db->prepare("
+                INSERT INTO flujo_proceso (aspirante_id, etapa, estatus, notas, evaluador_id,
+                                          fecha_inicio, fecha_cierre)
+                VALUES (?, ?, ?, ?, ?,
+                    IF(? != 'pendiente', NOW(), NULL),
+                    IF(? IN ('aprobado','rechazado'), NOW(), NULL))
+                ON DUPLICATE KEY UPDATE
+                    estatus      = VALUES(estatus),
+                    notas        = VALUES(notas),
+                    evaluador_id = VALUES(evaluador_id),
+                    fecha_inicio = CASE
+                        WHEN fecha_inicio IS NULL AND VALUES(estatus) != 'pendiente' THEN NOW()
+                        ELSE fecha_inicio
+                    END,
+                    fecha_cierre = CASE
+                        WHEN VALUES(estatus) IN ('aprobado','rechazado') THEN NOW()
+                        WHEN VALUES(estatus) NOT IN ('aprobado','rechazado') THEN NULL
+                        ELSE fecha_cierre
+                    END,
+                    updated_at   = NOW()
+            ")->execute([
+                $aspirante_id, $etapa, $estatus, $notas ?: null, (int)$_SESSION['usuario_id'],
+                $estatus,   // for fecha_inicio IF condition
+                $estatus,   // for fecha_cierre IF condition
+            ]);
+
+            $this->flash('exito', 'Etapa «' . ucwords(str_replace('_', ' ', $etapa)) . '» actualizada correctamente.');
+        }
+
+        $redirect = $this->safeRedirect($_POST['_redirect'] ?? '', '/admin/candidatos');
+        $this->redirigir($redirect);
+    }
+
+    // ── GET /admin/galeria ────────────────────────────────────
+    public function galeria(): void {
+        $this->requireAdminOEvaluador();
+        $db = Database::getConnection();
+
+        // Sedes con conteo de ítems
+        $sedes = $db->query("
+            SELECT s.*, COUNT(m.id) AS total_items
+            FROM sedes s
+            LEFT JOIN multimedia m ON m.sede_id = s.id
+            GROUP BY s.id
+            ORDER BY s.orden
+        ")->fetchAll();
+
+        $sede_sel = null;
+        $items    = [];
+        $sede_id  = (int)($_GET['sede'] ?? 0);
+
+        if ($sede_id) {
+            // Reutilizar datos ya cargados — evita query extra
+            $matches = array_filter($sedes, fn($s) => (int)$s['id'] === $sede_id);
+            $sede_sel = $matches ? array_values($matches)[0] : null;
+
+            if ($sede_sel) {
+                $stmt2 = $db->prepare("SELECT * FROM multimedia WHERE sede_id = ? ORDER BY orden, id DESC");
+                $stmt2->execute([$sede_id]);
+                $items = $stmt2->fetchAll();
+            }
+        }
+
+        $this->render('admin/galeria', [
+            'titulo'   => 'Galería Multimedia',
+            'sedes'    => $sedes,
+            'sede_sel' => $sede_sel,
+            'items'    => $items,
+        ], 'admin');
+    }
+
+    // ── POST /admin/galeria ───────────────────────────────────
+    public function gestionarGaleria(): void {
+        $this->requireAdminOEvaluador();
+
+        $accion   = $_POST['accion']  ?? '';
+        $sede_id  = (int)($_POST['sede_id'] ?? 0);
+        $redirect = "/admin/galeria?sede={$sede_id}";
+        $db       = Database::getConnection();
+
+        if ($accion === 'subir' && $sede_id) {
+            $tipo   = ($_POST['tipo'] ?? '') === 'video' ? 'video' : 'foto';
+            $titulo = trim($_POST['titulo'] ?? '');
+            $desc   = trim($_POST['descripcion'] ?? '') ?: null;
+            $dest   = (int)($_POST['destacado'] ?? 0);
+
+            if (!$titulo) {
+                $this->flash('error', 'El título es requerido.');
+                $this->redirigir($redirect);
+                return;
+            }
+
+            if ($tipo === 'foto') {
+                $file = $_FILES['archivo'] ?? null;
+                if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+                    $this->flash('error', 'Error al subir el archivo.');
+                    $this->redirigir($redirect);
+                    return;
+                }
+                // Validar MIME real + extensión
+                $finfo   = new finfo(FILEINFO_MIME_TYPE);
+                $mime    = $finfo->file($file['tmp_name']);
+                $mimes_ok = ['image/jpeg','image/png','image/webp','image/gif'];
+                $ext     = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                if (!in_array($mime, $mimes_ok) || $file['size'] > 5 * 1024 * 1024) {
+                    $this->flash('error', 'Solo JPG, PNG, WEBP, GIF. Máx 5 MB.');
+                    $this->redirigir($redirect);
+                    return;
+                }
+                // Nombre único a prueba de colisiones
+                $nombre = 'gal_' . $sede_id . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+                $ruta   = BASE_PATH . '/public/uploads/galeria/' . $nombre;
+                if (!move_uploaded_file($file['tmp_name'], $ruta)) {
+                    $this->flash('error', 'No se pudo guardar el archivo.');
+                    $this->redirigir($redirect);
+                    return;
+                }
+                $url   = '/uploads/galeria/' . $nombre;
+                $thumb = $url;
+
+            } else {
+                $url = trim($_POST['video_url'] ?? '');
+                if (!$url) {
+                    $this->flash('error', 'La URL del video es requerida.');
+                    $this->redirigir($redirect);
+                    return;
+                }
+                // Auto-extraer thumbnail de YouTube
+                $thumb = null;
+                if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $url, $m)) {
+                    $thumb = "https://img.youtube.com/vi/{$m[1]}/mqdefault.jpg";
+                }
+            }
+
+            $db->prepare("
+                INSERT INTO multimedia (sede_id, titulo, descripcion, tipo, url, thumb_url, destacado, orden)
+                VALUES (?, ?, ?, ?, ?, ?, ?,
+                    (SELECT COALESCE(MAX(mx.orden), 0) + 1 FROM multimedia mx WHERE mx.sede_id = ?))
+            ")->execute([$sede_id, $titulo, $desc, $tipo, $url, $thumb, $dest, $sede_id]);
+
+            $this->flash('exito', 'Ítem agregado correctamente.');
+
+        } elseif ($accion === 'eliminar') {
+            $id   = (int)($_POST['item_id'] ?? 0);
+            $stmt = $db->prepare("SELECT url, tipo FROM multimedia WHERE id = ? AND sede_id = ?");
+            $stmt->execute([$id, $sede_id]);
+            $item = $stmt->fetch();
+            if ($item) {
+                $db->prepare("DELETE FROM multimedia WHERE id = ?")->execute([$id]);
+                if ($item['tipo'] === 'foto') {
+                    $path = BASE_PATH . '/public' . $item['url'];
+                    if (file_exists($path)) @unlink($path);
+                }
+                $this->flash('exito', 'Ítem eliminado.');
+            }
+
+        } elseif ($accion === 'toggle_destacado') {
+            $id = (int)($_POST['item_id'] ?? 0);
+            $db->prepare("UPDATE multimedia SET destacado = NOT destacado WHERE id = ? AND sede_id = ?")->execute([$id, $sede_id]);
+
+        } elseif ($accion === 'toggle_activo') {
+            $id = (int)($_POST['item_id'] ?? 0);
+            $db->prepare("UPDATE multimedia SET activo = NOT activo WHERE id = ? AND sede_id = ?")->execute([$id, $sede_id]);
+        }
+
+        $this->redirigir($redirect);
     }
 
     // ── GET /admin/estadisticas ───────────────────────────────
@@ -187,7 +434,7 @@ class AdminController extends Controller {
             $stmt = $db->prepare("UPDATE impacto_estadisticas SET valor = :v WHERE id = :id");
             $stmt->execute([':v' => (int) $valor, ':id' => (int) $id]);
         }
-        $_SESSION['flash'] = ['tipo' => 'exito', 'msg' => 'Estadísticas actualizadas.'];
+        $this->flash('exito', 'Estadísticas actualizadas.');
         $this->redirigir('/admin/estadisticas');
     }
 
@@ -236,7 +483,7 @@ class AdminController extends Controller {
                 $stmt->execute([':n'=>$nombre, ':a'=>$apellido, ':e'=>$email, ':id'=>$id]);
                 $_SESSION['usuario_nombre'] = $nombre . ' ' . $apellido;
                 $_SESSION['usuario_email']  = $email;
-                $_SESSION['flash'] = ['tipo'=>'exito', 'msg'=>'Datos actualizados correctamente.'];
+                $this->flash('exito', 'Datos actualizados correctamente.');
                 $this->redirigir('/admin/perfil');
             }
 
@@ -260,7 +507,7 @@ class AdminController extends Controller {
                 require_once APP_PATH . '/models/UsuarioModel.php';
                 $uModel = new UsuarioModel();
                 $uModel->cambiarPassword($id, $nueva);
-                $_SESSION['flash'] = ['tipo'=>'exito', 'msg'=>'Contrasena actualizada correctamente.'];
+                $this->flash('exito', 'Contrasena actualizada correctamente.');
                 $this->redirigir('/admin/perfil');
             }
         }
@@ -275,6 +522,71 @@ class AdminController extends Controller {
             'errores' => $errores,
             'accion'  => $accion,
         ], 'admin');
+    }
+
+    // ── GET /admin/colaboradores ──────────────────────────────
+    public function colaboradores(): void {
+        $this->requireAdminOEvaluador();
+
+        $db   = Database::getConnection();
+        $filtro = $_GET['filtro'] ?? 'todos';
+
+        $where = match ($filtro) {
+            'pendientes' => 'WHERE aprobado = 0',
+            'aprobados'  => 'WHERE aprobado = 1',
+            default      => '',
+        };
+
+        $stmt = $db->query("
+            SELECT id, nombre, organizacion, email, tipo, mensaje, aprobado, created_at
+            FROM colaboradores
+            $where
+            ORDER BY aprobado ASC, created_at DESC
+        ");
+        $colaboradores = $stmt->fetchAll();
+
+        // Contadores
+        $total     = (int) $db->query("SELECT COUNT(*) FROM colaboradores")->fetchColumn();
+        $pendientes = (int) $db->query("SELECT COUNT(*) FROM colaboradores WHERE aprobado = 0")->fetchColumn();
+        $aprobados  = (int) $db->query("SELECT COUNT(*) FROM colaboradores WHERE aprobado = 1")->fetchColumn();
+
+        $this->render('admin/colaboradores', [
+            'titulo'       => 'Colaboradores',
+            'colaboradores' => $colaboradores,
+            'filtro'        => $filtro,
+            'total'         => $total,
+            'pendientes'    => $pendientes,
+            'aprobados'     => $aprobados,
+        ], 'admin');
+    }
+
+    // ── POST /admin/colaboradores ─────────────────────────────
+    public function gestionarColaborador(): void {
+        $this->requireAdminOEvaluador();
+
+        $db     = Database::getConnection();
+        $id     = (int) ($_POST['id'] ?? 0);
+        $accion = $_POST['accion'] ?? '';
+
+        if (!$id) {
+            $this->flash('error', 'ID inválido.');
+            $this->redirigir('/admin/colaboradores');
+            return;
+        }
+
+        if ($accion === 'aprobar') {
+            $db->prepare("UPDATE colaboradores SET aprobado = 1 WHERE id = :id")
+               ->execute([':id' => $id]);
+            $this->flash('exito', 'Colaborador aprobado.');
+        } elseif ($accion === 'rechazar') {
+            $db->prepare("DELETE FROM colaboradores WHERE id = :id")
+               ->execute([':id' => $id]);
+            $this->flash('exito', 'Registro eliminado.');
+        } else {
+            $this->flash('error', 'Acción no reconocida.');
+        }
+
+        $this->redirigir('/admin/colaboradores');
     }
 
     // ── Helpers ───────────────────────────────────────────────

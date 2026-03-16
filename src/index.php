@@ -57,6 +57,7 @@ $rutas = [
         '/admin/candidatos'     => ['AdminController',   'candidatos'],
         '/admin/galeria'        => ['AdminController',   'galeria'],
         '/admin/estadisticas'   => ['AdminController',   'estadisticas'],
+        '/admin/colaboradores'  => ['AdminController',   'colaboradores'],
         '/admin/perfil'         => ['AdminController',   'perfil'],
     ],
     'POST' => [
@@ -66,8 +67,11 @@ $rutas = [
         '/candidato/documentos' => ['CandidatoController',  'subirDocumento'],
         '/candidato/test'       => ['CandidatoController',  'guardarTest'],
         '/admin/candidatos'     => ['AdminController',      'actualizarEstatus'],
+        '/admin/galeria'        => ['AdminController',      'gestionarGaleria'],
         '/admin/estadisticas'   => ['AdminController',      'actualizarEstadisticas'],
+        '/admin/colaboradores'  => ['AdminController',      'gestionarColaborador'],
         '/admin/perfil'         => ['AdminController',      'actualizarPerfil'],
+        '/colaborar'            => ['PublicoController',    'registrarColaborador'],
     ],
 ];
 
