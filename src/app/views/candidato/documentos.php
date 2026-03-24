@@ -149,6 +149,7 @@
                       class="doc-upload-form <?= $subido ? 'oculto' : '' ?>"
                       id="form-<?= $req['tipo'] ?>"
                       data-tipo="<?= $req['tipo'] ?>">
+                    <?= csrf_field() ?>
 
                     <input type="hidden" name="tipo" value="<?= $req['tipo'] ?>">
 

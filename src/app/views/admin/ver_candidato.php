@@ -351,9 +351,18 @@
                                 </div>
                             </div>
                             <div class="doc-item__acciones">
-                                <?php if ($doc['verificado']): ?>
-                                    <span title="Verificado" style="color:var(--verde)"><i class="fas fa-check-circle"></i></span>
-                                <?php endif; ?>
+                                <form method="POST" action="/admin/candidatos" style="display:inline">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="accion"    value="verificar_doc">
+                                    <input type="hidden" name="doc_id"    value="<?= $doc['id'] ?>">
+                                    <input type="hidden" name="_redirect" value="/admin/candidatos?ver=<?= $aspirante['id'] ?>">
+                                    <button type="submit"
+                                        class="btn btn--xs <?= $doc['verificado'] ? 'btn--verde' : 'btn--outline' ?>"
+                                        title="<?= $doc['verificado'] ? 'Quitar verificación' : 'Marcar como verificado' ?>">
+                                        <i class="fas fa-check"></i>
+                                        <?= $doc['verificado'] ? 'Verificado' : 'Verificar' ?>
+                                    </button>
+                                </form>
                                 <a href="<?= htmlspecialchars($doc['ruta']) ?>" target="_blank"
                                    class="btn btn--outline btn--xs" title="Ver documento">
                                     <i class="fas fa-external-link-alt"></i>
@@ -369,6 +378,13 @@
                 <div class="admin-panel">
                     <div class="admin-panel__header">
                         <h2><i class="fas fa-info-circle"></i> Meta</h2>
+                        <?php if ($_SESSION['usuario_rol'] === 'admin'): ?>
+                        <button type="button" class="btn btn--outline btn--sm"
+                                onclick="document.getElementById('modal-reset-clave').style.display='flex'"
+                                title="Resetear contraseña del candidato">
+                            <i class="fas fa-key"></i> Resetear clave
+                        </button>
+                        <?php endif; ?>
                     </div>
                     <div class="detalle-grid detalle-grid--compact">
                         <div class="detalle-item">
@@ -419,6 +435,7 @@
             </button>
         </div>
         <form method="POST" action="/admin/candidatos">
+            <?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= $aspirante['id'] ?>">
             <input type="hidden" name="_redirect" value="/admin/candidatos?ver=<?= $aspirante['id'] ?>">
             <div class="modal__body">
@@ -590,6 +607,7 @@
             </button>
         </div>
         <form method="POST" action="/admin/candidatos">
+            <?= csrf_field() ?>
             <input type="hidden" name="accion"       value="flujo">
             <input type="hidden" name="aspirante_id" value="<?= $aspirante['id'] ?>">
             <input type="hidden" name="etapa"        id="flujo-etapa" value="">
@@ -691,4 +709,52 @@ document.getElementById('modal-estatus')?.addEventListener('click', function(e) 
 document.getElementById('modal-flujo')?.addEventListener('click', function(e) {
     if (e.target === this) this.style.display = 'none';
 });
+document.getElementById('modal-reset-clave')?.addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
 </script>
+
+<!-- Modal: Resetear contraseña del candidato (solo admin) ──── -->
+<div class="modal-overlay" id="modal-reset-clave" style="display:none">
+    <div class="modal">
+        <div class="modal__header">
+            <h3><i class="fas fa-key"></i> Resetear Contraseña</h3>
+            <button type="button" class="modal__cerrar"
+                    onclick="document.getElementById('modal-reset-clave').style.display='none'">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="/admin/candidatos">
+            <?= csrf_field() ?>
+            <input type="hidden" name="accion"     value="reset_clave">
+            <input type="hidden" name="usuario_id" value="<?= $aspirante['usuario_id'] ?>">
+            <input type="hidden" name="_redirect"  value="/admin/candidatos?ver=<?= $aspirante['id'] ?>">
+            <div class="modal__body">
+                <p class="modal__subtitulo">
+                    <?= htmlspecialchars($aspirante['nombres'] . ' ' . $aspirante['apellidos']) ?>
+                    <br><small style="color:var(--gris)"><?= htmlspecialchars($aspirante['email'] ?? '') ?></small>
+                </p>
+                <div class="aviso-info aviso-info--dorado" style="margin-bottom:1rem">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>Establece una contraseña temporal. Comunícasela al candidato por otro medio.</div>
+                </div>
+                <div class="form-grupo">
+                    <label for="nueva_clave">Nueva contraseña <span class="req">*</span></label>
+                    <input type="text" id="nueva_clave" name="nueva_clave" required
+                           minlength="8" placeholder="Mínimo 8 caracteres"
+                           autocomplete="off">
+                    <small class="form-ayuda">Usa texto plano para que puedas comunicársela al candidato.</small>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--outline"
+                        onclick="document.getElementById('modal-reset-clave').style.display='none'">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn--verde">
+                    <i class="fas fa-save"></i> Guardar nueva clave
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -93,8 +93,11 @@ $partes = [
             <strong><?= date('d/m/Y', strtotime($test['fecha_cierre'])) ?></strong>.
             El equipo coordinador del programa revisará tus respuestas y se comunicará contigo.</p>
         <div class="test-completado-card__acciones">
-            <a href="/candidato/dashboard" class="btn btn--verde">
-                <i class="fas fa-tachometer-alt"></i> Volver al Dashboard
+            <a href="/candidato/resultado-test" class="btn btn--verde">
+                <i class="fas fa-chart-bar"></i> Ver mi perfil vocacional
+            </a>
+            <a href="/candidato/dashboard" class="btn btn--outline">
+                <i class="fas fa-tachometer-alt"></i> Ir al Dashboard
             </a>
         </div>
         <p class="test-completado-card__nota">
@@ -129,6 +132,7 @@ $partes = [
 
     <!-- Formulario -->
     <form action="/candidato/test" method="POST" id="test-form" novalidate>
+        <?= csrf_field() ?>
         <input type="hidden" name="completado"   id="campo-completado"   value="0">
         <input type="hidden" name="parte_actual" id="campo-parte-actual" value="<?= $parte_ini ?>">
 

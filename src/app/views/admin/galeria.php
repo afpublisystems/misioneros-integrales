@@ -62,6 +62,7 @@ unset($_SESSION['flash']);
         </div>
 
         <form method="POST" action="/admin/galeria" enctype="multipart/form-data" class="galeria-form">
+            <?= csrf_field() ?>
             <input type="hidden" name="accion"   value="subir">
             <input type="hidden" name="sede_id"  value="<?= $sede_sel['id'] ?>">
             <input type="hidden" name="tipo"     id="tipo-hidden" value="foto">
@@ -169,6 +170,7 @@ unset($_SESSION['flash']);
                 <div class="galeria-item__acciones">
                     <!-- Toggle activo -->
                     <form method="POST" action="/admin/galeria" style="display:inline">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="accion"   value="toggle_activo">
                         <input type="hidden" name="sede_id"  value="<?= $sede_sel['id'] ?>">
                         <input type="hidden" name="item_id"  value="<?= $item['id'] ?>">
@@ -179,6 +181,7 @@ unset($_SESSION['flash']);
                     </form>
                     <!-- Toggle destacado -->
                     <form method="POST" action="/admin/galeria" style="display:inline">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="accion"   value="toggle_destacado">
                         <input type="hidden" name="sede_id"  value="<?= $sede_sel['id'] ?>">
                         <input type="hidden" name="item_id"  value="<?= $item['id'] ?>">
@@ -190,6 +193,7 @@ unset($_SESSION['flash']);
                     <!-- Eliminar -->
                     <form method="POST" action="/admin/galeria" style="display:inline"
                           onsubmit="return confirm('¿Eliminar este ítem? Esta acción no se puede deshacer.')">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="accion"   value="eliminar">
                         <input type="hidden" name="sede_id"  value="<?= $sede_sel['id'] ?>">
                         <input type="hidden" name="item_id"  value="<?= $item['id'] ?>">

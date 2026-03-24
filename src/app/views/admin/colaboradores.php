@@ -148,6 +148,7 @@ unset($_SESSION['flash']);
                         <div class="colab-acciones">
                             <?php if (!$c['aprobado']): ?>
                             <form method="POST" action="/admin/colaboradores" style="display:inline">
+                                <?= csrf_field() ?>
                                 <input type="hidden" name="id"     value="<?= $c['id'] ?>">
                                 <input type="hidden" name="accion" value="aprobar">
                                 <button type="submit" class="colab-btn colab-btn--ok"
@@ -158,6 +159,7 @@ unset($_SESSION['flash']);
                             <?php endif; ?>
                             <form method="POST" action="/admin/colaboradores" style="display:inline"
                                   onsubmit="return confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')">
+                                <?= csrf_field() ?>
                                 <input type="hidden" name="id"     value="<?= $c['id'] ?>">
                                 <input type="hidden" name="accion" value="rechazar">
                                 <button type="submit" class="colab-btn colab-btn--del" title="Eliminar registro">

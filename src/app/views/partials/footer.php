@@ -48,6 +48,28 @@
 
     </div>
 
+<!-- Botón flotante WhatsApp -->
+<a href="https://wa.me/584245886540?text=Hola,%20tengo%20una%20consulta%20sobre%20el%20programa%20Misioneros%20Integrales"
+   target="_blank" rel="noopener" class="whatsapp-float" title="Escríbenos por WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+</a>
+<style>
+.whatsapp-float {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #25d366; color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.75rem; box-shadow: 0 4px 14px rgba(37,211,102,0.45);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+}
+.whatsapp-float:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(37,211,102,0.55);
+    color: white;
+}
+</style>
+
     <div class="footer__bottom">
         <div class="footer__bottom-inner">
             <span>© <?= date('Y') ?> Programa de Formación Misioneros Integrales · CNBV / DIME · Venezuela</span>

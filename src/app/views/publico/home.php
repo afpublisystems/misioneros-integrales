@@ -65,6 +65,85 @@
 </section>
 
 <!-- ═══════════════════════════════════════════════════════
+     CONTADOR REGRESIVO
+     ═══════════════════════════════════════════════════════ -->
+<section class="countdown-band">
+    <div class="container countdown-band__inner">
+        <div class="countdown-band__texto">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Convocatoria <strong>Ciclo 1 · 2026</strong> — Postulaciones abiertas</span>
+        </div>
+        <div class="countdown-wrap">
+            <div class="countdown-item" id="cd-dias"><span class="cd-num">--</span><span class="cd-label">días</span></div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-item" id="cd-horas"><span class="cd-num">--</span><span class="cd-label">horas</span></div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-item" id="cd-mins"><span class="cd-num">--</span><span class="cd-label">min</span></div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-item" id="cd-segs"><span class="cd-num">--</span><span class="cd-label">seg</span></div>
+        </div>
+        <a href="/registro" class="btn btn--naranja btn--sm">
+            <i class="fas fa-user-plus"></i> Postularme
+        </a>
+    </div>
+</section>
+
+<script>
+(function() {
+    var fin = new Date('2026-06-30T23:59:59');
+    function actualizar() {
+        var ahora = new Date();
+        var diff  = fin - ahora;
+        if (diff <= 0) {
+            document.querySelector('.countdown-band__texto span').textContent = 'El plazo de postulación ha cerrado.';
+            return;
+        }
+        var d = Math.floor(diff / 86400000);
+        var h = Math.floor((diff % 86400000) / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        document.querySelector('#cd-dias .cd-num').textContent  = String(d).padStart(2,'0');
+        document.querySelector('#cd-horas .cd-num').textContent = String(h).padStart(2,'0');
+        document.querySelector('#cd-mins .cd-num').textContent  = String(m).padStart(2,'0');
+        document.querySelector('#cd-segs .cd-num').textContent  = String(s).padStart(2,'0');
+    }
+    actualizar();
+    setInterval(actualizar, 1000);
+})();
+</script>
+
+<style>
+.countdown-band {
+    background: var(--verde-dark); color: white;
+    padding: 1rem 0; border-top: 3px solid var(--dorado);
+}
+.countdown-band__inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap;
+}
+.countdown-band__texto {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 0.88rem; color: rgba(255,255,255,0.85);
+}
+.countdown-band__texto i { color: var(--dorado); font-size: 1.1rem; }
+.countdown-band__texto strong { color: white; }
+.countdown-wrap {
+    display: flex; align-items: center; gap: 0.25rem;
+}
+.countdown-item {
+    text-align: center; min-width: 48px;
+    background: rgba(255,255,255,0.08); border-radius: 6px; padding: 0.35rem 0.5rem;
+}
+.cd-num   { display: block; font-size: 1.3rem; font-weight: 900; line-height: 1; color: var(--dorado); }
+.cd-label { display: block; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.6); margin-top: 0.1rem; }
+.countdown-sep { font-size: 1.3rem; font-weight: 900; color: var(--dorado); padding: 0 0.1rem; margin-bottom: 0.75rem; }
+@media (max-width: 768px) {
+    .countdown-band__inner { justify-content: center; }
+    .countdown-band__texto { text-align: center; justify-content: center; width: 100%; }
+}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════
      IMPACTO ESPERADO — Cards doradas dinámicas
      ═══════════════════════════════════════════════════════ -->
 <section class="seccion impacto-seccion">
@@ -82,13 +161,13 @@
             <?php
             $impacto = [
                 ['num'=>'120',  'icono'=>'fa-user-graduate', 'titulo'=>'Misioneros Capacitados',
-                 'desc'=>'Multiplicadores del evangelio en comunidades vulnerables a lo largo del país'],
+                 'desc'=>'Formados para hacer discípulos y plantar iglesias en comunidades de Venezuela'],
                 ['num'=>'200+', 'icono'=>'fa-church', 'titulo'=>'Iglesias Plantadas / Revitalizadas',
-                 'desc'=>'Discipulado activo, ministerios vivos y transformación espiritual sostenida'],
+                 'desc'=>'Cada iglesia con discipulado activo y vida ministerial sostenida en el tiempo'],
                 ['num'=>'70+',  'icono'=>'fa-briefcase', 'titulo'=>'Microempresas Misioneras',
-                 'desc'=>'Autosostenibilidad económica, impacto local y evangelismo relacional'],
+                 'desc'=>'Misioneros con oficio propio para sostenerse y servir donde son enviados'],
                 ['num'=>'21+',  'icono'=>'fa-map-marked-alt', 'titulo'=>'Estados Alcanzados',
-                 'desc'=>'Evangelismo creativo, visibilidad institucional y conexión comunitaria'],
+                 'desc'=>'El evangelio presente en todo el territorio nacional'],
             ];
             foreach ($impacto as $item): ?>
             <div class="impacto-item">
@@ -112,7 +191,7 @@
         <div class="seccion-header">
             <span class="tag-label tag-label--verde"><i class="fas fa-layer-group"></i> Formación Integral</span>
             <h2 class="seccion__titulo">Ejes Formativos</h2>
-            <p class="seccion__subtitulo">Tres pilares diseñados para formar misioneros completos en fe, habilidad y práctica</p>
+            <p class="seccion__subtitulo">Tres áreas que forman al misionero de manera integral: fe, oficio y práctica de campo</p>
         </div>
 
         <div class="ejes-grid">
@@ -123,7 +202,7 @@
                     <i class="fas fa-bible"></i>
                 </div>
                 <h3 class="eje__titulo">Teológica, Bíblica<br>y Ministerial</h3>
-                <p class="eje__desc">Plan de estudios de <strong>45 materias</strong> en 3 niveles progresivos. Formación profunda para construir una base sólida y un liderazgo ministerial efectivo.</p>
+                <p class="eje__desc"><strong>45 materias</strong> en 3 niveles progresivos para construir base teológica y liderazgo ministerial desde cero.</p>
                 <ul class="eje__lista">
                     <li><i class="fas fa-check-circle"></i> Biblia y Teología Sistemática</li>
                     <li><i class="fas fa-check-circle"></i> Hermenéutica y Predicación</li>
@@ -138,7 +217,7 @@
                     <i class="fas fa-tools"></i>
                 </div>
                 <h3 class="eje__titulo">Habilidades<br>Autosustentables</h3>
-                <p class="eje__desc">Equipamos a cada misionero con herramientas reales para generar ingresos, sostener su ministerio y crear oportunidades en su comunidad.</p>
+                <p class="eje__desc">Cada participante aprende un oficio que le permite sostenerse donde sea enviado y generar trabajo en su comunidad.</p>
                 <ul class="eje__lista">
                     <li><i class="fas fa-check-circle"></i> Panadería y Repostería</li>
                     <li><i class="fas fa-check-circle"></i> Confección y Textiles</li>
@@ -153,7 +232,7 @@
                     <i class="fas fa-globe-americas"></i>
                 </div>
                 <h3 class="eje__titulo">Prácticas<br>Misioneras</h3>
-                <p class="eje__desc">El corazón del programa. Cada fin de semana los participantes sirven en iglesias locales aplicando lo aprendido en escenarios reales y diversos.</p>
+                <p class="eje__desc">Cada fin de semana, los participantes sirven en iglesias locales de la ciudad sede, poniendo en práctica lo que aprendieron esa semana.</p>
                 <ul class="eje__lista">
                     <li><i class="fas fa-check-circle"></i> Plantación de Iglesias</li>
                     <li><i class="fas fa-check-circle"></i> Revitalización Ministerial</li>
@@ -173,7 +252,7 @@
         <div class="seccion-header">
             <span class="tag-label tag-label--dorado"><i class="fas fa-map-signs"></i> Ciclo 1 · 2026–2027</span>
             <h2 class="seccion__titulo">Estructura del Programa</h2>
-            <p class="seccion__subtitulo">Un modelo formativo único: itinerante, integral y misional</p>
+            <p class="seccion__subtitulo">Itinerante por diseño: cada mes, una ciudad diferente en Venezuela</p>
         </div>
 
         <!-- Tres números impactantes -->
@@ -205,7 +284,7 @@
                 <div class="est-eje__icono"><i class="fas fa-seedling"></i></div>
                 <div class="est-eje__texto">
                     <strong>Habilidades Autosustentables</strong>
-                    <span>Microemprendimiento, autosostenibilidad e impacto económico comunitario</span>
+                    <span>Panadería, confección, finanzas: oficios para sostenerse y crear trabajo</span>
                 </div>
             </div>
             <div class="est-eje">
@@ -236,7 +315,7 @@
             <div class="perfil-texto">
                 <span class="tag-label tag-label--verde"><i class="fas fa-user-check"></i> Perfil del Participante</span>
                 <h2>¿Es este programa para ti?</h2>
-                <p class="perfil-intro">Buscamos jóvenes y adultos con vocación misionera, corazón disponible y respaldo de su iglesia local.</p>
+                <p class="perfil-intro">Buscamos personas entre 18 y 40 años con llamado misionero, respaldo de su pastor y disponibilidad para moverse a cada ciudad del itinerario.</p>
                 <ul class="perfil-requisitos">
                     <li><i class="fas fa-check-circle"></i> 18 a 40 años de edad</li>
                     <li><i class="fas fa-check-circle"></i> Bautizado hace mínimo 1 año</li>
@@ -277,6 +356,255 @@
 </section>
 
 <!-- ═══════════════════════════════════════════════════════
+     RESPALDO INSTITUCIONAL — CNBV y DIME
+     ═══════════════════════════════════════════════════════ -->
+<section class="seccion respaldo-seccion">
+    <div class="container">
+
+        <div class="respaldo-header">
+            <p class="respaldo-header__sup">
+                <i class="fas fa-handshake"></i> Respaldo institucional
+            </p>
+            <h2>Un programa con más de 70 años de historia detrás</h2>
+            <p class="respaldo-header__sub">
+                Este programa no nació en un escritorio. Lo impulsan dos de las instituciones
+                bautistas más consolidadas de Venezuela.
+            </p>
+        </div>
+
+        <div class="respaldo-cards">
+
+            <!-- CNBV -->
+            <div class="respaldo-card">
+                <div class="respaldo-card__logo">
+                    <img src="/public/assets/logos/logo-cnbv-t.png"
+                         alt="Convención Nacional Bautista de Venezuela">
+                </div>
+                <div class="respaldo-card__cuerpo">
+                    <h3>Convención Nacional Bautista de Venezuela</h3>
+                    <p class="respaldo-card__sigla">CNBV · Fundada en 1951</p>
+                    <p class="respaldo-card__desc">
+                        Organismo que reúne a las iglesias bautistas de Venezuela desde hace más
+                        de 70 años. Con sede en Caracas y presencia en todo el territorio nacional,
+                        la CNBV agrupa cerca de <strong>1.000 iglesias afiliadas</strong> y coordina
+                        la vida eclesial, educativa y misionera del movimiento bautista venezolano.
+                    </p>
+                    <div class="respaldo-card__stats">
+                        <div class="respaldo-stat">
+                            <strong>1951</strong>
+                            <span>Año de fundación</span>
+                        </div>
+                        <div class="respaldo-stat">
+                            <strong>~1.000</strong>
+                            <span>Iglesias afiliadas</span>
+                        </div>
+                        <div class="respaldo-stat">
+                            <strong>Nacional</strong>
+                            <span>Alcance territorial</span>
+                        </div>
+                    </div>
+                    <a href="https://cnbv.org" target="_blank" rel="noopener" class="respaldo-card__link">
+                        <i class="fas fa-external-link-alt"></i> cnbv.org
+                    </a>
+                </div>
+            </div>
+
+            <!-- DIME -->
+            <div class="respaldo-card">
+                <div class="respaldo-card__logo">
+                    <img src="/public/assets/logos/logo-dime-t.png"
+                         alt="Dirección de Misiones y Evangelización — CNBV">
+                </div>
+                <div class="respaldo-card__cuerpo">
+                    <h3>Dirección de Misiones y Evangelización</h3>
+                    <p class="respaldo-card__sigla">DIME · Departamento oficial de la CNBV</p>
+                    <p class="respaldo-card__desc">
+                        Brazo misionero de la CNBV, responsable de planificar y ejecutar la
+                        estrategia evangelizadora y misionera a nivel nacional. La DIME coordina
+                        los proyectos de alcance, forma a los obreros del campo y promueve el
+                        avance del evangelio hacia los pueblos no alcanzados de Venezuela y más allá.
+                        <strong>Misioneros Integrales es un programa de la DIME.</strong>
+                    </p>
+                    <div class="respaldo-card__stats">
+                        <div class="respaldo-stat">
+                            <strong>Misiones</strong>
+                            <span>Nacionales e internacionales</span>
+                        </div>
+                        <div class="respaldo-stat">
+                            <strong>Formación</strong>
+                            <span>De obreros y misioneros</span>
+                        </div>
+                        <div class="respaldo-stat">
+                            <strong>Alcance</strong>
+                            <span>Pueblos no alcanzados</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Nota de aval -->
+        <div class="respaldo-aval">
+            <i class="fas fa-award"></i>
+            <p>
+                Al completar el programa recibes una
+                <strong>Certificación Ministerial — Mención Misiones</strong>
+                avalada por la CNBV, reconocida por las iglesias e instituciones bautistas
+                de Venezuela.
+            </p>
+        </div>
+
+    </div>
+</section>
+
+<style>
+/* ── Respaldo Institucional ──────────────────────────── */
+.respaldo-seccion {
+    background: #fff;
+    border-top: 1px solid rgba(22,122,94,0.1);
+}
+
+.respaldo-header { text-align: center; max-width: 620px; margin: 0 auto 3rem; }
+.respaldo-header__sup {
+    font-size: 0.78rem; font-weight: 700;
+    color: var(--verde); text-transform: uppercase; letter-spacing: 1.5px;
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    margin-bottom: 0.75rem;
+}
+.respaldo-header h2 {
+    font-size: 2rem; font-weight: 900;
+    color: var(--verde-dark); margin: 0 0 0.85rem;
+    line-height: 1.2;
+}
+.respaldo-header__sub {
+    color: var(--gris); font-size: 0.95rem; line-height: 1.6; margin: 0;
+}
+
+/* Cards */
+.respaldo-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.75rem;
+    margin-bottom: 2rem;
+}
+
+.respaldo-card {
+    border: 1px solid rgba(22,122,94,0.12);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: box-shadow 0.25s, transform 0.25s;
+    background: var(--crema, #faf8f3);
+    display: flex;
+    flex-direction: column;
+}
+.respaldo-card:hover {
+    box-shadow: 0 12px 40px rgba(22,122,94,0.12);
+    transform: translateY(-3px);
+}
+
+.respaldo-card__logo {
+    background: var(--verde-dark);
+    padding: 2.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+}
+.respaldo-card__logo img {
+    max-width: 170px;
+    max-height: 85px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+}
+
+.respaldo-card__cuerpo {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    flex: 1;
+}
+
+.respaldo-card__cuerpo h3 {
+    font-size: 1.1rem; font-weight: 900;
+    color: var(--verde-dark); margin: 0; line-height: 1.3;
+}
+.respaldo-card__sigla {
+    font-size: 0.78rem; font-weight: 700;
+    color: var(--verde); text-transform: uppercase;
+    letter-spacing: 0.8px; margin: 0;
+}
+.respaldo-card__desc {
+    font-size: 0.88rem; color: var(--gris-dark);
+    line-height: 1.65; margin: 0;
+}
+.respaldo-card__desc strong { color: var(--verde-dark); }
+
+/* Mini stats */
+.respaldo-card__stats {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid rgba(22,122,94,0.1);
+    border-bottom: 1px solid rgba(22,122,94,0.1);
+    padding: 0.85rem 0;
+    margin: 0.25rem 0;
+}
+.respaldo-stat {
+    flex: 1;
+    text-align: center;
+    padding: 0 0.5rem;
+    border-right: 1px solid rgba(22,122,94,0.1);
+}
+.respaldo-stat:last-child { border-right: none; }
+.respaldo-stat strong {
+    display: block; font-size: 0.95rem; font-weight: 900;
+    color: var(--verde); line-height: 1.2;
+}
+.respaldo-stat span {
+    display: block; font-size: 0.68rem;
+    color: var(--gris); margin-top: 0.15rem;
+    line-height: 1.3;
+}
+
+.respaldo-card__link {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: 0.82rem; font-weight: 700; color: var(--verde);
+    text-decoration: none; margin-top: auto;
+    transition: color 0.2s;
+}
+.respaldo-card__link:hover { color: var(--verde-dark); }
+
+/* Aval */
+.respaldo-aval {
+    display: flex; gap: 1rem; align-items: flex-start;
+    background: rgba(206,162,55,0.08);
+    border: 1px solid rgba(206,162,55,0.3);
+    border-left: 4px solid var(--dorado);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    max-width: 720px;
+    margin: 0 auto;
+}
+.respaldo-aval i {
+    color: var(--dorado); font-size: 1.4rem; flex-shrink: 0; margin-top: 2px;
+}
+.respaldo-aval p {
+    font-size: 0.9rem; color: var(--gris-dark);
+    line-height: 1.6; margin: 0;
+}
+.respaldo-aval strong { color: var(--verde-dark); }
+
+@media (max-width: 768px) {
+    .respaldo-cards { grid-template-columns: 1fr; }
+    .respaldo-header h2 { font-size: 1.6rem; }
+    .respaldo-card__logo { min-height: 110px; padding: 1.5rem; }
+    .respaldo-card__logo img { max-width: 140px; }
+}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════
      CTA FINAL — Verde con llamado a la acción
      ═══════════════════════════════════════════════════════ -->
 <section class="cta-final">
@@ -310,8 +638,8 @@
     <div class="container">
         <div class="seccion-header">
             <span class="tag-label tag-label--dorado"><i class="fas fa-hands-helping"></i> Colabora con Nosotros</span>
-            <h2 class="seccion__titulo">Sé Parte del Movimiento</h2>
-            <p class="seccion__subtitulo">Tu apoyo hace posible que más misioneros sean formados y enviados a transformar Venezuela</p>
+            <h2 class="seccion__titulo">Colabora con el Programa</h2>
+            <p class="seccion__subtitulo">Con tu apoyo podemos formar y enviar más misioneros a todo el país</p>
         </div>
 
         <!-- Tarjetas de tipo de colaboración -->
@@ -342,7 +670,7 @@
         <div class="colabora-form-wrap">
             <div class="colabora-form-header">
                 <h3><i class="fas fa-envelope-open-text"></i> Regístrate como Colaborador</h3>
-                <p>Déjanos tus datos y nos pondremos en contacto contigo para coordinar tu forma de apoyo.</p>
+                <p>Déjanos tus datos y te contactamos para coordinar juntos.</p>
             </div>
 
             <?php if (!empty($_SESSION['flash_colabora'])): ?>
@@ -354,6 +682,7 @@
             <?php endif; ?>
 
             <form action="/colaborar" method="POST" class="colabora-form" novalidate>
+                <?= csrf_field() ?>
                 <div class="colabora-form__fila">
                     <div class="colabora-form__grupo">
                         <label for="col_nombre"><i class="fas fa-user"></i> Nombre completo <span class="req">*</span></label>
@@ -405,9 +734,9 @@
 <section class="aliados-seccion">
     <div class="container">
         <div class="aliados-header">
-            <span class="tag-label"><i class="fas fa-handshake"></i> Alianzas Estratégicas</span>
-            <h2>Organizaciones e Instituciones Aliadas</h2>
-            <p>Trabajamos juntos por la misión en Venezuela y América Latina</p>
+            <span class="tag-label"><i class="fas fa-handshake"></i> Organizaciones Aliadas</span>
+            <h2>Quiénes caminan con nosotros</h2>
+            <p>Iglesias, asociaciones e instituciones que apoyan el programa en Venezuela</p>
         </div>
     </div>
 
@@ -1137,3 +1466,390 @@
     .colabora-tipos { grid-template-columns: 1fr; }
 }
 </style>
+
+<?php if (empty($_SESSION['usuario_id'])): ?>
+<!-- ═══════════════════════════════════════════════════════
+     POPUP DE LANZAMIENTO — Convocatoria Cohorte 2026
+     Solo se muestra una vez por sesión (sessionStorage)
+     ═══════════════════════════════════════════════════════ -->
+<div id="popup-lanzamiento" class="popup-backdrop" role="dialog" aria-modal="true" aria-label="Convocatoria abierta">
+
+    <div class="popup-card">
+
+        <!-- Botón cerrar -->
+        <button class="popup-cerrar" id="popup-cerrar" aria-label="Cerrar">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <!-- Panel izquierdo: visual -->
+        <div class="popup-visual">
+            <div class="popup-visual__overlay"></div>
+            <div class="popup-visual__contenido">
+                <img src="/public/assets/logos/logo-mi-completo-t.png"
+                     alt="Misioneros Integrales" class="popup-logo">
+                <div class="popup-badge">
+                    <i class="fas fa-satellite-dish"></i>
+                    Convocatoria abierta · Cohorte 2026
+                </div>
+                <div class="popup-orgs">
+                    <img src="/public/assets/logos/logo-cnbv-t.png" alt="CNBV">
+                    <span>×</span>
+                    <img src="/public/assets/logos/logo-dime-t.png" alt="DIME">
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel derecho: llamado -->
+        <div class="popup-cuerpo">
+
+            <p class="popup-sobre">Programa de Formación Misionera — CNBV / DIME</p>
+            <h2 class="popup-titulo">¿Dios te está<br>llamando a las misiones?</h2>
+
+            <p class="popup-texto">
+                Este programa te forma durante 8 meses para llevar el evangelio
+                a las naciones — con herramientas reales, respaldo institucional
+                y una comunidad que camina contigo.
+            </p>
+
+            <!-- Cupos y tiempo -->
+            <div class="popup-stats">
+                <div class="popup-stat">
+                    <i class="fas fa-calendar-check"></i>
+                    <div>
+                        <strong>Inicio</strong>
+                        <span>Julio 2026</span>
+                    </div>
+                </div>
+                <div class="popup-stat">
+                    <i class="fas fa-users"></i>
+                    <div>
+                        <strong>Cupos limitados</strong>
+                        <span>20 por cohorte</span>
+                    </div>
+                </div>
+                <div class="popup-stat">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <strong>Cierre convocatoria</strong>
+                        <span id="popup-dias-restantes">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTAs -->
+            <div class="popup-ctas">
+                <a href="/registro" class="popup-btn popup-btn--principal">
+                    <i class="fas fa-rocket"></i>
+                    Postularme ahora
+                </a>
+                <a href="/programa" class="popup-btn popup-btn--secundario" id="popup-saber-mas">
+                    <i class="fas fa-book-open"></i>
+                    Conocer el programa
+                </a>
+            </div>
+
+            <p class="popup-dismiss" id="popup-dismiss-link">
+                Ahora no — <button type="button" onclick="cerrarPopup()">cerrar</button>
+            </p>
+
+        </div>
+    </div>
+</div>
+
+<style>
+/* ── Backdrop ────────────────────────────────────────── */
+.popup-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 30, 20, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+.popup-backdrop.visible {
+    display: flex;
+    animation: popupFadeIn 0.35s ease;
+}
+@keyframes popupFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ── Card ────────────────────────────────────────────── */
+.popup-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    width: 100%;
+    max-width: 780px;
+    max-height: 90vh;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(206,162,55,0.2);
+    animation: popupSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes popupSlideUp {
+    from { transform: translateY(40px) scale(0.96); opacity: 0; }
+    to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* ── Cerrar ──────────────────────────────────────────── */
+.popup-cerrar {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10;
+    transition: background 0.2s, transform 0.15s;
+}
+.popup-cerrar:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+
+/* ── Panel visual (izquierdo) ────────────────────────── */
+.popup-visual {
+    position: relative;
+    background:
+        linear-gradient(160deg, rgba(8,60,43,0.97) 0%, rgba(22,122,94,0.93) 100%),
+        url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&q=75')
+        center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 2rem;
+}
+.popup-visual__overlay {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 30%, rgba(206,162,55,0.12) 0%, transparent 65%);
+}
+.popup-visual__contenido {
+    position: relative;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 1.5rem;
+    text-align: center;
+}
+.popup-logo {
+    width: 180px;
+    filter: drop-shadow(0 6px 20px rgba(0,0,0,0.4));
+}
+.popup-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(206,162,55,0.18);
+    border: 1px solid rgba(206,162,55,0.45);
+    border-radius: 100px;
+    padding: 0.45rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--dorado, #cea237);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+.popup-orgs {
+    display: flex; align-items: center; gap: 1rem;
+}
+.popup-orgs img {
+    height: 22px;
+    filter: brightness(0) invert(1);
+    opacity: 0.55;
+}
+.popup-orgs span {
+    color: rgba(255,255,255,0.3);
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* ── Panel cuerpo (derecho) ──────────────────────────── */
+.popup-cuerpo {
+    background: var(--crema, #faf8f3);
+    padding: 2.5rem 2.25rem;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    gap: 1.15rem;
+    overflow-y: auto;
+}
+.popup-sobre {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--verde, #167a5e);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+.popup-titulo {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--verde-dark, #083c2b);
+    line-height: 1.2;
+    margin: 0;
+}
+.popup-texto {
+    font-size: 0.9rem;
+    color: var(--gris, #6b7280);
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* Stats / datos rápidos */
+.popup-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    background: rgba(22,122,94,0.05);
+    border: 1px solid rgba(22,122,94,0.12);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+}
+.popup-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.popup-stat i {
+    width: 28px; height: 28px;
+    background: rgba(22,122,94,0.1);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--verde, #167a5e);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+.popup-stat div { display: flex; flex-direction: column; line-height: 1.3; }
+.popup-stat strong { font-size: 0.8rem; color: var(--gris-dark, #374151); font-weight: 700; }
+.popup-stat span   { font-size: 0.78rem; color: var(--gris, #6b7280); }
+
+/* CTAs */
+.popup-ctas {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+.popup-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    font-family: inherit;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.1s;
+    cursor: pointer;
+    border: none;
+}
+.popup-btn:active { transform: scale(0.98); }
+.popup-btn--principal {
+    background: var(--verde, #167a5e);
+    color: #fff;
+}
+.popup-btn--principal:hover { background: #0f5a45; }
+.popup-btn--secundario {
+    background: transparent;
+    color: var(--verde, #167a5e);
+    border: 2px solid var(--verde, #167a5e);
+}
+.popup-btn--secundario:hover { background: rgba(22,122,94,0.07); }
+
+.popup-dismiss {
+    margin: 0;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--gris, #6b7280);
+}
+.popup-dismiss button {
+    background: none;
+    border: none;
+    color: var(--gris, #6b7280);
+    font-family: inherit;
+    font-size: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+}
+.popup-dismiss button:hover { color: var(--verde, #167a5e); }
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 640px) {
+    .popup-backdrop { padding: 0; align-items: flex-end; }
+    .popup-card {
+        grid-template-columns: 1fr;
+        border-radius: 24px 24px 0 0;
+        max-height: 92vh;
+    }
+    .popup-visual { display: none; }
+    .popup-cuerpo { padding: 2rem 1.5rem 1.5rem; }
+    .popup-titulo { font-size: 1.4rem; }
+    .popup-cerrar { background: rgba(0,0,0,0.15); color: var(--verde-dark, #083c2b); border-color: rgba(0,0,0,0.15); }
+}
+@media (min-width: 641px) and (max-width: 900px) {
+    .popup-card { grid-template-columns: 220px 1fr; }
+    .popup-logo { width: 140px; }
+}
+</style>
+
+<script>
+(function () {
+    var KEY    = 'mi_popup_visto';
+    var popup  = document.getElementById('popup-lanzamiento');
+    var btnX   = document.getElementById('popup-cerrar');
+    var btnSM  = document.getElementById('popup-saber-mas');
+
+    // No mostrar si ya fue visto en esta sesión
+    if (sessionStorage.getItem(KEY)) return;
+
+    function cerrarPopup() {
+        popup.style.animation = 'popupFadeIn 0.25s ease reverse forwards';
+        setTimeout(function () { popup.classList.remove('visible'); }, 220);
+        sessionStorage.setItem(KEY, '1');
+    }
+    window.cerrarPopup = cerrarPopup;
+
+    // Mostrar con delay (la página carga primero)
+    setTimeout(function () {
+        popup.classList.add('visible');
+    }, 1200);
+
+    // Cerrar con botón X
+    btnX.addEventListener('click', cerrarPopup);
+
+    // Cerrar al hacer clic en el backdrop (fuera del card)
+    popup.addEventListener('click', function (e) {
+        if (e.target === popup) cerrarPopup();
+    });
+
+    // "Conocer el programa" también cierra el popup antes de navegar
+    if (btnSM) {
+        btnSM.addEventListener('click', function () {
+            sessionStorage.setItem(KEY, '1');
+        });
+    }
+
+    // Tecla Escape
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && popup.classList.contains('visible')) cerrarPopup();
+    });
+
+    // Días restantes para el cierre de convocatoria
+    var fin = new Date('2026-06-30T23:59:59');
+    var diff = fin - new Date();
+    var el   = document.getElementById('popup-dias-restantes');
+    if (el && diff > 0) {
+        var dias = Math.ceil(diff / 86400000);
+        el.textContent = dias + ' días restantes';
+    } else if (el) {
+        el.textContent = 'Convocatoria cerrada';
+    }
+})();
+</script>
+<?php endif; ?>

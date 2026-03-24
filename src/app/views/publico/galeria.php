@@ -14,7 +14,7 @@
     <div class="gal-hero__content">
         <span class="gal-hero__etiqueta">CNBV · DIME · Venezuela</span>
         <h1 class="gal-hero__titulo">Galería del<br><em>Programa</em></h1>
-        <p class="gal-hero__sub">Conoce el impacto visual de Misioneros Integrales en cada sede</p>
+        <p class="gal-hero__sub">Fotos y videos del programa en cada ciudad sede</p>
     </div>
 </section>
 
@@ -137,9 +137,9 @@
 ═══════════════════════════════════════════════ -->
 <section class="seccion seccion--verde">
     <div class="container" style="text-align:center;">
-        <h2 class="seccion__titulo">¿Quieres ser parte de la historia?</h2>
+        <h2 class="seccion__titulo">Postúlate para el Ciclo 1</h2>
         <p class="seccion__subtitulo" style="max-width:500px; margin:0 auto 2rem;">
-            Postúlate para el Ciclo 1 y deja tu huella en cada una de las 7 sedes.
+            Julio 2026 · 7 ciudades en Venezuela. Un ciclo de 8 meses itinerantes.
         </p>
         <a href="/registro" class="btn-cta-naranja">
             <i class="fas fa-user-plus"></i> Postularme ahora

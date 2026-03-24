@@ -162,7 +162,7 @@
         <div class="seccion__encabezado">
             <span class="seccion-label">Promoción 2026 · Ciclo 1</span>
             <h2 class="seccion__titulo">Lo que esperamos lograr</h2>
-            <p class="seccion__subtitulo">Proyecciones de impacto para la primera promoción del programa. Cada año se abre una nueva cohorte.</p>
+            <p class="seccion__subtitulo">Metas para la Promoción 2026. A partir de 2027 se abren nuevas cohortes cada año.</p>
         </div>
 
         <div class="imp-metas-grid">
@@ -185,7 +185,7 @@
                 <div class="imp-meta-card__icono"><i class="fas fa-book-open"></i></div>
                 <div class="imp-meta-card__num">3</div>
                 <div class="imp-meta-card__label">Ciclos hasta la Certificación</div>
-                <p>Al completar los 3 ciclos, los participantes reciben la Certificación Ministerial — Mención Misiones (CNBV). Cada año se incorpora una nueva cohorte.</p>
+                <p>Al completar los 3 ciclos (uno por año) reciben la Certificación Ministerial — Mención Misiones de la CNBV.</p>
             </div>
 
             <div class="imp-meta-card">
@@ -206,7 +206,7 @@
     <div class="container">
         <div class="seccion__encabezado">
             <span class="seccion-label">Transformación</span>
-            <h2 class="seccion__titulo">Un impacto en <span class="highlight-dorado">4 dimensiones</span></h2>
+            <h2 class="seccion__titulo">El programa actúa en <span class="highlight-dorado">4 frentes</span></h2>
         </div>
 
         <div class="imp-dimensiones">
@@ -218,14 +218,13 @@
                 <div class="imp-dimension__contenido">
                     <h3>Impacto Espiritual</h3>
                     <p>
-                        Formamos líderes con profunda vida devocional, sólido fundamento bíblico y pasión por
-                        la evangelización. Cada misionero egresado lleva consigo el fuego del Espíritu para
-                        transformar comunidades.
+                        45 materias en tres niveles bíblicos y teológicos. Cada fin de semana, los misioneros
+                        evangelizan y sirven en una iglesia local de la ciudad sede.
                     </p>
                     <ul class="imp-dimension__lista">
-                        <li><i class="fas fa-check"></i> Formación bíblica y teológica intensiva</li>
-                        <li><i class="fas fa-check"></i> Discipulado práctico en campo</li>
-                        <li><i class="fas fa-check"></i> Evangelización en cada sede</li>
+                        <li><i class="fas fa-check"></i> Formación bíblica y teológica en 3 niveles</li>
+                        <li><i class="fas fa-check"></i> Discipulado práctico semanal en campo</li>
+                        <li><i class="fas fa-check"></i> Evangelización en cada ciudad sede</li>
                     </ul>
                 </div>
             </div>
@@ -237,13 +236,13 @@
                 <div class="imp-dimension__contenido">
                     <h3>Impacto Social</h3>
                     <p>
-                        Misioneros Integrales no solo predica el evangelio; también promueve el desarrollo
-                        comunitario, la educación y el servicio social en las comunidades donde opera.
+                        Los misioneros viven en la comunidad de cada ciudad sede durante el mes de formación.
+                        Participan en actividades de servicio junto a la iglesia local anfitriona.
                     </p>
                     <ul class="imp-dimension__lista">
-                        <li><i class="fas fa-check"></i> Programas de ayuda comunitaria</li>
-                        <li><i class="fas fa-check"></i> Talleres de habilidades para la vida</li>
-                        <li><i class="fas fa-check"></i> Apoyo a familias vulnerables</li>
+                        <li><i class="fas fa-check"></i> Servicio comunitario con la iglesia local</li>
+                        <li><i class="fas fa-check"></i> Talleres prácticos en cada ciudad sede</li>
+                        <li><i class="fas fa-check"></i> Apoyo directo a familias de la comunidad</li>
                     </ul>
                 </div>
             </div>
@@ -261,7 +260,7 @@
                     <ul class="imp-dimension__lista">
                         <li><i class="fas fa-check"></i> Formación en emprendimiento cristiano</li>
                         <li><i class="fas fa-check"></i> Modelos de autofinanciamiento misionero</li>
-                        <li><i class="fas fa-check"></i> Sostenibilidad a largo plazo</li>
+                        <li><i class="fas fa-check"></i> El negocio financia la obra, no al revés</li>
                     </ul>
                 </div>
             </div>
@@ -273,13 +272,13 @@
                 <div class="imp-dimension__contenido">
                     <h3>Impacto Eclesial</h3>
                     <p>
-                        Cada egresado regresa a su iglesia local con nuevas herramientas para multiplicar
-                        discípulos, plantar congregaciones y fortalecer la red eclesiástica bautista venezolana.
+                        Cada egresado vuelve a su iglesia con formación teológica, un oficio y experiencia
+                        de campo en 7 ciudades. Muchos quedan sirviendo en las ciudades donde fueron enviados.
                     </p>
                     <ul class="imp-dimension__lista">
                         <li><i class="fas fa-check"></i> Plantación de nuevas iglesias</li>
-                        <li><i class="fas fa-check"></i> Fortalecimiento de la CNBV</li>
-                        <li><i class="fas fa-check"></i> Red de misioneros egresados</li>
+                        <li><i class="fas fa-check"></i> Fortalecimiento de la red CNBV</li>
+                        <li><i class="fas fa-check"></i> Red activa de misioneros egresados</li>
                     </ul>
                 </div>
             </div>
@@ -295,7 +294,7 @@
     <div class="container">
         <div class="seccion__encabezado">
             <span class="seccion-label">Venezuela</span>
-            <h2 class="seccion__titulo">El itinerario de transformación</h2>
+            <h2 class="seccion__titulo">El itinerario del Ciclo 1</h2>
         </div>
 
         <div class="imp-itinerario">
@@ -330,10 +329,10 @@
 ═══════════════════════════════════════════════ -->
 <section class="seccion seccion--verde">
     <div class="container" style="text-align:center;">
-        <span class="seccion-label" style="color:var(--dorado)">¿Quieres ser parte?</span>
-        <h2 class="seccion__titulo">Sé el siguiente misionero transformado</h2>
+        <span class="seccion-label" style="color:var(--dorado)">Promoción 2026</span>
+        <h2 class="seccion__titulo">Postúlate para el Ciclo 1</h2>
         <p class="seccion__subtitulo" style="max-width:500px; margin:0 auto 2rem;">
-            Postúlate para la Promoción 2026 (Ciclo 1). Las plazas son limitadas y nuevas cohortes se abren cada año.
+            El programa inicia en julio 2026. Cada año se abre una nueva promoción.
         </p>
         <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
             <a href="/registro" class="btn-cta-naranja">

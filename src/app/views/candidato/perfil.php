@@ -56,9 +56,11 @@
             <button class="perfil-tab"        data-tab="eclesial"  role="tab"><i class="fas fa-church"></i> Eclesial</button>
             <button class="perfil-tab"        data-tab="academico" role="tab"><i class="fas fa-graduation-cap"></i> Académico</button>
             <button class="perfil-tab"        data-tab="movilidad" role="tab"><i class="fas fa-map-marker-alt"></i> Movilidad</button>
+            <button class="perfil-tab"        data-tab="seguridad" role="tab"><i class="fas fa-lock"></i> Contraseña</button>
         </div>
 
         <form method="POST" action="/candidato/perfil" id="form-perfil" novalidate>
+            <?= csrf_field() ?>
 
             <!-- ── TAB 1: DATOS PERSONALES ──────────────────────── -->
             <div class="perfil-panel activo" id="tab-personal">
@@ -399,6 +401,41 @@
             </div>
 
         </form>
+
+        <!-- ── TAB 5: SEGURIDAD / CONTRASEÑA ───────────────── -->
+        <div class="perfil-panel" id="tab-seguridad">
+            <div class="form-card">
+                <h2 class="form-card__titulo"><i class="fas fa-lock"></i> Cambiar Contraseña</h2>
+
+                <form method="POST" action="/candidato/perfil/clave" id="form-clave" novalidate>
+                    <?= csrf_field() ?>
+                    <div class="form-grupo">
+                        <label for="password_actual">Contraseña actual <span class="req">*</span></label>
+                        <input type="password" id="password_actual" name="password_actual" required
+                               placeholder="Tu contraseña actual" autocomplete="current-password">
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-grupo">
+                            <label for="password_nueva">Nueva contraseña <span class="req">*</span></label>
+                            <input type="password" id="password_nueva" name="password_nueva" required
+                                   minlength="8" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                        </div>
+                        <div class="form-grupo">
+                            <label for="password_confirma">Confirmar nueva contraseña <span class="req">*</span></label>
+                            <input type="password" id="password_confirma" name="password_confirma" required
+                                   placeholder="Repite la nueva contraseña" autocomplete="new-password">
+                        </div>
+                    </div>
+                    <div class="tab-nav-btns">
+                        <span></span>
+                        <button type="submit" class="btn btn--verde">
+                            <i class="fas fa-key"></i> Actualizar contraseña
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </main>
 </div>
 
@@ -449,4 +486,10 @@ document.querySelectorAll('input, select, textarea').forEach(el => {
     el.addEventListener('change', calcularPct);
 });
 calcularPct(); // Inicial
+
+// ── Abrir tab desde query param (?tab=seguridad) ──────────────
+const tabParam = new URLSearchParams(window.location.search).get('tab');
+if (tabParam && document.querySelector(`[data-tab="${tabParam}"]`)) {
+    cambiarTab(tabParam);
+}
 </script>

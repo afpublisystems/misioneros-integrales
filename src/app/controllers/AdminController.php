@@ -8,6 +8,7 @@
 require_once APP_PATH . '/controllers/Controller.php';
 require_once APP_PATH . '/models/AspiranteModel.php';
 require_once APP_PATH . '/models/UsuarioModel.php';
+require_once APP_PATH . '/helpers/TestScorer.php';
 
 class AdminController extends Controller {
 
@@ -79,6 +80,12 @@ class AdminController extends Controller {
             return;
         }
 
+        // Si viene ?exportar=1, generar CSV
+        if (isset($_GET['exportar'])) {
+            $this->exportarCSV();
+            return;
+        }
+
         $filtro_estatus = $_GET['estatus'] ?? '';
         $busqueda       = trim($_GET['q'] ?? '');
         $db             = Database::getConnection();
@@ -113,6 +120,89 @@ class AdminController extends Controller {
                 'rechazada'   => $this->contarPorEstatus('rechazada'),
             ],
         ], 'admin');
+    }
+
+    // ── GET /admin/candidatos?exportar=1 — descargar CSV ─────────
+    public function exportarCSV(): void {
+        $this->requireAdminOEvaluador();
+
+        $db     = Database::getConnection();
+        $filtro = $_GET['estatus'] ?? '';
+        $sql    = "
+            SELECT
+                a.id,
+                a.nombres,
+                a.apellidos,
+                a.cedula,
+                u.email,
+                a.telefono,
+                a.genero,
+                a.edad,
+                a.estado_civil,
+                a.ciudad_origen,
+                a.estado_origen,
+                a.iglesia,
+                a.pastor,
+                a.anos_bautizado,
+                a.nivel_academico,
+                a.estatus,
+                a.created_at
+            FROM aspirantes a
+            LEFT JOIN usuarios u ON u.id = a.usuario_id
+        ";
+        $params = [];
+        if ($filtro) {
+            $sql .= " WHERE a.estatus = :estatus";
+            $params[':estatus'] = $filtro;
+        }
+        $sql .= " ORDER BY a.created_at DESC";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $nombre_archivo = 'candidatos_' . date('Y-m-d') . ($filtro ? "_{$filtro}" : '') . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        // BOM para que Excel abra con tildes correctamente
+        echo "\xEF\xBB\xBF";
+
+        $out = fopen('php://output', 'w');
+
+        // Encabezados
+        fputcsv($out, [
+            'ID', 'Nombres', 'Apellidos', 'Cédula', 'Email',
+            'Teléfono', 'Género', 'Edad', 'Estado Civil',
+            'Ciudad', 'Estado', 'Iglesia', 'Pastor',
+            'Años bautizado', 'Nivel académico', 'Estatus', 'Fecha registro',
+        ], ';');
+
+        foreach ($filas as $f) {
+            fputcsv($out, [
+                $f['id'],
+                $f['nombres'],
+                $f['apellidos'],
+                $f['cedula'],
+                $f['email'],
+                $f['telefono'],
+                $f['genero'],
+                $f['edad'],
+                $f['estado_civil'],
+                $f['ciudad_origen'],
+                $f['estado_origen'],
+                $f['iglesia'],
+                $f['pastor'],
+                $f['anos_bautizado'],
+                $f['nivel_academico'],
+                ucfirst(str_replace('_', ' ', $f['estatus'])),
+                $f['created_at'],
+            ], ';');
+        }
+
+        fclose($out);
+        exit;
     }
 
     // ── GET /admin/candidatos?ver=ID — ver detalle ───────────────
@@ -185,8 +275,12 @@ class AdminController extends Controller {
         $test = $stmt2->fetch() ?: null;
 
         $respuestas = [];
+        $scoring    = null;
         if ($test && !empty($test['respuestas'])) {
             $respuestas = json_decode($test['respuestas'], true) ?: [];
+            if (!empty($test['completado'])) {
+                $scoring = TestScorer::calcular($respuestas);
+            }
         }
 
         $this->render('admin/ver_test', [
@@ -194,6 +288,7 @@ class AdminController extends Controller {
             'aspirante'  => $aspirante,
             'test'       => $test,
             'respuestas' => $respuestas,
+            'scoring'    => $scoring,
         ], 'admin');
     }
 
@@ -204,6 +299,18 @@ class AdminController extends Controller {
         // Si viene accion=flujo, delegamos al gestor de etapas
         if (($_POST['accion'] ?? '') === 'flujo') {
             $this->actualizarFlujo();
+            return;
+        }
+
+        // Si viene accion=reset_clave, delegamos al reset de contraseña
+        if (($_POST['accion'] ?? '') === 'reset_clave') {
+            $this->resetearClave();
+            return;
+        }
+
+        // Si viene accion=verificar_doc, toggleamos verificado del documento
+        if (($_POST['accion'] ?? '') === 'verificar_doc') {
+            $this->verificarDocumento();
             return;
         }
 
@@ -222,6 +329,43 @@ class AdminController extends Controller {
 
         // Redirigir al detalle si viene del modal de ver_candidato
         $redirect = $this->safeRedirect($_POST['_redirect'] ?? '', '/admin/candidatos');
+        $this->redirigir($redirect);
+    }
+
+    // ── POST /admin/candidatos (accion=reset_clave) — resetear contraseña candidato ──
+    public function resetearClave(): void {
+        $this->requireAuth('admin'); // Solo admin, no evaluador
+
+        $usuario_id = (int) ($_POST['usuario_id'] ?? 0);
+        $nueva      = trim($_POST['nueva_clave'] ?? '');
+        $redirect   = $this->safeRedirect($_POST['_redirect'] ?? '', '/admin/candidatos');
+
+        if (!$usuario_id || strlen($nueva) < 8) {
+            $this->flash('error', 'La contraseña debe tener al menos 8 caracteres.');
+            $this->redirigir($redirect);
+            return;
+        }
+
+        require_once APP_PATH . '/models/UsuarioModel.php';
+        (new UsuarioModel())->cambiarPassword($usuario_id, $nueva);
+        $this->flash('exito', 'Contraseña del candidato actualizada correctamente.');
+        $this->redirigir($redirect);
+    }
+
+    // ── POST /admin/candidatos (accion=verificar_doc) — toggle verificado ──
+    public function verificarDocumento(): void {
+        $this->requireAdminOEvaluador();
+
+        $doc_id   = (int) ($_POST['doc_id'] ?? 0);
+        $redirect = $this->safeRedirect($_POST['_redirect'] ?? '', '/admin/candidatos');
+
+        if ($doc_id) {
+            $db = Database::getConnection();
+            $db->prepare("UPDATE documentos SET verificado = NOT verificado WHERE id = ?")
+               ->execute([$doc_id]);
+            $this->flash('exito', 'Estado del documento actualizado.');
+        }
+
         $this->redirigir($redirect);
     }
 

@@ -413,6 +413,89 @@ $niveles_labels = ['ninguna' => 'Ninguna', 'basica' => 'Básica', 'intermedia' =
         </div>
 
         <?php else: ?>
+        <?php if ($test['completado'] && $scoring): ?>
+        <!-- ══ PANEL DE PERFIL VOCACIONAL ══════════════════════════ -->
+        <div class="admin-panel vt-scoring-panel">
+            <div class="admin-panel__header">
+                <h2><i class="fas fa-chart-bar"></i> Perfil Vocacional Orientacional</h2>
+                <span style="font-size:.8rem; color:var(--gris);">
+                    Puntaje global: <strong style="color:var(--verde); font-size:1rem;"><?= $scoring['puntaje_total'] ?>%</strong>
+                </span>
+            </div>
+
+            <!-- Aviso orientacional -->
+            <div class="aviso-info aviso-info--dorado" style="margin:1rem 1.25rem .25rem;">
+                <i class="fas fa-info-circle"></i>
+                <div>Este perfil es <strong>orientacional</strong>. Muestra tendencias, no define la admisión. El equipo evaluador toma la decisión final.</div>
+            </div>
+
+            <!-- Fortalezas destacadas -->
+            <div style="padding:1rem 1.25rem .5rem;">
+                <p style="font-size:.75rem; font-weight:600; text-transform:uppercase; color:var(--gris); letter-spacing:.04em; margin-bottom:.6rem;">
+                    Dimensiones más desarrolladas
+                </p>
+                <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+                    <?php foreach ($scoring['fortalezas'] as $i => $f): ?>
+                    <span class="vt-fortaleza vt-fortaleza--<?= $i ?>">
+                        <i class="fas fa-star"></i> <?= htmlspecialchars($f) ?>
+                    </span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- Barras de dimensiones -->
+            <div class="vt-dims-grid">
+                <?php foreach ($scoring['dimensiones'] as $dim):
+                    $color = $dim['score'] >= 75 ? 'verde' : ($dim['score'] >= 50 ? 'dorado' : 'naranja');
+                ?>
+                <div class="vt-dim">
+                    <div class="vt-dim__header">
+                        <span><i class="fas <?= $dim['icono'] ?>"></i> <?= htmlspecialchars($dim['nombre']) ?></span>
+                        <strong class="vt-dim__score vt-dim__score--<?= $color ?>"><?= $dim['score'] ?>%</strong>
+                    </div>
+                    <div class="vt-dim__bar">
+                        <div class="vt-dim__fill vt-dim__fill--<?= $color ?>" style="width:<?= $dim['score'] ?>%"></div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Áreas de crecimiento -->
+            <?php if (!empty($scoring['por_mejorar'])): ?>
+            <div style="padding:.5rem 1.25rem 1rem;">
+                <p style="font-size:.75rem; font-weight:600; text-transform:uppercase; color:var(--gris); letter-spacing:.04em; margin-bottom:.5rem;">
+                    Áreas a fortalecer
+                </p>
+                <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+                    <?php foreach ($scoring['por_mejorar'] as $pm): ?>
+                    <span style="background:#fef3c7; color:#92400e; padding:.25rem .75rem; border-radius:999px; font-size:.78rem; font-weight:500;">
+                        <i class="fas fa-arrow-up"></i> <?= htmlspecialchars($pm) ?>
+                    </span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <style>
+        .vt-scoring-panel { margin-bottom: 1.25rem; }
+        .vt-dims-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; padding: .5rem 1.25rem 1rem; }
+        @media (max-width: 700px) { .vt-dims-grid { grid-template-columns: 1fr; } }
+        .vt-dim__header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.3rem; font-size:.82rem; }
+        .vt-dim__bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+        .vt-dim__fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+        .vt-dim__fill--verde   { background: var(--verde); }
+        .vt-dim__fill--dorado  { background: var(--dorado); }
+        .vt-dim__fill--naranja { background: #f97316; }
+        .vt-dim__score--verde  { color: var(--verde); }
+        .vt-dim__score--dorado { color: var(--dorado-dark); }
+        .vt-dim__score--naranja{ color: #f97316; }
+        .vt-fortaleza { padding:.3rem .9rem; border-radius:999px; font-size:.78rem; font-weight:600; }
+        .vt-fortaleza--0 { background:var(--verde-light); color:var(--verde); }
+        .vt-fortaleza--1 { background:#dcfce7; color:#15803d; }
+        .vt-fortaleza--2 { background:var(--dorado-light); color:var(--dorado-dark); }
+        </style>
+        <?php endif; ?>
 
         <!-- ===================================================
              PARTE I: LLAMADO Y VOCACIÓN MISIONERA (Q1–Q6)

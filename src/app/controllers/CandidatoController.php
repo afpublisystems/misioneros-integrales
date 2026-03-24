@@ -6,6 +6,7 @@
 
 require_once APP_PATH . '/controllers/Controller.php';
 require_once APP_PATH . '/models/AspiranteModel.php';
+require_once APP_PATH . '/helpers/TestScorer.php';
 
 class CandidatoController extends Controller {
 
@@ -19,13 +20,69 @@ class CandidatoController extends Controller {
         $this->requireAuth('candidato');
 
         $aspirante = $this->aspirantes->porUsuario($_SESSION['usuario_id']) ?: null;
-        $progreso  = $this->calcularProgreso($aspirante);
+
+        // Cargar flujo_proceso real del aspirante
+        $flujo = [];
+        if ($aspirante) {
+            $db   = Database::getConnection();
+            $stmt = $db->prepare(
+                "SELECT etapa, estatus, fecha_inicio, fecha_cierre
+                 FROM flujo_proceso WHERE aspirante_id = ?"
+            );
+            $stmt->execute([$aspirante['id']]);
+            foreach ($stmt->fetchAll() as $row) {
+                $flujo[$row['etapa']] = $row;
+            }
+        }
+
+        $progreso   = $this->calcularProgreso($aspirante, $flujo);
+        $proximo    = $this->proximoPaso($aspirante, $flujo);
+        $requisitos = $this->validarRequisitos($aspirante);
 
         $this->render('candidato/dashboard', [
-            'titulo'    => 'Mi Postulación',
-            'aspirante' => $aspirante,
-            'progreso'  => $progreso,
+            'titulo'      => 'Mi Postulación',
+            'aspirante'   => $aspirante,
+            'progreso'    => $progreso,
+            'flujo'       => $flujo,
+            'proximo'     => $proximo,
+            'requisitos'  => $requisitos,
         ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // ENVIAR POSTULACIÓN
+    // ─────────────────────────────────────────────────────────────────
+    public function enviarPostulacion(): void {
+        $this->requireAuth('candidato');
+
+        $aspirante = $this->aspirantes->porUsuario($_SESSION['usuario_id']);
+        if (!$aspirante || $aspirante['estatus'] !== 'borrador') {
+            $this->redirigir('/candidato/dashboard');
+            return;
+        }
+
+        $req = $this->validarRequisitos($aspirante);
+        if (!$req['lista']) {
+            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Completa todos los requisitos antes de enviar tu postulación.'];
+            $this->redirigir('/candidato/dashboard');
+            return;
+        }
+
+        $this->aspirantes->actualizar($aspirante['id'], ['estatus' => 'enviada']);
+
+        // Registrar en flujo_proceso
+        $db = Database::getConnection();
+        $db->prepare("
+            INSERT INTO flujo_proceso (aspirante_id, etapa, estatus, fecha_inicio)
+            VALUES (?, 'solicitud_formal', 'aprobado', NOW())
+            ON DUPLICATE KEY UPDATE
+                estatus      = 'aprobado',
+                fecha_cierre = NOW(),
+                updated_at   = NOW()
+        ")->execute([$aspirante['id']]);
+
+        $_SESSION['flash'] = ['tipo' => 'exito', 'msg' => '¡Postulación enviada! El equipo coordinador revisará tu solicitud y se comunicará contigo.'];
+        $this->redirigir('/candidato/dashboard');
     }
 
     public function perfil(): void {
@@ -189,19 +246,28 @@ class CandidatoController extends Controller {
         $respuestas = $_POST['respuestas'] ?? [];
         $json       = json_encode($respuestas, JSON_UNESCAPED_UNICODE);
 
+        // Calcular puntaje orientacional si se está completando
+        $puntaje_total = null;
+        if ($completado) {
+            $perfil = TestScorer::calcular($respuestas);
+            $puntaje_total = $perfil['puntaje_total'];
+        }
+
         if ($existente) {
             $stmt2 = $db->prepare("
                 UPDATE test_vocacional
-                SET respuestas = ?, completado = ?, fecha_cierre = IF(? = 1, NOW(), fecha_cierre)
+                SET respuestas = ?, completado = ?,
+                    puntaje_total = COALESCE(?, puntaje_total),
+                    fecha_cierre = IF(? = 1, NOW(), fecha_cierre)
                 WHERE aspirante_id = ?
             ");
-            $stmt2->execute([$json, $completado, $completado, $aspirante['id']]);
+            $stmt2->execute([$json, $completado, $puntaje_total, $completado, $aspirante['id']]);
         } else {
             $stmt2 = $db->prepare("
-                INSERT INTO test_vocacional (aspirante_id, respuestas, completado, fecha_inicio, fecha_cierre)
-                VALUES (?, ?, ?, NOW(), IF(? = 1, NOW(), NULL))
+                INSERT INTO test_vocacional (aspirante_id, respuestas, completado, puntaje_total, fecha_inicio, fecha_cierre)
+                VALUES (?, ?, ?, ?, NOW(), IF(? = 1, NOW(), NULL))
             ");
-            $stmt2->execute([$aspirante['id'], $json, $completado, $completado]);
+            $stmt2->execute([$aspirante['id'], $json, $completado, $puntaje_total, $completado]);
         }
 
         // Guardar parte actual para volver al mismo lugar
@@ -238,40 +304,294 @@ class CandidatoController extends Controller {
         $this->redirigir('/candidato/test');
     }
 
-    // Calcular el progreso de las 5 etapas
-    private function calcularProgreso(?array $aspirante): array {
-        $etapas = [
-            ['clave' => 'solicitud_formal',      'nombre' => 'Solicitud Formal',       'icono' => 'fa-file-alt'],
-            ['clave' => 'evaluacion_documental',  'nombre' => 'Evaluación Documental',  'icono' => 'fa-folder-open'],
-            ['clave' => 'test_vocacional',         'nombre' => 'Test Vocacional',        'icono' => 'fa-clipboard-list'],
-            ['clave' => 'entrevista_personal',     'nombre' => 'Entrevista Personal',    'icono' => 'fa-comments'],
-            ['clave' => 'confirmacion_admision',   'nombre' => 'Confirmación',           'icono' => 'fa-check-circle'],
+    // Verifica si el candidato cumple los requisitos mínimos para enviar la postulación
+    private function validarRequisitos(?array $aspirante): array {
+        $checks = [];
+
+        if (!$aspirante) {
+            return ['lista' => false, 'checks' => [], 'faltantes' => 1];
+        }
+
+        // Campos obligatorios del perfil
+        $campos = [
+            'nombres'   => 'Nombre completo',
+            'apellidos' => 'Apellidos',
+            'cedula'    => 'Cédula de identidad',
+            'telefono'  => 'Teléfono',
+            'iglesia'   => 'Iglesia local',
+            'pastor'    => 'Nombre del pastor',
+        ];
+        foreach ($campos as $campo => $label) {
+            $ok = !empty(trim($aspirante[$campo] ?? ''));
+            $checks[] = ['label' => $label, 'ok' => $ok];
+        }
+
+        // Documentos obligatorios
+        $tipos_req = ['cedula', 'titulo_bachiller', 'carta_pastoral', 'foto_reciente'];
+        $labels_doc = [
+            'cedula'          => 'Cédula (documento)',
+            'titulo_bachiller'=> 'Título de Bachiller',
+            'carta_pastoral'  => 'Carta Pastoral',
+            'foto_reciente'   => 'Foto Reciente',
         ];
 
-        // Si no hay aspirante, todo pendiente
+        $db   = Database::getConnection();
+        $stmt = $db->prepare(
+            "SELECT tipo FROM documentos WHERE aspirante_id = ? AND tipo IN ('cedula','titulo_bachiller','carta_pastoral','foto_reciente')"
+        );
+        $stmt->execute([$aspirante['id']]);
+        $docs_subidos = array_column($stmt->fetchAll(), 'tipo');
+
+        foreach ($tipos_req as $tipo) {
+            $checks[] = [
+                'label' => $labels_doc[$tipo],
+                'ok'    => in_array($tipo, $docs_subidos),
+            ];
+        }
+
+        $faltantes = count(array_filter($checks, fn($c) => !$c['ok']));
+
+        return [
+            'lista'     => $faltantes === 0,
+            'checks'    => $checks,
+            'faltantes' => $faltantes,
+        ];
+    }
+
+    // Calcular el progreso de las 5 etapas usando flujo_proceso real
+    private function calcularProgreso(?array $aspirante, array $flujo = []): array {
+        $etapas = [
+            ['clave' => 'solicitud_formal',      'nombre' => 'Solicitud Formal',      'icono' => 'fa-file-alt'],
+            ['clave' => 'evaluacion_documental',  'nombre' => 'Ev. Documental',        'icono' => 'fa-folder-open'],
+            ['clave' => 'test_vocacional',         'nombre' => 'Test Vocacional',       'icono' => 'fa-clipboard-list'],
+            ['clave' => 'entrevista_personal',     'nombre' => 'Entrevista Personal',   'icono' => 'fa-comments'],
+            ['clave' => 'confirmacion_admision',   'nombre' => 'Confirmación',          'icono' => 'fa-check-circle'],
+        ];
+
         if (!$aspirante) {
             foreach ($etapas as &$e) $e['estatus'] = 'pendiente';
+            unset($e);
             return ['etapas' => $etapas, 'pct' => 0, 'etapa_actual' => 0];
         }
 
-        // Primer paso aprobado si el perfil está enviado
-        $etapas[0]['estatus'] = match($aspirante['estatus']) {
-            'enviada', 'en_revision', 'aprobada' => 'aprobado',
-            'borrador' => 'en_proceso',
-            default    => 'pendiente',
-        };
-
-        for ($i = 1; $i < count($etapas); $i++) {
-            $etapas[$i]['estatus'] = 'pendiente';
+        foreach ($etapas as &$e) {
+            if (isset($flujo[$e['clave']])) {
+                $e['estatus'] = $flujo[$e['clave']]['estatus'];
+            } elseif ($e['clave'] === 'solicitud_formal') {
+                // Inferir desde estatus del aspirante si no hay registro en flujo
+                $e['estatus'] = match($aspirante['estatus']) {
+                    'enviada', 'en_revision', 'aprobada' => 'aprobado',
+                    'borrador' => 'en_proceso',
+                    default    => 'pendiente',
+                };
+            } else {
+                $e['estatus'] = 'pendiente';
+            }
         }
+        unset($e);
 
         $aprobadas = count(array_filter($etapas, fn($e) => $e['estatus'] === 'aprobado'));
-        $pct = (int)(($aprobadas / count($etapas)) * 100);
+        $pct       = (int)(($aprobadas / count($etapas)) * 100);
 
         return [
             'etapas'       => $etapas,
             'pct'          => $pct,
             'etapa_actual' => $aprobadas,
         ];
+    }
+
+    // Determinar el próximo paso contextual del candidato
+    private function proximoPaso(?array $aspirante, array $flujo): array {
+        if (!$aspirante) {
+            return [
+                'icono'  => 'fa-user-edit',
+                'titulo' => 'Completa tu perfil',
+                'texto'  => 'Para iniciar tu postulación, llena tus datos personales, eclesiales y académicos.',
+                'accion' => ['url' => '/candidato/perfil', 'texto' => 'Ir a mi perfil'],
+                'tipo'   => 'accion',
+            ];
+        }
+
+        // Etapa rechazada → notificar
+        foreach ($flujo as $datos) {
+            if ($datos['estatus'] === 'rechazado') {
+                return [
+                    'icono'  => 'fa-times-circle',
+                    'titulo' => 'Postulación no aprobada en esta etapa',
+                    'texto'  => 'Tu postulación no pudo continuar. Si tienes preguntas, contáctanos.',
+                    'accion' => ['url' => '/contacto', 'texto' => 'Contactar al equipo'],
+                    'tipo'   => 'error',
+                ];
+            }
+        }
+
+        $s = fn(string $etapa) => $flujo[$etapa]['estatus'] ?? 'pendiente';
+
+        // Admitido
+        if ($s('confirmacion_admision') === 'aprobado') {
+            return [
+                'icono'  => 'fa-star',
+                'titulo' => '¡Fuiste admitido/a al programa!',
+                'texto'  => 'El equipo coordinador se pondrá en contacto para los detalles de inicio.',
+                'accion' => null,
+                'tipo'   => 'exito',
+            ];
+        }
+
+        // Confirmación en proceso
+        if ($s('confirmacion_admision') === 'en_proceso') {
+            return [
+                'icono'  => 'fa-hourglass-half',
+                'titulo' => 'Evaluación final en proceso',
+                'texto'  => 'El equipo está realizando la evaluación final de tu postulación. Te contactaremos pronto.',
+                'accion' => null,
+                'tipo'   => 'espera',
+            ];
+        }
+
+        // Entrevista activa
+        if (in_array($s('entrevista_personal'), ['en_proceso', 'aprobado'])) {
+            return [
+                'icono'  => 'fa-comments',
+                'titulo' => 'Entrevista personal coordinada',
+                'texto'  => 'El equipo evaluador se comunicará contigo para la fecha y modalidad de la entrevista.',
+                'accion' => null,
+                'tipo'   => 'espera',
+            ];
+        }
+
+        // Test enviado (en_proceso)
+        if ($s('test_vocacional') === 'en_proceso') {
+            return [
+                'icono'  => 'fa-clipboard-check',
+                'titulo' => 'Test vocacional recibido',
+                'texto'  => 'Tu test fue enviado. El equipo lo revisará y coordinará la siguiente etapa. Tiempo estimado: 5-10 días hábiles.',
+                'accion' => ['url' => '/candidato/resultado-test', 'texto' => 'Ver mi perfil vocacional'],
+                'tipo'   => 'espera',
+            ];
+        }
+
+        // Evaluación documental aprobada → hacer test
+        if ($s('evaluacion_documental') === 'aprobado') {
+            return [
+                'icono'  => 'fa-clipboard-list',
+                'titulo' => 'Realiza el test vocacional',
+                'texto'  => 'Tus documentos fueron aprobados. El siguiente paso es completar el test vocacional.',
+                'accion' => ['url' => '/candidato/test', 'texto' => 'Ir al test'],
+                'tipo'   => 'accion',
+            ];
+        }
+
+        // Documentos en revisión
+        if ($s('evaluacion_documental') === 'en_proceso') {
+            return [
+                'icono'  => 'fa-folder-open',
+                'titulo' => 'Documentos en revisión',
+                'texto'  => 'El equipo está revisando tus documentos. Tiempo estimado: 5-7 días hábiles.',
+                'accion' => ['url' => '/candidato/documentos', 'texto' => 'Ver mis documentos'],
+                'tipo'   => 'espera',
+            ];
+        }
+
+        // Solicitud aprobada → subir documentos
+        if ($s('solicitud_formal') === 'aprobado') {
+            return [
+                'icono'  => 'fa-folder-open',
+                'titulo' => 'Sube tus documentos requeridos',
+                'texto'  => 'Tu solicitud fue recibida. Ahora debes subir los documentos para continuar el proceso.',
+                'accion' => ['url' => '/candidato/documentos', 'texto' => 'Subir documentos'],
+                'tipo'   => 'accion',
+            ];
+        }
+
+        // Perfil en borrador
+        if ($aspirante['estatus'] === 'borrador') {
+            return [
+                'icono'  => 'fa-user-edit',
+                'titulo' => 'Completa y envía tu postulación',
+                'texto'  => 'Llena todos tus datos y envía tu postulación para iniciar el proceso de selección.',
+                'accion' => ['url' => '/candidato/perfil', 'texto' => 'Completar perfil'],
+                'tipo'   => 'accion',
+            ];
+        }
+
+        // Enviada, en espera general
+        return [
+            'icono'  => 'fa-hourglass-half',
+            'titulo' => 'Postulación enviada',
+            'texto'  => 'Tu solicitud está siendo revisada por el equipo coordinador. Te contactaremos pronto.',
+            'accion' => null,
+            'tipo'   => 'espera',
+        ];
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // CAMBIAR CONTRASEÑA (desde perfil del candidato)
+    // ─────────────────────────────────────────────────────────────────
+    public function cambiarPassword(): void {
+        $this->requireAuth('candidato');
+
+        $id       = (int) $_SESSION['usuario_id'];
+        $actual   = $_POST['password_actual']   ?? '';
+        $nueva    = $_POST['password_nueva']    ?? '';
+        $confirma = $_POST['password_confirma'] ?? '';
+        $errores  = [];
+
+        $db   = Database::getConnection();
+        $stmt = $db->prepare("SELECT password FROM usuarios WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        $hash = $stmt->fetchColumn();
+
+        if (!password_verify($actual, $hash))
+            $errores[] = 'La contraseña actual no es correcta.';
+        if (strlen($nueva) < 8)
+            $errores[] = 'La nueva contraseña debe tener al menos 8 caracteres.';
+        if ($nueva !== $confirma)
+            $errores[] = 'La confirmación no coincide.';
+
+        if ($errores) {
+            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => implode(' ', $errores)];
+        } else {
+            require_once APP_PATH . '/models/UsuarioModel.php';
+            (new UsuarioModel())->cambiarPassword($id, $nueva);
+            $_SESSION['flash'] = ['tipo' => 'exito', 'msg' => 'Contraseña actualizada correctamente.'];
+        }
+
+        $this->redirigir('/candidato/perfil?tab=seguridad');
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // RESULTADO DEL TEST VOCACIONAL (orientacional, no definitorio)
+    // ─────────────────────────────────────────────────────────────────
+    public function resultadoTest(): void {
+        $this->requireAuth('candidato');
+
+        $aspirante = $this->aspirantes->porUsuario($_SESSION['usuario_id']);
+        if (!$aspirante) {
+            $this->redirigir('/candidato/dashboard');
+            return;
+        }
+
+        $db   = Database::getConnection();
+        $stmt = $db->prepare("SELECT * FROM test_vocacional WHERE aspirante_id = ? AND completado = 1");
+        $stmt->execute([$aspirante['id']]);
+        $test = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$test) {
+            $_SESSION['flash'] = ['tipo' => 'info', 'msg' => 'Debes completar y enviar el test para ver tu perfil vocacional.'];
+            $this->redirigir('/candidato/test');
+            return;
+        }
+
+        $respuestas = json_decode($test['respuestas'], true) ?? [];
+        $perfil     = TestScorer::calcular($respuestas);
+
+        $this->render('candidato/resultado_test', [
+            'titulo'     => 'Mi Perfil Vocacional',
+            'aspirante'  => $aspirante,
+            'test'       => $test,
+            'respuestas' => $respuestas,
+            'perfil'     => $perfil,
+        ]);
     }
 }

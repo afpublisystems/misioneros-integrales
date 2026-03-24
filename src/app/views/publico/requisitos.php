@@ -34,9 +34,9 @@
                 <span class="seccion-label">¿Quién puede postularse?</span>
                 <h2>Buscamos <span class="highlight-dorado">hombres y mujeres</span> con llamado misionero</h2>
                 <p>
-                    El Programa Misioneros Integrales está abierto a creyentes comprometidos con la Gran Comisión,
-                    que deseen formarse integralmente para impactar comunidades en Venezuela y América Latina.
-                    Antes de postularte, asegúrate de cumplir con los siguientes requisitos.
+                    El programa está abierto a creyentes con llamado misionero
+                    que quieran formarse para servir en Venezuela.
+                    Antes de postularte, revisa que cumples con estos requisitos.
                 </p>
             </div>
         </div>
@@ -50,8 +50,8 @@
     <div class="container">
         <div class="seccion__encabezado">
             <span class="seccion-label">Requisitos</span>
-            <h2 class="seccion__titulo">Condiciones de Postulación</h2>
-            <p class="seccion__subtitulo">Todos los requisitos son obligatorios para completar tu postulación</p>
+            <h2 class="seccion__titulo">Requisitos de Postulación</h2>
+            <p class="seccion__subtitulo">Debes cumplir todos para que tu postulación sea considerada</p>
         </div>
 
         <div class="req-grid">
@@ -113,55 +113,46 @@
             <p class="seccion__subtitulo">El proceso consta de 5 etapas. Te notificaremos por cada una.</p>
         </div>
 
-        <div class="proceso-timeline">
+        <div class="proceso-grid">
 
-            <div class="proceso-paso">
-                <div class="proceso-paso__linea"></div>
-                <div class="proceso-paso__burbuja">1</div>
-                <div class="proceso-paso__contenido">
-                    <div class="proceso-paso__icono"><i class="fas fa-file-alt"></i></div>
-                    <h4>Solicitud Formal</h4>
-                    <p>Completa el formulario en línea con tus datos personales, eclesiales y académicos.</p>
-                </div>
+            <div class="proceso-card">
+                <div class="proceso-card__conector proceso-card__conector--right"></div>
+                <div class="proceso-card__num">1</div>
+                <div class="proceso-card__icono"><i class="fas fa-file-alt"></i></div>
+                <h4>Solicitud Formal</h4>
+                <p>Completa el formulario en línea con tus datos personales, eclesiales y académicos.</p>
             </div>
 
-            <div class="proceso-paso">
-                <div class="proceso-paso__linea"></div>
-                <div class="proceso-paso__burbuja">2</div>
-                <div class="proceso-paso__contenido">
-                    <div class="proceso-paso__icono"><i class="fas fa-folder-open"></i></div>
-                    <h4>Evaluación Documental</h4>
-                    <p>El equipo coordinador del programa revisa tus documentos: carta pastoral, cédula, título y carta de motivación.</p>
-                </div>
+            <div class="proceso-card">
+                <div class="proceso-card__conector proceso-card__conector--both"></div>
+                <div class="proceso-card__num">2</div>
+                <div class="proceso-card__icono"><i class="fas fa-folder-open"></i></div>
+                <h4>Evaluación Documental</h4>
+                <p>El equipo revisa tu carta pastoral, cédula, título y demás documentos requeridos.</p>
             </div>
 
-            <div class="proceso-paso">
-                <div class="proceso-paso__linea"></div>
-                <div class="proceso-paso__burbuja">3</div>
-                <div class="proceso-paso__contenido">
-                    <div class="proceso-paso__icono"><i class="fas fa-clipboard-list"></i></div>
-                    <h4>Test Vocacional</h4>
-                    <p>Cuestionario en línea de 60 preguntas para evaluar tu perfil misionero, liderazgo y disposición.</p>
-                </div>
+            <div class="proceso-card">
+                <div class="proceso-card__conector proceso-card__conector--both"></div>
+                <div class="proceso-card__num">3</div>
+                <div class="proceso-card__icono"><i class="fas fa-clipboard-list"></i></div>
+                <h4>Test Vocacional</h4>
+                <p>Cuestionario en línea para evaluar tu perfil misionero, liderazgo y disposición de servicio.</p>
             </div>
 
-            <div class="proceso-paso">
-                <div class="proceso-paso__linea"></div>
-                <div class="proceso-paso__burbuja">4</div>
-                <div class="proceso-paso__contenido">
-                    <div class="proceso-paso__icono"><i class="fas fa-user-tie"></i></div>
-                    <h4>Entrevista Personal</h4>
-                    <p>Entrevista con los coordinadores del programa (presencial o por videollamada) para conocerte mejor.</p>
-                </div>
+            <div class="proceso-card">
+                <div class="proceso-card__conector proceso-card__conector--both"></div>
+                <div class="proceso-card__num">4</div>
+                <div class="proceso-card__icono"><i class="fas fa-comments"></i></div>
+                <h4>Entrevista Personal</h4>
+                <p>Conversación con los coordinadores del programa, presencial o por videollamada.</p>
             </div>
 
-            <div class="proceso-paso proceso-paso--ultimo">
-                <div class="proceso-paso__burbuja">5</div>
-                <div class="proceso-paso__contenido">
-                    <div class="proceso-paso__icono"><i class="fas fa-check-double"></i></div>
-                    <h4>Confirmación de Admisión</h4>
-                    <p>Recibirás una notificación oficial de admisión o lista de espera. ¡Bienvenido al programa!</p>
-                </div>
+            <div class="proceso-card proceso-card--final">
+                <div class="proceso-card__conector proceso-card__conector--left"></div>
+                <div class="proceso-card__num proceso-card__num--final">5</div>
+                <div class="proceso-card__icono"><i class="fas fa-check-double"></i></div>
+                <h4>Confirmación</h4>
+                <p>Recibirás notificación oficial de admisión. ¡Bienvenido/a al programa!</p>
             </div>
 
         </div>
@@ -247,6 +238,123 @@
         </div>
     </div>
 </section>
+
+<!-- ═══════════════════════════════════════════════
+     ¿CÓMO ES EL PROCESO?
+═══════════════════════════════════════════════ -->
+<section class="seccion seccion--crema">
+    <div class="container">
+        <div style="text-align:center; margin-bottom:2.5rem;">
+            <span class="seccion-label"><i class="fas fa-route"></i> Paso a paso</span>
+            <h2 class="seccion__titulo">¿Cómo es el proceso de selección?</h2>
+            <p class="seccion__subtitulo">5 etapas claras y transparentes — del registro a la confirmación</p>
+        </div>
+        <div class="proceso-pasos">
+
+            <div class="proceso-paso">
+                <div class="proceso-paso__num">1</div>
+                <div class="proceso-paso__icono"><i class="fas fa-user-plus"></i></div>
+                <h3>Crea tu cuenta</h3>
+                <p>Regístrate en la plataforma con tu correo electrónico y una contraseña. Es rápido y gratuito.</p>
+                <span class="proceso-paso__tiempo"><i class="fas fa-clock"></i> 5 minutos</span>
+            </div>
+
+            <div class="proceso-paso__sep"><i class="fas fa-chevron-right"></i></div>
+
+            <div class="proceso-paso">
+                <div class="proceso-paso__num">2</div>
+                <div class="proceso-paso__icono"><i class="fas fa-file-alt"></i></div>
+                <h3>Completa tu perfil</h3>
+                <p>Llena tus datos personales, eclesiales y académicos. Sube los documentos requeridos.</p>
+                <span class="proceso-paso__tiempo"><i class="fas fa-clock"></i> 15-20 minutos</span>
+            </div>
+
+            <div class="proceso-paso__sep"><i class="fas fa-chevron-right"></i></div>
+
+            <div class="proceso-paso">
+                <div class="proceso-paso__num">3</div>
+                <div class="proceso-paso__icono"><i class="fas fa-clipboard-list"></i></div>
+                <h3>Test vocacional</h3>
+                <p>Responde el test de orientación vocacional en línea. Puedes guardarlo y continuarlo después.</p>
+                <span class="proceso-paso__tiempo"><i class="fas fa-clock"></i> 20-30 minutos</span>
+            </div>
+
+            <div class="proceso-paso__sep"><i class="fas fa-chevron-right"></i></div>
+
+            <div class="proceso-paso">
+                <div class="proceso-paso__num">4</div>
+                <div class="proceso-paso__icono"><i class="fas fa-comments"></i></div>
+                <h3>Entrevista personal</h3>
+                <p>El equipo coordinador te contactará para coordinar una entrevista (presencial o virtual).</p>
+                <span class="proceso-paso__tiempo"><i class="fas fa-clock"></i> 1 semana</span>
+            </div>
+
+            <div class="proceso-paso__sep"><i class="fas fa-chevron-right"></i></div>
+
+            <div class="proceso-paso">
+                <div class="proceso-paso__num">5</div>
+                <div class="proceso-paso__icono"><i class="fas fa-check-circle"></i></div>
+                <h3>Confirmación</h3>
+                <p>Recibirás una notificación con la decisión final. Los admitidos recibirán instrucciones de inicio.</p>
+                <span class="proceso-paso__tiempo"><i class="fas fa-clock"></i> Julio 2026</span>
+            </div>
+
+        </div>
+
+        <div style="text-align:center; margin-top:2rem; padding:1.25rem; background:var(--blanco); border-radius:var(--radio-lg); border:1px solid #e5e7eb;">
+            <i class="fas fa-calendar-alt" style="color:var(--dorado); margin-right:0.5rem;"></i>
+            <strong>Fecha límite de postulación:</strong>
+            <span style="color:var(--verde); font-weight:700; margin-left:0.4rem;">30 de junio de 2026</span>
+            &nbsp;·&nbsp;
+            <a href="/registro" style="color:var(--naranja); font-weight:700;">Postularme ahora →</a>
+        </div>
+    </div>
+</section>
+
+<style>
+.proceso-pasos {
+    display: flex; align-items: flex-start; gap: 0;
+    flex-wrap: wrap; justify-content: center;
+}
+.proceso-paso {
+    background: var(--blanco); border-radius: var(--radio-lg);
+    padding: 1.75rem 1.25rem; text-align: center;
+    flex: 1; min-width: 150px; max-width: 200px;
+    box-shadow: var(--sombra); position: relative;
+}
+.proceso-paso__num {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--verde); color: white;
+    font-size: 0.8rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+}
+.proceso-paso__icono {
+    font-size: 2rem; color: var(--verde-light); margin: 0.75rem 0 0.75rem;
+}
+.proceso-paso h3 {
+    font-size: 0.88rem; font-weight: 800; color: var(--verde-dark);
+    margin-bottom: 0.5rem;
+}
+.proceso-paso p {
+    font-size: 0.78rem; color: var(--gris); line-height: 1.5; margin-bottom: 0.75rem;
+}
+.proceso-paso__tiempo {
+    font-size: 0.72rem; color: var(--dorado-dark); font-weight: 700;
+    background: #fef9ec; padding: 0.2rem 0.6rem; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 0.3rem;
+}
+.proceso-paso__sep {
+    display: flex; align-items: center; color: #d1d5db;
+    font-size: 1.2rem; padding: 0 0.25rem; margin-top: 3.5rem;
+    flex-shrink: 0;
+}
+@media (max-width: 768px) {
+    .proceso-pasos { flex-direction: column; align-items: center; }
+    .proceso-paso { max-width: 100%; width: 100%; }
+    .proceso-paso__sep { transform: rotate(90deg); margin: 0.25rem 0; }
+}
+</style>
 
 <!-- ═══════════════════════════════════════════════
      CTA FINAL
@@ -338,35 +446,62 @@
 .req-card h3 { font-size: 1rem; font-weight: 700; color: var(--verde-dark); margin-bottom: 0.5rem; }
 .req-card p { font-size: 0.88rem; color: #6b7280; line-height: 1.6; }
 
-/* ── Timeline proceso ─────────────────────────────────── */
-.proceso-timeline {
-    max-width: 680px; margin: 2.5rem auto 0;
-    display: flex; flex-direction: column; gap: 0;
+/* ── Grid proceso ──────────────────────────────────────── */
+.proceso-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-top: 2.5rem;
+    position: relative;
 }
-.proceso-paso {
-    display: flex; gap: 1.5rem; align-items: flex-start;
-    padding-bottom: 2rem; position: relative;
+.proceso-card {
+    background: white;
+    border-radius: var(--radio-lg);
+    padding: 1.5rem 1.25rem 1.25rem;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    border-top: 3px solid var(--verde);
+    position: relative;
 }
-.proceso-paso__linea {
-    position: absolute; left: 1.1rem; top: 2.5rem;
-    width: 2px; height: calc(100% - 0.5rem);
-    background: linear-gradient(to bottom, var(--verde), var(--verde-light));
+.proceso-card--final { border-top-color: var(--dorado); }
+
+/* Línea horizontal conectora entre cards */
+.proceso-card__conector {
+    position: absolute;
+    top: -3px; height: 3px;
+    background: #d1fae5;
 }
-.proceso-paso--ultimo { padding-bottom: 0; }
-.proceso-paso__burbuja {
-    width: 2.25rem; height: 2.25rem; background: var(--verde); color: white;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 0.9rem; flex-shrink: 0; z-index: 1;
-    box-shadow: 0 0 0 4px var(--verde-light);
+.proceso-card__conector--right { left: 50%; right: -1rem; }
+.proceso-card__conector--left  { left: -1rem; right: 50%; }
+.proceso-card__conector--both  { left: -1rem; right: -1rem; }
+
+.proceso-card__num {
+    width: 2.25rem; height: 2.25rem;
+    background: var(--verde); color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 0.9rem;
+    margin: 0 auto 1rem;
+    box-shadow: 0 0 0 4px #d1fae5;
+    position: relative; z-index: 1;
 }
-.proceso-paso__contenido {
-    background: white; border-radius: 0.75rem; padding: 1.25rem 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06); flex: 1;
-    border-left: 3px solid var(--verde);
+.proceso-card__num--final { background: var(--dorado); color: var(--verde-dark); box-shadow: 0 0 0 4px #fef9ec; }
+
+.proceso-card__icono { font-size: 1.75rem; color: var(--verde-light); margin-bottom: 0.6rem; }
+.proceso-card--final .proceso-card__icono { color: var(--dorado); }
+.proceso-card h4 { font-size: 0.9rem; font-weight: 800; color: var(--verde-dark); margin-bottom: 0.5rem; }
+.proceso-card p  { font-size: 0.8rem; color: #6b7280; line-height: 1.55; margin: 0; }
+
+@media (max-width: 1024px) {
+    .proceso-grid { grid-template-columns: repeat(3, 1fr); }
+    .proceso-card:nth-child(3) .proceso-card__conector--right,
+    .proceso-card:nth-child(5) .proceso-card__conector--left { display: none; }
 }
-.proceso-paso__icono { color: var(--verde); font-size: 1.1rem; margin-bottom: 0.4rem; }
-.proceso-paso__contenido h4 { font-size: 1rem; font-weight: 700; color: var(--verde-dark); margin-bottom: 0.35rem; }
-.proceso-paso__contenido p { font-size: 0.85rem; color: #6b7280; line-height: 1.6; }
+@media (max-width: 640px) {
+    .proceso-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .proceso-card__conector { display: none; }
+    .proceso-card:last-child { grid-column: span 2; max-width: 280px; margin: 0 auto; width: 100%; }
+}
 
 /* ── Documentos requeridos ────────────────────────────── */
 .docs-requeridos {

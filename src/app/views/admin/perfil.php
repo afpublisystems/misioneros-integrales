@@ -37,6 +37,7 @@
                     <?php endif; ?>
 
                     <form method="POST" action="/admin/perfil">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="accion" value="datos">
 
                         <div class="form-fila">
@@ -91,6 +92,7 @@
                     <?php endif; ?>
 
                     <form method="POST" action="/admin/perfil">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="accion" value="password">
 
                         <div class="form-grupo">

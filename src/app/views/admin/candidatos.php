@@ -17,6 +17,10 @@
                 <h1>Candidatos</h1>
                 <p>Gestión y evaluación de postulaciones</p>
             </div>
+            <a href="/admin/candidatos?exportar=1<?= $filtro_estatus ? '&estatus='.urlencode($filtro_estatus) : '' ?>"
+               class="btn btn--outline btn--sm" title="Descargar lista como CSV">
+                <i class="fas fa-file-csv"></i> Exportar CSV
+            </a>
         </div>
 
         <!-- Filtros rápidos por estatus ─────────────────────── -->
@@ -157,6 +161,7 @@
             </button>
         </div>
         <form method="POST" action="/admin/candidatos">
+            <?= csrf_field() ?>
             <input type="hidden" name="id" id="modal-id">
             <div class="modal__body">
                 <p class="modal__subtitulo" id="modal-nombre"></p>

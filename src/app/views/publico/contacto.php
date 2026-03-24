@@ -14,7 +14,7 @@
     <div class="con-hero__content">
         <span class="con-hero__etiqueta">CNBV · DIME · Venezuela</span>
         <h1 class="con-hero__titulo">Contáctanos</h1>
-        <p class="con-hero__sub">¿Tienes preguntas sobre el programa? Estamos para ayudarte.</p>
+        <p class="con-hero__sub">Escríbenos si tienes preguntas sobre el programa o el proceso de postulación.</p>
     </div>
 </section>
 
@@ -117,7 +117,7 @@
                     <div class="con-whatsapp-card__icono"><i class="fab fa-whatsapp"></i></div>
                     <div>
                         <strong>¿Prefieres WhatsApp?</strong>
-                        <p>Contáctanos directamente con los coordinadores del programa</p>
+                        <p>Escríbeles directamente a los coordinadores del programa</p>
                     </div>
                     <div class="con-whatsapp-card__btns">
                         <a href="https://wa.me/584245886540?text=Hola,%20tengo%20una%20consulta%20sobre%20el%20programa%20Misioneros%20Integrales"
@@ -158,12 +158,13 @@
                 <div class="con-exito">
                     <div class="con-exito__icono"><i class="fas fa-check-circle"></i></div>
                     <h3>¡Mensaje enviado!</h3>
-                    <p>Gracias por contactarnos. Te responderemos a la brevedad.</p>
+                    <p>Tu mensaje fue enviado. Te responderemos en menos de 48 horas.</p>
                     <a href="/contacto" class="btn btn--verde">Enviar otro mensaje</a>
                 </div>
                 <?php else: ?>
 
                 <form class="con-form" method="POST" action="/contacto" novalidate>
+                    <?= csrf_field() ?>
 
                     <h2 class="con-form__titulo">
                         <i class="fas fa-paper-plane"></i> Envíanos un mensaje

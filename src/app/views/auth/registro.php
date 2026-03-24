@@ -75,6 +75,7 @@
             <?php endif; ?>
 
             <form method="POST" action="/registro" class="auth-form" novalidate>
+                <?= csrf_field() ?>
 
                 <div class="form-row">
                     <div class="form-grupo">

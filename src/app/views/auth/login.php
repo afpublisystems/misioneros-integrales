@@ -40,6 +40,7 @@
             <?php endif; ?>
 
             <form method="POST" action="/login" class="auth-form" novalidate>
+                <?= csrf_field() ?>
 
                 <div class="form-grupo">
                     <label for="email">

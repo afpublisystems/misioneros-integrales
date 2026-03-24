@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT.md
 # Proyecto: Misioneros Integrales — Sistema Web CNBV/DIME
-# Última actualización: 11/03/2026 (v2)
+# Última actualización: 20/03/2026 (v3)
 # Roles: Gemini = Arquitecto | Claude = Ejecutor (código PHP/MVC/CSS)
 
 ---
@@ -153,6 +153,7 @@ C:\xampp\htdocs\misioneros-integrales\
 | `documentos` | Archivos subidos | ✅ |
 | `test_vocacional` | Respuestas encuesta 60 preguntas (JSON) | ✅ |
 | `multimedia` | Galería por sede | ✅ tabla creada, vista admin pendiente |
+| `mensajes_contacto` | Mensajes del formulario público de contacto | ✅ Migración 003 aplicada |
 | `impacto_estadisticas` | Contadores públicos editables | ✅ Con datos |
 
 ### Schema flujo_proceso (importante)
@@ -240,10 +241,14 @@ POST:
   /candidato/perfil       → CandidatoController::guardarPerfil
   /candidato/documentos   → CandidatoController::subirDocumento
   /candidato/test         → CandidatoController::guardarTest (+ auto-upsert flujo)
+  /candidato/postular     → CandidatoController::enviarPostulacion  ✅ NUEVO
   /admin/candidatos       → AdminController::actualizarEstatus
     accion=flujo          → AdminController::actualizarFlujo() (delegado internamente)
+    accion=verificar_doc  → AdminController::verificarDocumento()  ✅ NUEVO
+    ?exportar=1           → AdminController::exportarCSV()  ✅ NUEVO (GET)
   /admin/estadisticas     → AdminController::actualizarEstadisticas
   /admin/perfil           → AdminController::actualizarPerfil
+  /contacto               → PublicoController::enviarContacto  ✅ NUEVO
   /colaborar              → PublicoController::registrarColaborador
 ```
 
@@ -307,6 +312,7 @@ POST:
 - Tabla con: avatar, nombre, email, cédula, iglesia, estado, edad, movilidad, estatus, fecha
 - Modal para cambio rápido de estatus + nota del evaluador
 - Badges de colores por estatus
+- Botón "Exportar CSV" — descarga candidatos filtrados por estatus activo (17 columnas, BOM UTF-8, separador `;` para Excel en español)
 
 ### Ver Candidato (`/admin/candidatos?ver=ID`)
 - Columna izquierda: datos personales, contacto, eclesiales, académico/movilidad
@@ -316,7 +322,8 @@ POST:
     - INSERT ... ON DUPLICATE KEY UPDATE (upsert)
     - Fecha inicio automática al salir de pendiente; fecha cierre al aprobar/rechazar
   - **Test Vocacional** — badge de estado + fechas + botón "Ver respuestas"
-  - **Documentos** — lista con tamaño, tipo, fecha, verificado
+  - **Documentos** — lista con tamaño, tipo, fecha, verificado + botón "Verificar/Verificado" por documento
+    - POST `accion=verificar_doc` + `doc_id` → toggle campo `verificado` en tabla `documentos`
   - **Meta** — email cuenta, último acceso, fechas registro/actualización, nota evaluador
 - Modal cambio estatus general del aspirante (tabla `aspirantes.estatus`)
 
@@ -349,6 +356,14 @@ POST:
 ### Dashboard (`/candidato/dashboard`)
 - Progress bar con 5 etapas del proceso de selección
 - Estado actual del aspirante por etapa (desde `flujo_proceso` en `calcularProgreso()`)
+- Aviso de plazo ("Plazo: 30 jun. 2026") en el header
+- Card "Próximo paso contextual" — 10 estados posibles según flujo + estatus del aspirante
+- Card "Checklist de postulación" — visible solo si estatus=`borrador`; lista 6 campos perfil + 4 docs requeridos
+- Botón "Enviar postulación" → POST `/candidato/postular` (solo si todos los requisitos se cumplen)
+- `CandidatoController::enviarPostulacion()` — valida requisitos, cambia estatus a `enviada`, registra etapa 1 en `flujo_proceso`
+- `CandidatoController::validarRequisitos()` — verifica 6 campos perfil + 4 docs (cedula, titulo_bachiller, carta_pastoral, foto_reciente)
+- `CandidatoController::proximoPaso()` — 10 estados contextuales, devuelve [texto, clase CSS]
+- `calcularProgreso()` — actualizado para usar datos reales de `flujo_proceso` (antes devolvía todo `pendiente`)
 
 ### Perfil (`/candidato/perfil`)
 - 4 tabs: Datos Personales, Eclesiales, Académico, Movilidad
@@ -402,22 +417,23 @@ POST:
 | FASE 2 | Autenticación (login, registro, sesiones, roles) | ✅ Completa |
 | FASE 3 | Módulo Candidato (dashboard, perfil 4 tabs, documentos drag&drop) | ✅ Completa |
 | FASE 4 | Panel Admin (dashboard KPIs, gestión candidatos, mi perfil, estadísticas) | ✅ Completa |
-| FASE 5 | Páginas públicas (El Programa, Requisitos, Galería, Impacto, Contacto) | ⏳ Pendiente |
+| FASE 5 | Páginas públicas (El Programa, Requisitos, Galería, Impacto, Contacto) | ✅ Completa |
 | FASE 6 | Test Vocacional (60 preguntas / 10 partes + vista admin completa) | ✅ Completa |
 | FASE 7 | Gestión de flujo del proceso (admin edita etapas) + auto-upsert al enviar test | ✅ Completa |
 | FASE 8 | Vista estadísticas admin (editar contadores públicos) | ✅ Completa |
 | FASE 9 | Galería admin (fotos/videos por sede, drag&drop, thumbnail YouTube auto) | ✅ Completa |
 | FASE 10 | Sección pública "Colaboradores" (home + tabla BD + controller) | ✅ Completa |
 | FASE 11 | Refactoring y seguridad (flash helper, safeRedirect, MIME check, índices BD) | ✅ Completa |
+| FASE 12 | Humanización de textos (todas las páginas públicas + dashboard candidato) | ✅ Completa |
+| FASE 13 | Flujo postulación candidato (checklist + enviar + validar requisitos + flujo_proceso) | ✅ Completa |
+| FASE 14 | Mejoras UX admin (verificar docs, exportar CSV, etapas selección horizontal, countdown home, WhatsApp flotante) | ✅ Completa |
 
 ---
 
 ## PENDIENTES INMEDIATOS
 
-1. **Cambiar contraseña** del usuario admin id=1 (actualmente `password`) — email: jfer22@gmail.com
-2. **Fase 5** — Páginas públicas completas (programa, requisitos, galería pública, impacto, contacto)
-3. **Borrar** `src/diagnostico.php` si aún existe
-4. **Vista admin colaboradores** — panel en `/admin` para ver/aprobar registros de colaboradores
+1. **Cambiar contraseña** del usuario admin id=1 (actualmente `password`) — email: jfer22@gmail.com — usar `src/encrypt.php`
+2. **Eliminar** `src/encrypt.php` antes de subir a producción (riesgo de seguridad) — `src/test_db.php` ya eliminado
 
 ---
 
@@ -437,6 +453,7 @@ POST:
 12. Usar `$this->safeRedirect($url, $fallback)` para todo redirect con input del usuario
 13. Validar MIME real con `finfo_file()` en uploads — extensión sola NO es suficiente
 14. Nombres de archivo únicos: `bin2hex(random_bytes(8))` — NO usar `time() + random_int`
+15. Textos y copys: aplicar principios del humanizador (`~/.claude/skills/humanizer/SKILL.md`) — sin rule-of-three, sin adjetivos inflados, sin em dash excesivo, lenguaje directo y concreto
 
 ---
 
@@ -461,7 +478,7 @@ POST:
 - **Formulario POST** → `/colaborar` → `PublicoController::registrarColaborador()`
 - **Tabla BD:** `colaboradores` (nombre, organizacion, email, tipo ENUM, mensaje, aprobado, created_at)
 - **Flash session key:** `$_SESSION['flash_colabora']` (separada del flash global del admin)
-- **TODO pendiente:** Vista admin `/admin/colaboradores` para ver y aprobar registros
+- **Vista admin `/admin/colaboradores`:** implementada — tabla filtrable + KPIs + aprobar/eliminar + modal
 
 ## GALERÍA ADMIN — Notas técnicas
 
@@ -515,9 +532,23 @@ POST:
 ## HOME v5 — SECCIONES
 
 1. **Hero** — PNG transparente sobre overlay verde con imagen Unsplash, logos CNBV/DIME blancos
-2. **Impacto Esperado** — 4 cards doradas (200+ misioneros, 200+ iglesias, 70+ microempresas, 21+ estados)
-3. **Ejes Formativos** — 3 cards (Teológica, Habilidades, Prácticas)
-4. **Estructura del Programa** — Semana típica + Timeline 8 meses con scroll horizontal
-5. **Perfil + Inversión** — Requisitos + Beca 50% card verde
-6. **CTA Final** — "Ve y haz discípulos..." Mateo 28:19
-7. **Carrusel Aliados** — Scroll infinito CSS, pausa en hover, fade en bordes, 10 organizaciones
+2. **Countdown band** — Cuenta regresiva JS a `2026-06-30T23:59:59` (días/horas/min/seg), se oculta al llegar a cero
+3. **Impacto Esperado** — 4 cards doradas (200+ misioneros, 200+ iglesias, 70+ microempresas, 21+ estados)
+4. **Ejes Formativos** — 3 cards (Teológica, Habilidades, Prácticas)
+5. **Estructura del Programa** — Semana típica + Timeline 8 meses con scroll horizontal
+6. **Perfil + Inversión** — Requisitos + Beca 50% card verde
+7. **CTA Final** — "Ve y haz discípulos..." Mateo 28:19
+8. **Carrusel Aliados** — Scroll infinito CSS, pausa en hover, fade en bordes, 10 organizaciones
+
+## FOOTER — Características
+
+- 4 columnas: Brand (logo + lema), Programa (links), Contacto (directivos + logos CNBV/DIME), CTA postulación
+- Link discreto "Acceso Administradores" → `/login` (opacidad baja, visible en hover)
+- **Botón flotante WhatsApp** (`position:fixed; bottom:1.5rem; right:1.5rem`) → `wa.me/584245886540` con mensaje pre-llenado
+
+## REQUISITOS — Etapas de Selección
+
+- Reemplazó la línea vertical (max-width 680px) con un **grid horizontal de 5 columnas**
+- `.proceso-grid` > `.proceso-card` con `__conector` entre tarjetas, `__num`, `__icono`
+- Responsive: 5 cols desktop → 3 cols tablet → 2 cols mobile
+- Nueva sección "¿Cómo es el proceso?" antes del CTA final (pasos con estimados de tiempo)

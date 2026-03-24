@@ -55,6 +55,7 @@
         <!-- Formulario de edición ──────────────────────── -->
         <?php if ($_SESSION['usuario_rol'] === 'admin'): ?>
         <form method="POST" action="/admin/estadisticas">
+            <?= csrf_field() ?>
 
             <div class="admin-panel">
                 <div class="admin-panel__header">

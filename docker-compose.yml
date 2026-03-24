@@ -9,6 +9,11 @@ services:
       - db
     networks:
       - misioneros_net
+    environment:
+      DB_HOST: db
+      DB_NAME: misioneros_integrales_db
+      DB_USER: root
+      DB_PASS: secret_password
 
   db:
     image: mysql:8.0

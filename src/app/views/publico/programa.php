@@ -30,13 +30,13 @@
         <div class="prog-que-es__grid">
             <div class="prog-que-es__texto">
                 <span class="seccion-label">¿Qué es?</span>
-                <h2>Una formación que va <span class="highlight-dorado">más allá del aula</span></h2>
+                <h2>Un programa que no cabe en un <span class="highlight-dorado">salón de clases</span></h2>
                 <p>
                     Misioneros Integrales es un programa de formación intensiva e itinerante organizado por la
                     <strong>Convención Nacional Bautista de Venezuela (CNBV)</strong> a través de la
-                    <strong>Dirección de Misiones y Evangelización (DIME)</strong>, con el propósito de
-                    formar líderes misioneros con sólida preparación teológica, habilidades autosustentables
-                    y experiencia práctica, para impactar comunidades en Venezuela y América Latina.
+                    <strong>Dirección de Misiones y Evangelización (DIME)</strong>. Su propósito es
+                    formar misioneros con preparación teológica, un oficio que les permita sostenerse
+                    e iglesias donde servir cada fin de semana.
                 </p>
                 <p>
                     El programa se desarrolla en <strong>3 ciclos de 8 meses cada uno</strong>: el
@@ -84,9 +84,8 @@
     <div class="container">
         <div class="seccion-header centrado">
             <span class="seccion-label">Formación integral</span>
-            <h2>Tres Ejes que <span class="highlight-dorado">Transforman</span></h2>
-            <p class="seccion-subtitulo">El programa articula tres dimensiones complementarias que forman
-            al misionero de manera completa — espiritual, intelectual y práctica.</p>
+            <h2>Así se forma un <span class="highlight-dorado">misionero integral</span></h2>
+            <p class="seccion-subtitulo">Tres áreas trabajan juntas para que la formación no quede solo en el aula: fe, oficio y práctica de campo.</p>
         </div>
         <div class="ejes-grid">
             <div class="eje-card eje-card--teologica">
@@ -94,8 +93,7 @@
                     <i class="fas fa-bible"></i>
                 </div>
                 <h3>Teológica, Bíblica y Ministerial</h3>
-                <p>Plan de estudios de <strong>45 materias</strong> distribuidas estratégicamente en tres
-                   niveles para construir una base sólida y un liderazgo efectivo de manera gradual y progresiva.</p>
+                <p><strong>45 materias</strong> distribuidas en tres niveles progresivos para construir base teológica y liderazgo ministerial.</p>
                 <ul class="eje-lista">
                     <li><i class="fas fa-check"></i> Hermenéutica y Exégesis Bíblica</li>
                     <li><i class="fas fa-check"></i> Teología Sistemática</li>
@@ -108,12 +106,11 @@
                     <i class="fas fa-seedling"></i>
                 </div>
                 <h3>Habilidades Autosustentables</h3>
-                <p>Equipar a los participantes con herramientas reales que les permitan <strong>generar ingresos</strong>,
-                   sostener sus ministerios y crear oportunidades de empleo en sus comunidades.</p>
+                <p>Que cada misionero aprenda un oficio real que le permita <strong>sostenerse</strong> donde sea enviado, sin depender de apoyo externo.</p>
                 <ul class="eje-lista">
                     <li><i class="fas fa-check"></i> Microemprendimiento Misionero</li>
                     <li><i class="fas fa-check"></i> Autosostenibilidad Ministerial</li>
-                    <li><i class="fas fa-check"></i> Impacto Económico Comunitario</li>
+                    <li><i class="fas fa-check"></i> Generación de Trabajo Local</li>
                     <li><i class="fas fa-check"></i> Evangelismo Relacional</li>
                 </ul>
             </div>
@@ -122,8 +119,7 @@
                     <i class="fas fa-hands-helping"></i>
                 </div>
                 <h3>Prácticas Misioneras</h3>
-                <p>El corazón del programa: la teoría teológica y las habilidades de autosostenibilidad
-                   se aplican en <strong>escenarios reales</strong> junto a iglesias locales.</p>
+                <p>La teoría y el oficio se aplican en <strong>iglesias locales reales</strong> cada fin de semana, en la ciudad donde el misionero está ese mes.</p>
                 <ul class="eje-lista">
                     <li><i class="fas fa-check"></i> Plantación de Iglesias</li>
                     <li><i class="fas fa-check"></i> Revitalización Ministerial</li>
@@ -144,9 +140,7 @@
             <div class="prog-semana__texto">
                 <span class="seccion-label">Estructura</span>
                 <h2>Una semana <span class="highlight-dorado">en el programa</span></h2>
-                <p>Cada semana combina descanso, formación intensiva y acción misionera real.
-                   Los participantes viven inmersos en la comunidad local de cada ciudad sede,
-                   integrando teoría y práctica de manera progresiva.</p>
+                <p>La semana tiene tres momentos: descanso y devoción, formación en el aula, y práctica de campo. Los participantes viven en la comunidad de cada ciudad sede, no en un campus separado.</p>
                 <div class="semana-dias">
                     <div class="semana-dia">
                         <span class="dia-etiqueta lunes">Lunes</span>
@@ -154,7 +148,7 @@
                             <i class="fas fa-moon"></i>
                             <div>
                                 <strong>Descanso</strong>
-                                <p>Devoción personal, vida en comunidad y preparación para la semana formativa</p>
+                                <p>Devoción personal, descanso y preparación para la semana</p>
                             </div>
                         </div>
                     </div>
@@ -164,7 +158,7 @@
                             <i class="fas fa-book-open"></i>
                             <div>
                                 <strong>Clases Teológicas y Talleres Productivos</strong>
-                                <p>Formación bíblica, ministerial y desarrollo de habilidades autosustentables con facilitadores CNBV</p>
+                                <p>Materias teológicas y talleres de oficio con facilitadores CNBV</p>
                             </div>
                         </div>
                     </div>
@@ -174,7 +168,7 @@
                             <i class="fas fa-hands-helping"></i>
                             <div>
                                 <strong>Prácticas Misioneras en Iglesias Locales</strong>
-                                <p>Evangelismo, plantación, revitalización ministerial y servicio social en la ciudad sede</p>
+                                <p>Evangelismo, plantación de iglesias y servicio comunitario en la ciudad sede</p>
                             </div>
                         </div>
                     </div>
@@ -532,15 +526,11 @@
                     <i class="fas fa-university"></i>
                     <span>STBV</span>
                 </div>
-                <div class="alianza-sep"><i class="fas fa-times"></i></div>
-                <div class="alianza-logo-item mints-text">
-                    <i class="fas fa-globe-americas"></i>
-                    <span>MINTS</span>
-                </div>
             </div>
-            <p class="alianza-desc">Programa avalado académicamente por la <strong>CNBV</strong>,
-            el <strong>Seminario Teológico Bautista de Venezuela (STBV)</strong> y el
-            <strong>Miami International Seminary (MINTS)</strong>.</p>
+            <p class="alianza-desc">Programa impulsado por la <strong>CNBV</strong>
+            y ejecutado a través de la <strong>Dirección de Misiones y Evangelización (DIME)</strong>,
+            con gestiones de validación académica ante el
+            <strong>Seminario Teológico Bautista de Venezuela (STBV)</strong>.</p>
         </div>
 
     </div>
@@ -559,6 +549,9 @@
         <div class="prog-cta-final__botones">
             <a href="/registro" class="btn-cta-naranja btn-lg">
                 <i class="fas fa-hand-point-right"></i> Postularme ahora
+            </a>
+            <a href="/pensum" class="btn-cta-blanco btn-lg">
+                <i class="fas fa-book-open"></i> Ver malla curricular
             </a>
             <a href="/requisitos" class="btn-cta-blanco btn-lg">
                 <i class="fas fa-list-check"></i> Ver requisitos

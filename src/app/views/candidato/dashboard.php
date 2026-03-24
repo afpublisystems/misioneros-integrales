@@ -50,12 +50,17 @@
         <div class="dash-header">
             <div>
                 <h1>Mi Postulación</h1>
-                <p>Ciclo 1 — Julio 2026 · Programa de Formación Misioneros Integrales</p>
+                <p>
+                    Ciclo 1 — Julio 2026 · Programa de Formación Misioneros Integrales
+                    &nbsp;·&nbsp;
+                    <span style="color:var(--naranja); font-weight:700;">
+                        <i class="fas fa-calendar-alt"></i> Plazo: 30 jun. 2026
+                    </span>
+                </p>
             </div>
-            <?php if (empty($aspirante) || $aspirante['estatus'] === 'borrador'): ?>
+            <?php if (empty($aspirante)): ?>
             <a href="/candidato/perfil" class="btn btn--verde">
-                <i class="fas fa-arrow-right"></i>
-                <?= empty($aspirante) ? 'Completar perfil' : 'Continuar postulación' ?>
+                <i class="fas fa-arrow-right"></i> Completar perfil
             </a>
             <?php endif; ?>
         </div>
@@ -71,13 +76,39 @@
             </div>
             <p class="dash-progreso-card__texto">
                 <?php if ($progreso['pct'] == 0): ?>
-                    Completa tu perfil para iniciar el proceso de selección.
+                    Empieza llenando tu perfil para que el equipo pueda revisar tu postulación.
                 <?php elseif ($progreso['pct'] < 100): ?>
-                    Etapa <?= $progreso['etapa_actual'] ?> de 5 completada. ¡Sigue adelante!
+                    Llevas <?= $progreso['etapa_actual'] ?> de 5 etapas. ¡Ya vas bien!
                 <?php else: ?>
-                    ¡Felicitaciones! Has completado todas las etapas. Espera confirmación.
+                    ¡Completaste todas las etapas! Espera la confirmación del equipo evaluador.
                 <?php endif; ?>
             </p>
+        </div>
+
+        <!-- Próximo paso contextual -->
+        <?php
+        $tipo_clases = [
+            'accion' => 'proximo--accion',
+            'espera' => 'proximo--espera',
+            'exito'  => 'proximo--exito',
+            'error'  => 'proximo--error',
+            'info'   => 'proximo--info',
+        ];
+        $cls = $tipo_clases[$proximo['tipo']] ?? 'proximo--info';
+        ?>
+        <div class="proximo-paso <?= $cls ?>">
+            <div class="proximo-paso__icono">
+                <i class="fas <?= $proximo['icono'] ?>"></i>
+            </div>
+            <div class="proximo-paso__cuerpo">
+                <strong><?= htmlspecialchars($proximo['titulo']) ?></strong>
+                <p><?= htmlspecialchars($proximo['texto']) ?></p>
+            </div>
+            <?php if (!empty($proximo['accion'])): ?>
+            <a href="<?= $proximo['accion']['url'] ?>" class="btn btn--sm proximo-paso__btn">
+                <?= htmlspecialchars($proximo['accion']['texto']) ?> <i class="fas fa-arrow-right"></i>
+            </a>
+            <?php endif; ?>
         </div>
 
         <!-- Etapas del proceso -->
@@ -109,11 +140,53 @@
             <div class="dash-inicio-card__icono">
                 <i class="fas fa-user-edit"></i>
             </div>
-            <h3>Comienza completando tu perfil</h3>
-            <p>Necesitamos tus datos personales, eclesiales y académicos para iniciar tu proceso de postulación al programa.</p>
+            <h3>Primero: llena tu perfil</h3>
+            <p>Llena tu perfil para que podamos revisar tu postulación.</p>
             <a href="/candidato/perfil" class="btn btn--verde btn--lg">
                 <i class="fas fa-arrow-right"></i> Ir a mi perfil
             </a>
+        </div>
+        <?php elseif ($aspirante['estatus'] === 'borrador'): ?>
+        <!-- Checklist de requisitos + botón enviar -->
+        <div class="requisitos-card">
+            <div class="requisitos-card__header">
+                <div>
+                    <h2><i class="fas fa-clipboard-check"></i> Checklist de postulación</h2>
+                    <p>Completa todos los ítems para poder enviar tu solicitud</p>
+                </div>
+                <?php if ($requisitos['lista']): ?>
+                <form method="POST" action="/candidato/postular">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn--verde btn--lg">
+                        <i class="fas fa-paper-plane"></i> Enviar postulación
+                    </button>
+                </form>
+                <?php else: ?>
+                <span class="badge-pendiente">
+                    <i class="fas fa-hourglass-half"></i>
+                    <?= $requisitos['faltantes'] ?> ítem<?= $requisitos['faltantes'] > 1 ? 's' : '' ?> pendiente<?= $requisitos['faltantes'] > 1 ? 's' : '' ?>
+                </span>
+                <?php endif; ?>
+            </div>
+            <div class="requisitos-checks">
+                <?php foreach ($requisitos['checks'] as $ch): ?>
+                <div class="req-check req-check--<?= $ch['ok'] ? 'ok' : 'pending' ?>">
+                    <i class="fas <?= $ch['ok'] ? 'fa-check-circle' : 'fa-circle' ?>"></i>
+                    <?= htmlspecialchars($ch['label']) ?>
+                    <?php if (!$ch['ok']): ?>
+                    <span class="req-check__hint">Pendiente</span>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <div class="requisitos-card__footer">
+                <a href="/candidato/perfil" class="btn btn--outline btn--sm">
+                    <i class="fas fa-user-edit"></i> Editar perfil
+                </a>
+                <a href="/candidato/documentos" class="btn btn--outline btn--sm">
+                    <i class="fas fa-folder-open"></i> Gestionar documentos
+                </a>
+            </div>
         </div>
         <?php else: ?>
         <!-- Resumen de datos -->
@@ -290,11 +363,74 @@
 @media (max-width: 1024px) {
     .etapas-grid { grid-template-columns: repeat(3, 1fr); }
 }
+/* Checklist de requisitos */
+.requisitos-card {
+    background: var(--blanco); border-radius: var(--radio-lg);
+    box-shadow: var(--sombra); margin-bottom: 2rem; overflow: hidden;
+}
+.requisitos-card__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 1.75rem; border-bottom: 1px solid #f3f4f6; flex-wrap: wrap; gap: 1rem;
+}
+.requisitos-card__header h2 { font-size: 1rem; font-weight: 800; color: var(--verde); display: flex; align-items: center; gap: 0.5rem; }
+.requisitos-card__header p  { font-size: 0.82rem; color: var(--gris); margin-top: 0.2rem; }
+
+.requisitos-checks {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem; padding: 1.25rem 1.75rem;
+}
+.req-check {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-size: 0.84rem; font-weight: 600; padding: 0.5rem 0.75rem;
+    border-radius: var(--radio); background: #f9fafb;
+}
+.req-check--ok      { color: var(--verde);   background: #ecfdf5; }
+.req-check--pending { color: var(--gris-dark); }
+.req-check--ok i    { color: var(--verde); }
+.req-check--pending i { color: #d1d5db; }
+.req-check__hint { margin-left: auto; font-size: 0.72rem; font-weight: 500; color: #9ca3af; }
+
+.requisitos-card__footer {
+    padding: 1rem 1.75rem; border-top: 1px solid #f3f4f6;
+    display: flex; gap: 0.75rem; flex-wrap: wrap;
+}
+.badge-pendiente {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: #fffbeb; color: #92400e; padding: 0.5rem 1rem;
+    border-radius: var(--radio); font-size: 0.82rem; font-weight: 700;
+    border: 1px solid var(--dorado);
+}
+
+/* Próximo paso */
+.proximo-paso {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.1rem 1.5rem; border-radius: var(--radio-lg);
+    margin-bottom: 2rem; border-left: 4px solid currentColor;
+    flex-wrap: wrap;
+}
+.proximo--accion { background: #ecfdf5; color: var(--verde);   border-color: var(--verde); }
+.proximo--espera { background: #fffbeb; color: #92400e;        border-color: var(--dorado); }
+.proximo--exito  { background: #ecfdf5; color: var(--verde);   border-color: var(--verde); }
+.proximo--error  { background: #fef2f2; color: #991b1b;        border-color: #ef4444; }
+.proximo--info   { background: #eff6ff; color: #1e40af;        border-color: #3b82f6; }
+
+.proximo-paso__icono { font-size: 1.5rem; flex-shrink: 0; }
+.proximo-paso__cuerpo { flex: 1; min-width: 0; }
+.proximo-paso__cuerpo strong { display: block; font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
+.proximo-paso__cuerpo p { font-size: 0.83rem; color: inherit; opacity: 0.85; margin: 0; line-height: 1.5; }
+.proximo-paso__btn {
+    white-space: nowrap; background: currentColor; color: white !important;
+    padding: 0.45rem 1rem; border-radius: var(--radio); font-size: 0.8rem;
+    font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.proximo--espera .proximo-paso__btn { background: var(--dorado); color: var(--verde-dark) !important; }
+
 @media (max-width: 768px) {
     .dashboard-layout { grid-template-columns: 1fr; }
     .dash-sidebar { display: none; }
     .dash-main { padding: 1.5rem 1rem; }
     .etapas-grid { grid-template-columns: repeat(2, 1fr); }
     .dash-resumen-grid { grid-template-columns: 1fr; }
+    .proximo-paso { flex-direction: column; align-items: flex-start; }
 }
 </style>
