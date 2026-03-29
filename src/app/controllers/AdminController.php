@@ -8,6 +8,8 @@
 require_once APP_PATH . '/controllers/Controller.php';
 require_once APP_PATH . '/models/AspiranteModel.php';
 require_once APP_PATH . '/models/UsuarioModel.php';
+require_once APP_PATH . '/models/PagoModel.php';
+require_once APP_PATH . '/models/GastoModel.php';
 require_once APP_PATH . '/helpers/TestScorer.php';
 
 class AdminController extends Controller {
@@ -324,6 +326,12 @@ class AdminController extends Controller {
                 'estatus'       => $estatus,
                 'nota_evaluador'=> $nota,
             ]);
+
+            // Al aprobar: generar las 7 cuotas si no existen aún
+            if ($estatus === 'aprobada') {
+                (new PagoModel())->generarCuotas($id);
+            }
+
             $this->flash('exito', 'Estatus actualizado correctamente.');
         }
 
@@ -733,6 +741,134 @@ class AdminController extends Controller {
         $this->redirigir('/admin/colaboradores');
     }
 
+    // ── GET /admin/finanzas ───────────────────────────────────
+    public function finanzas(): void {
+        $this->requireAdminOEvaluador();
+
+        $pagos  = new PagoModel();
+        $gastos = new GastoModel();
+
+        $this->render('admin/finanzas', [
+            'titulo'            => 'Finanzas',
+            'kpis'              => $pagos->kpis(),
+            'abonos_pendientes' => $pagos->abonosPendientes(),
+            'gastos_recientes'  => $gastos->recientes(15),
+            'resumen_estudiantes' => $pagos->resumenPorEstudiante(),
+        ], 'admin');
+    }
+
+    // ── POST /admin/finanzas/gasto ────────────────────────────
+    public function registrarGasto(): void {
+        $this->requireAdminOEvaluador();
+
+        $datos = [
+            'concepto'    => trim($_POST['concepto'] ?? ''),
+            'categoria'   => $_POST['categoria']   ?? 'otro',
+            'monto_usd'   => $_POST['monto_usd']   ?? null,
+            'monto_ves'   => $_POST['monto_ves']   ?? null,
+            'metodo_pago' => $_POST['metodo_pago'] ?? 'efectivo',
+            'referencia'  => trim($_POST['referencia'] ?? ''),
+            'fecha_gasto' => $_POST['fecha_gasto'] ?? date('Y-m-d'),
+            'notas'       => trim($_POST['notas']  ?? ''),
+        ];
+
+        if (empty($datos['concepto'])) {
+            $this->flash('error', 'El concepto es obligatorio.');
+            $this->redirigir('/admin/finanzas');
+            return;
+        }
+
+        // Upload comprobante opcional
+        $datos['comprobante_ruta'] = null;
+        if (!empty($_FILES['comprobante']['name'])) {
+            $ruta = $this->subirComprobante($_FILES['comprobante'], 'gasto');
+            if ($ruta === false) {
+                $this->flash('error', 'Archivo inválido. Usa JPG, PNG o PDF (máx 5 MB).');
+                $this->redirigir('/admin/finanzas');
+                return;
+            }
+            $datos['comprobante_ruta'] = $ruta;
+        }
+
+        (new GastoModel())->registrar($datos, (int)$_SESSION['usuario_id']);
+        $this->flash('exito', 'Gasto registrado correctamente.');
+        $this->redirigir('/admin/finanzas');
+    }
+
+    // ── POST /admin/finanzas/confirmar ────────────────────────
+    public function confirmarAbono(): void {
+        $this->requireAdminOEvaluador();
+
+        $id     = (int) ($_POST['id']     ?? 0);
+        $accion = $_POST['accion'] ?? '';
+        $notas  = trim($_POST['notas_admin'] ?? '');
+
+        if (!$id || !in_array($accion, ['confirmar', 'rechazar'])) {
+            $this->flash('error', 'Solicitud inválida.');
+            $this->redirigir('/admin/finanzas');
+            return;
+        }
+
+        $pagos     = new PagoModel();
+        $admin_id  = (int) $_SESSION['usuario_id'];
+
+        if ($accion === 'confirmar') {
+            $ok = $pagos->confirmarAbono($id, $admin_id, $notas ?: null);
+            $this->flash($ok ? 'exito' : 'error', $ok ? 'Pago confirmado correctamente.' : 'No se pudo confirmar el pago.');
+        } else {
+            if (empty($notas)) {
+                $this->flash('error', 'Debes indicar el motivo del rechazo.');
+                $this->redirigir('/admin/finanzas');
+                return;
+            }
+            $ok = $pagos->rechazarAbono($id, $admin_id, $notas);
+            $this->flash($ok ? 'exito' : 'error', $ok ? 'Abono rechazado.' : 'No se pudo rechazar.');
+        }
+
+        $this->redirigir('/admin/finanzas');
+    }
+
+    // ── GET /admin/finanzas/exportar ──────────────────────────
+    public function exportarFinanzas(): void {
+        $this->requireAdminOEvaluador();
+
+        $tipo = $_GET['tipo'] ?? 'pagos';
+        $pagos  = new PagoModel();
+        $gastos = new GastoModel();
+
+        header('Content-Type: text/csv; charset=utf-8');
+        $fecha = date('Y-m-d');
+
+        if ($tipo === 'gastos') {
+            header("Content-Disposition: attachment; filename=gastos_{$fecha}.csv");
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM UTF-8
+            fputcsv($out, ['Concepto','Categoría','Monto USD','Monto VES','Método','Referencia','Fecha','Registrado por','Notas'], ';');
+            foreach ($gastos->todosParaExportar() as $r) {
+                fputcsv($out, [
+                    $r['concepto'], $r['categoria'], $r['monto_usd'], $r['monto_ves'],
+                    $r['metodo_pago'], $r['referencia'], $r['fecha_gasto'],
+                    $r['registrado_por'], $r['notas'],
+                ], ';');
+            }
+        } else {
+            header("Content-Disposition: attachment; filename=pagos_{$fecha}.csv");
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($out, ['Estudiante','Cédula','Cuota #','Monto USD','Monto VES','Tasa','Método','Referencia','Estatus','Fecha pago','Fecha confirmación'], ';');
+            foreach ($pagos->todosParaExportar() as $r) {
+                fputcsv($out, [
+                    $r['estudiante'], $r['cedula'], $r['cuota_numero'],
+                    $r['monto_declarado_usd'], $r['monto_declarado_ves'], $r['tasa_cambio'],
+                    $r['metodo_pago'], $r['referencia'], $r['estatus'],
+                    $r['fecha_pago_declarado'], $r['fecha_confirmacion'],
+                ], ';');
+            }
+        }
+        fclose($out);
+        exit;
+    }
+
     // ── Helpers ───────────────────────────────────────────────
     private function requireAdminOEvaluador(): void {
         if (empty($_SESSION['usuario_id'])) {
@@ -743,6 +879,25 @@ class AdminController extends Controller {
             require APP_PATH . '/views/errors/403.php';
             exit;
         }
+    }
+
+    /**
+     * Sube un comprobante de pago/gasto al servidor.
+     * @return string|false  Ruta relativa o false si hay error
+     */
+    private function subirComprobante(array $file, string $prefijo = 'comp'): string|false {
+        $extPermitidas = ['jpg','jpeg','png','pdf'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $extPermitidas)) return false;
+        if ($file['size'] > 5 * 1024 * 1024) return false;
+
+        $dir = BASE_PATH . '/../uploads/comprobantes/';
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+        $nombre = $prefijo . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        if (!move_uploaded_file($file['tmp_name'], $dir . $nombre)) return false;
+
+        return 'uploads/comprobantes/' . $nombre;
     }
 
     private function contarPorEstatus(string $estatus): int {

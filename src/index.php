@@ -102,6 +102,10 @@ $rutas = [
         '/admin/estadisticas'   => ['AdminController',   'estadisticas'],
         '/admin/colaboradores'  => ['AdminController',   'colaboradores'],
         '/admin/perfil'         => ['AdminController',   'perfil'],
+        '/admin/finanzas'       => ['AdminController',   'finanzas'],
+        '/admin/finanzas/exportar' => ['AdminController','exportarFinanzas'],
+        // Candidato — pagos
+        '/candidato/pagos'      => ['CandidatoController', 'pagos'],
     ],
     'POST' => [
         '/login'                    => ['AuthController',       'login'],
@@ -117,6 +121,10 @@ $rutas = [
         '/admin/estadisticas'       => ['AdminController',      'actualizarEstadisticas'],
         '/admin/colaboradores'      => ['AdminController',      'gestionarColaborador'],
         '/admin/perfil'             => ['AdminController',      'actualizarPerfil'],
+        '/admin/finanzas/gasto'     => ['AdminController',      'registrarGasto'],
+        '/admin/finanzas/confirmar' => ['AdminController',      'confirmarAbono'],
+        // Candidato — pagos
+        '/candidato/pagos'          => ['CandidatoController',  'subirAbono'],
         '/colaborar'                => ['PublicoController',    'registrarColaborador'],
         '/contacto'                 => ['PublicoController',    'enviarContacto'],
     ],

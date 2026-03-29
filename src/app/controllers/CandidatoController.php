@@ -6,6 +6,7 @@
 
 require_once APP_PATH . '/controllers/Controller.php';
 require_once APP_PATH . '/models/AspiranteModel.php';
+require_once APP_PATH . '/models/PagoModel.php';
 require_once APP_PATH . '/helpers/TestScorer.php';
 
 class CandidatoController extends Controller {
@@ -558,6 +559,94 @@ class CandidatoController extends Controller {
         }
 
         $this->redirigir('/candidato/perfil?tab=seguridad');
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // MIS PAGOS / CUOTAS
+    // ─────────────────────────────────────────────────────────────────
+
+    public function pagos(): void {
+        $this->requireAuth('candidato');
+
+        $aspirante = $this->aspirantes->porUsuario($_SESSION['usuario_id']);
+        if (!$aspirante) {
+            $this->redirigir('/candidato/dashboard');
+            return;
+        }
+
+        $pagos  = new PagoModel();
+        $cuotas = $pagos->cuotasPorAspirante($aspirante['id']);
+        $abonos = $pagos->abonosPorAspirante($aspirante['id']);
+
+        $this->render('candidato/pagos', [
+            'titulo'    => 'Mis Pagos',
+            'aspirante' => $aspirante,
+            'cuotas'    => $cuotas,
+            'abonos'    => $abonos,
+        ]);
+    }
+
+    public function subirAbono(): void {
+        $this->requireAuth('candidato');
+
+        $aspirante = $this->aspirantes->porUsuario($_SESSION['usuario_id']);
+        if (!$aspirante) {
+            $this->redirigir('/candidato/dashboard');
+            return;
+        }
+
+        $cuota_id  = (int) ($_POST['cuota_id'] ?? 0);
+        $monto_usd = (float) ($_POST['monto_declarado_usd'] ?? 0);
+        $metodo    = $_POST['metodo_pago'] ?? '';
+        $fecha     = $_POST['fecha_pago_declarado'] ?? '';
+
+        if (!$cuota_id || $monto_usd <= 0 || !$metodo || !$fecha) {
+            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Completa todos los campos obligatorios.'];
+            $this->redirigir('/candidato/pagos');
+            return;
+        }
+
+        // Verificar que la cuota pertenece a este aspirante
+        $pagos = new PagoModel();
+        $cuota = $pagos->porId($cuota_id);
+        if (!$cuota || (int)$cuota['aspirante_id'] !== (int)$aspirante['id']) {
+            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Cuota no válida.'];
+            $this->redirigir('/candidato/pagos');
+            return;
+        }
+
+        // Subir comprobante (opcional)
+        $ruta = null;
+        if (!empty($_FILES['comprobante']['name'])) {
+            $extPermitidas = ['jpg','jpeg','png','pdf'];
+            $ext = strtolower(pathinfo($_FILES['comprobante']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $extPermitidas) || $_FILES['comprobante']['size'] > 5 * 1024 * 1024) {
+                $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Archivo inválido. Usa JPG, PNG o PDF (máx 5 MB).'];
+                $this->redirigir('/candidato/pagos');
+                return;
+            }
+            $dir = BASE_PATH . '/../uploads/comprobantes/';
+            if (!is_dir($dir)) mkdir($dir, 0755, true);
+            $nombre = 'asp' . $aspirante['id'] . '_cuota' . $cuota['cuota_numero'] . '_' . time() . '.' . $ext;
+            move_uploaded_file($_FILES['comprobante']['tmp_name'], $dir . $nombre);
+            $ruta = 'uploads/comprobantes/' . $nombre;
+        }
+
+        $pagos->registrarAbono([
+            'cuota_id'             => $cuota_id,
+            'aspirante_id'         => $aspirante['id'],
+            'monto_declarado_usd'  => $monto_usd,
+            'monto_declarado_ves'  => !empty($_POST['monto_declarado_ves']) ? (float)$_POST['monto_declarado_ves'] : null,
+            'tasa_cambio'          => !empty($_POST['tasa_cambio']) ? (float)$_POST['tasa_cambio'] : null,
+            'metodo_pago'          => $metodo,
+            'banco_origen'         => trim($_POST['banco_origen'] ?? ''),
+            'referencia'           => trim($_POST['referencia'] ?? ''),
+            'comprobante_ruta'     => $ruta,
+            'fecha_pago_declarado' => $fecha,
+        ]);
+
+        $_SESSION['flash'] = ['tipo' => 'exito', 'msg' => 'Comprobante enviado. El administrador lo revisará pronto.'];
+        $this->redirigir('/candidato/pagos');
     }
 
     // ─────────────────────────────────────────────────────────────────

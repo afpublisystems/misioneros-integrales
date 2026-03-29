@@ -28,6 +28,10 @@
         </a>
         <?php endif; ?>
 
+        <a href="/admin/finanzas" class="admin-nav__item <?= str_starts_with($uri, '/admin/finanzas') ? 'activo' : '' ?>">
+            <i class="fas fa-dollar-sign"></i> Finanzas
+        </a>
+
         <a href="/admin/perfil" class="admin-nav__item <?= str_starts_with($uri, '/admin/perfil') ? 'activo' : '' ?>">
             <i class="fas fa-user-cog"></i> Mi Perfil
         </a>

@@ -60,6 +60,7 @@ function etiquetaNivel(int $score): string {
         <a href="/candidato/perfil"     class="dash-nav__item"><i class="fas fa-user-edit"></i> Mi Perfil</a>
         <a href="/candidato/documentos" class="dash-nav__item"><i class="fas fa-folder-open"></i> Documentos</a>
         <a href="/candidato/test"       class="dash-nav__item activo"><i class="fas fa-clipboard-list"></i> Test Vocacional</a>
+        <a href="/candidato/pagos"      class="dash-nav__item"><i class="fas fa-dollar-sign"></i> Mis Pagos</a>
         <a href="/logout"               class="dash-nav__item dash-nav__item--logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
     </nav>
 </aside>

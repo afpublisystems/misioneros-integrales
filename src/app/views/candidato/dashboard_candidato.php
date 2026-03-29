@@ -29,6 +29,9 @@
             <a href="/candidato/test" class="dash-nav__item">
                 <i class="fas fa-clipboard-list"></i> Test Vocacional
             </a>
+            <a href="/candidato/pagos" class="dash-nav__item">
+                <i class="fas fa-dollar-sign"></i> Mis Pagos
+            </a>
             <a href="/logout" class="dash-nav__item dash-nav__item--logout">
                 <i class="fas fa-sign-out-alt"></i> Cerrar sesión
             </a>

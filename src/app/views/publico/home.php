@@ -1523,8 +1523,8 @@
                 <div class="popup-stat">
                     <i class="fas fa-users"></i>
                     <div>
-                        <strong>Cupos limitados</strong>
-                        <span>20 por cohorte</span>
+                        <strong>Cupos disponibles</strong>
+                        <span id="popup-cupos-texto">40 por cohorte</span>
                     </div>
                 </div>
                 <div class="popup-stat">
@@ -1839,6 +1839,19 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && popup.classList.contains('visible')) cerrarPopup();
     });
+
+    // Cupos disponibles — carga dinámica desde API
+    fetch('/api/cupos')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            var el = document.getElementById('popup-cupos-texto');
+            if (el && typeof d.disponibles !== 'undefined') {
+                el.textContent = d.disponibles > 0
+                    ? d.disponibles + ' disponibles de ' + d.total
+                    : 'Sin cupos disponibles';
+            }
+        })
+        .catch(function() { /* mantiene el texto por defecto */ });
 
     // Días restantes para el cierre de convocatoria
     var fin = new Date('2026-06-30T23:59:59');

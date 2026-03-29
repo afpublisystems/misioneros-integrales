@@ -20,9 +20,9 @@ class Database {
         // En producción (Webempresa): reemplaza los valores de fallback con los datos reales de cPanel.
         // En Docker local: las variables de entorno se inyectan desde docker-compose.yml.
         self::$host     = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: 'localhost';
-        self::$dbname   = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'USUARIO_CPANEL_nombrebd';
-        self::$user     = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'USUARIO_CPANEL_usuariobd';
-        self::$password = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: 'PASSWORD_BD_AQUI';
+        self::$dbname   = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'hosting63201us_misioneros';
+        self::$user     = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'hosting63201us_admin';
+        self::$password = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: 'Admin123*';
     }
 
     private static ?PDO $instance = null;

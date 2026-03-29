@@ -188,7 +188,7 @@ class AuthController extends Controller {
 
     // ── Helper cupos ──────────────────────────────────────────
     private function consultarCupos(): array {
-        $total = 20; // cupos primera cohorte
+        $total = 40; // cupos primera cohorte
         try {
             $db       = Database::getConnection();
             $inscritos = (int) $db->query(
