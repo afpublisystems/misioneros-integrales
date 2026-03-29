@@ -1781,11 +1781,18 @@
 
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 640px) {
-    .popup-backdrop { padding: 0; align-items: flex-end; }
+    .popup-backdrop {
+        padding: 1rem;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+    }
     .popup-card {
         grid-template-columns: 1fr;
-        border-radius: 24px 24px 0 0;
-        max-height: 92vh;
+        border-radius: 20px;
+        max-height: 88vh;
+        overflow-y: auto;
+        width: 100%;
     }
     .popup-visual { display: none; }
     .popup-cuerpo { padding: 2rem 1.5rem 1.5rem; }
