@@ -42,7 +42,7 @@ class AspiranteModel extends Model {
     /**
      * Guardar o actualizar perfil del aspirante
      */
-    public function guardarPerfil(int $usuario_id, array $datos): int|bool {
+    public function guardarPerfil(int $usuario_id, array $datos) {
         $existente = $this->porUsuario($usuario_id);
 
         $campos = [

@@ -683,11 +683,13 @@ class AdminController extends Controller {
         $db   = Database::getConnection();
         $filtro = $_GET['filtro'] ?? 'todos';
 
-        $where = match ($filtro) {
-            'pendientes' => 'WHERE aprobado = 0',
-            'aprobados'  => 'WHERE aprobado = 1',
-            default      => '',
-        };
+        if ($filtro === 'pendientes') {
+            $where = 'WHERE aprobado = 0';
+        } elseif ($filtro === 'aprobados') {
+            $where = 'WHERE aprobado = 1';
+        } else {
+            $where = '';
+        }
 
         $stmt = $db->query("
             SELECT id, nombre, organizacion, email, tipo, mensaje, aprobado, created_at

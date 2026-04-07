@@ -24,7 +24,7 @@ class DocumentoModel extends Model {
     /**
      * Guardar o reemplazar documento por tipo
      */
-    public function guardar(array $datos): int|bool {
+    public function guardar(array $datos) {
         // Verificar si ya existe uno del mismo tipo para este aspirante
         $stmt = $this->db->prepare(
             "SELECT id FROM documentos WHERE aspirante_id = :aid AND tipo = :tipo LIMIT 1"

@@ -1783,16 +1783,19 @@
 @media (max-width: 640px) {
     .popup-backdrop {
         padding: 1rem;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         overflow-y: auto;
+        padding-top: max(1rem, env(safe-area-inset-top, 1rem));
     }
     .popup-card {
         grid-template-columns: 1fr;
         border-radius: 20px;
-        max-height: 88vh;
-        overflow-y: auto;
+        max-height: none;
+        overflow-y: visible;
         width: 100%;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
     }
     .popup-visual { display: none; }
     .popup-cuerpo { padding: 2rem 1.5rem 1.5rem; }

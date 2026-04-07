@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT.md
 # Proyecto: Misioneros Integrales — Sistema Web CNBV/DIME
-# Última actualización: 20/03/2026 (v3)
+# Última actualización: 31/03/2026 (v4)
 # Roles: Gemini = Arquitecto | Claude = Ejecutor (código PHP/MVC/CSS)
 
 ---
@@ -492,6 +492,7 @@ POST:
 
 ## NOTAS TÉCNICAS IMPORTANTES
 
+- **✅ Servidor producción PHP 8.4**: Webempresa corre PHP 8.4. Soporta `match()`, union types, named arguments, `str_contains()`, etc. Sin restricciones de versión.
 - **`Database::getConnection()`** — nombre correcto del método Singleton (NO `getInstance()`)
 - **Layout admin**: Las vistas admin usan `render('admin/vista', [...], 'admin')` como tercer parámetro
 - **Migración `nota_evaluador`**: YA aplicada en BD (no ejecutar de nuevo → error #1060 duplicado)
@@ -552,3 +553,28 @@ POST:
 - `.proceso-grid` > `.proceso-card` con `__conector` entre tarjetas, `__num`, `__icono`
 - Responsive: 5 cols desktop → 3 cols tablet → 2 cols mobile
 - Nueva sección "¿Cómo es el proceso?" antes del CTA final (pasos con estimados de tiempo)
+
+---
+
+## REGISTRO DE CAMBIOS EN PRODUCCIÓN
+
+### v4 — 31/03/2026 — Correcciones producción post-deploy
+
+**Bugs corregidos:**
+
+| Archivo | Bug | Causa | Fix |
+|---------|-----|-------|-----|
+| `CandidatoController.php` | HTTP 500 al subir documentos | Path incorrecto `public/uploads/documentos/` — no coincidía con URL `/uploads/documentos/` | Cambiado a `BASE_PATH . '/uploads/documentos/'` |
+| `DocumentoModel.php` | HTTP 500 en POST documentos | Union type `int|bool` — Eliminado como precaución (innecesario, PHP 8.4 lo soporta; cambio inofensivo) |
+| `AspiranteModel.php` | Potencial HTTP 500 en guardar perfil | Union type `int|bool` — Eliminado como precaución (innecesario, PHP 8.4 lo soporta; cambio inofensivo) |
+| `CandidatoController.php` | HTTP 500 al subir documentos | `match()` — Reemplazado con switch/case como precaución (innecesario, PHP 8.4 lo soporta; cambio inofensivo) |
+| `AdminController.php` | Potencial HTTP 500 en colaboradores | `match()` — Reemplazado con if/else como precaución (innecesario, PHP 8.4) |
+| `AuthController.php` | Potencial HTTP 500 en login | `match()` — Reemplazado con if/else como precaución (innecesario, PHP 8.4) |
+
+**Infraestructura creada en producción:**
+- Carpeta `misionerosintegrales.com/uploads/` creada en cPanel
+- Carpeta `misionerosintegrales.com/uploads/documentos/` creada en cPanel
+- Archivo `uploads/.htaccess` subido (bloquea ejecución de scripts en uploads)
+
+**Regla añadida a REGLAS DE ORO:**
+- El servidor de producción (Webempresa) corre PHP 8.4. Sintaxis moderna (match, union types, str_contains, etc.) completamente soportada.

@@ -46,7 +46,7 @@
         <?php
         $docs_requeridos = [
             [
-                'tipo'        => 'cedula',
+                'tipo'        => 'cedula_identidad',
                 'nombre'      => 'Cédula de Identidad',
                 'descripcion' => 'Copia legible de ambas caras de tu cédula de identidad',
                 'icono'       => 'fa-id-card',
@@ -70,7 +70,7 @@
                 'obligatorio' => true,
             ],
             [
-                'tipo'        => 'foto_reciente',
+                'tipo'        => 'foto_personal',
                 'nombre'      => 'Foto Reciente',
                 'descripcion' => 'Foto tipo carné o retrato reciente, fondo claro',
                 'icono'       => 'fa-camera',
@@ -78,7 +78,7 @@
                 'obligatorio' => true,
             ],
             [
-                'tipo'        => 'otros',
+                'tipo'        => 'otro',
                 'nombre'      => 'Documentos Adicionales',
                 'descripcion' => 'Cualquier otro documento que desees incluir (títulos, certificados, etc.)',
                 'icono'       => 'fa-paperclip',
@@ -124,14 +124,14 @@
                 <div class="doc-subido">
                     <div class="doc-subido__nombre">
                         <i class="fas fa-file-alt"></i>
-                        <?= htmlspecialchars($subido['nombre_original']) ?>
+                        <?= htmlspecialchars($subido['nombre_archivo']) ?>
                     </div>
                     <div class="doc-subido__meta">
                         Subido el <?= date('d/m/Y H:i', strtotime($subido['created_at'])) ?>
-                        · <?= round($subido['tamano'] / 1024) ?> KB
+                        · <?= $subido['tamanio_kb'] ?> KB
                     </div>
                     <div class="doc-subido__acciones">
-                        <a href="/uploads/documentos/<?= $subido['archivo'] ?>" target="_blank"
+                        <a href="/<?= htmlspecialchars($subido['ruta']) ?>" target="_blank"
                            class="btn btn--outline btn--sm">
                             <i class="fas fa-eye"></i> Ver
                         </a>

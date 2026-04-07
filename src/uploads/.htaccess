@@ -1,0 +1,15 @@
+# Bloquear ejecución PHP y scripts en directorio de uploads
+Options -Indexes -ExecCGI
+
+<FilesMatch "\.php[0-9]?$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(php|php3|php4|php5|php7|phtml|phar|shtml|cgi|pl|py|rb|sh)$">
+    Require all denied
+</FilesMatch>
+
+# Solo permitir imágenes y PDFs
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|pdf)$">
+    Require all granted
+</FilesMatch>

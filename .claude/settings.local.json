@@ -49,7 +49,8 @@
       "Bash(node:*)",
       "WebFetch(domain:cnbv.org)",
       "Bash(cp \"C:/Users/User/Documents/Proyectos/PROYECTO MISIONERO/STBV.jpg\" \"C:/xampp/htdocs/misioneros-integrales/src/public/assets/logos/logo-stbv.jpg\")",
-      "Bash(cp \"C:/Users/User/Documents/Proyectos/PROYECTO MISIONERO/DIME.png\" \"C:/xampp/htdocs/misioneros-integrales/src/public/assets/logos/logo-dime-bw.png\")"
+      "Bash(cp \"C:/Users/User/Documents/Proyectos/PROYECTO MISIONERO/DIME.png\" \"C:/xampp/htdocs/misioneros-integrales/src/public/assets/logos/logo-dime-bw.png\")",
+      "Bash(grep -n \"popup\\\\|uploads\\\\|upload_max\\\\|post_max\\\\|BASE_PATH\" /c/xampp/htdocs/misioneros-integrales/src/app/config/*.php)"
     ]
   }
 }

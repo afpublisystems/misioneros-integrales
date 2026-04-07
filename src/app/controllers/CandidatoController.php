@@ -130,13 +130,15 @@ class CandidatoController extends Controller {
             $this->redirigir('/candidato/perfil');
         }
 
-        // Validar que llegó un archivo
-        if (empty($_FILES['archivo']['tmp_name'])) {
-            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'No se recibió ningún archivo.'];
+        // Validar que llegó un archivo y sin errores de PHP
+        $err_php = $_FILES['archivo']['error'] ?? UPLOAD_ERR_NO_FILE;
+        if ($err_php !== UPLOAD_ERR_OK) {
+            switch ($err_php) {                case UPLOAD_ERR_INI_SIZE:                case UPLOAD_ERR_FORM_SIZE:                    $msg_err = 'El archivo es demasiado grande. Máximo permitido: 5 MB.';                    break;                case UPLOAD_ERR_PARTIAL:                    $msg_err = 'La subida se interrumpió. Por favor intenta de nuevo.';                    break;                case UPLOAD_ERR_NO_FILE:                    $msg_err = 'No se seleccionó ningún archivo.';                    break;                default:                    $msg_err = 'Error al recibir el archivo. Intenta nuevamente.';            }
+            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => $msg_err];
             $this->redirigir('/candidato/documentos');
         }
 
-        $tipos_validos = ['cedula','titulo_bachiller','carta_pastoral','foto_reciente','otros'];
+        $tipos_validos = ['cedula_identidad','titulo_bachiller','carta_pastoral','foto_personal','otro'];
         $tipo          = $_POST['tipo'] ?? '';
         if (!in_array($tipo, $tipos_validos)) {
             $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Tipo de documento no válido.'];
@@ -161,10 +163,16 @@ class CandidatoController extends Controller {
 
         // Nombre seguro único
         $nombre_archivo = $aspirante['id'] . '_' . $tipo . '_' . time() . '.' . $ext;
-        $destino        = BASE_PATH . '/public/uploads/documentos/' . $nombre_archivo;
+        $dir_destino    = BASE_PATH . '/uploads/documentos/';
+        $destino        = $dir_destino . $nombre_archivo;
+
+        // Crear directorio si no existe (producción puede no tenerlo)
+        if (!is_dir($dir_destino)) {
+            mkdir($dir_destino, 0755, true);
+        }
 
         if (!move_uploaded_file($archivo['tmp_name'], $destino)) {
-            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Error al guardar el archivo. Intenta nuevamente.'];
+            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'No se pudo guardar el archivo en el servidor. Contacta al administrador.'];
             $this->redirigir('/candidato/documentos');
         }
 
@@ -172,12 +180,12 @@ class CandidatoController extends Controller {
         require_once APP_PATH . '/models/DocumentoModel.php';
         $docModel = new DocumentoModel();
         $docModel->guardar([
-            'aspirante_id'    => $aspirante['id'],
-            'tipo'            => $tipo,
-            'archivo'         => $nombre_archivo,
-            'nombre_original' => $archivo['name'],
-            'tamano'          => $archivo['size'],
-            'mime'            => $archivo['type'],
+            'aspirante_id'  => $aspirante['id'],
+            'tipo'          => $tipo,
+            'nombre_archivo'=> $nombre_archivo,
+            'ruta'          => 'uploads/documentos/' . $nombre_archivo,
+            'mime_type'     => $archivo['type'],
+            'tamanio_kb'    => (int) ceil($archivo['size'] / 1024),
         ]);
 
         $_SESSION['flash'] = ['tipo' => 'exito', 'msg' => 'Documento subido correctamente.'];
