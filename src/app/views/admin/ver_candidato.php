@@ -363,7 +363,7 @@
                                         <?= $doc['verificado'] ? 'Verificado' : 'Verificar' ?>
                                     </button>
                                 </form>
-                                <a href="<?= htmlspecialchars($doc['ruta']) ?>" target="_blank"
+                                <a href="/<?= htmlspecialchars($doc['ruta']) ?>" target="_blank"
                                    class="btn btn--outline btn--xs" title="Ver documento">
                                     <i class="fas fa-external-link-alt"></i>
                                 </a>
