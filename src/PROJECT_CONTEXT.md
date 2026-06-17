@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT.md
 # Proyecto: Misioneros Integrales — Sistema Web CNBV/DIME
-# Última actualización: 31/03/2026 (v4)
+# Última actualización: 17/06/2026 (v5)
 # Roles: Gemini = Arquitecto | Claude = Ejecutor (código PHP/MVC/CSS)
 
 ---
@@ -277,6 +277,7 @@ POST:
 | 3 | Admin CNBV | admin@misionerosintegrales.com | admin | incompleto |
 
 > ⚠️ Cambiar contraseña del usuario 1 usando genhash.php
+> 📌 **Producción (17/06/2026):** el único usuario con rol `admin` es `jfer22@gmail.com`. La tabla de arriba refleja el estado local/histórico, no producción.
 
 ---
 
@@ -295,6 +296,13 @@ POST:
   - `candidato` → `/candidato/dashboard`
   - `admin/evaluador` → `/admin`
 - Link discreto en footer: "🔒 Acceso Administradores" → `/login`
+
+**Reset de clave olvidada (admin):**
+1. Subir `reset-admin-tmp.php` a la raíz del sitio por FTP
+2. Listar admins: `?token=AF-reset-2026`
+3. Fijar nueva clave: `?token=AF-reset-2026&email=EMAIL&nueva=CLAVE` (mínimo 8 caracteres)
+4. **Borrar el archivo del hosting** — es puerta de entrada si se deja
+- El login usa `password_verify` contra `usuarios.password` (hash bcrypt), por eso el reset genera el hash con `password_hash()`
 
 ---
 
@@ -324,6 +332,7 @@ POST:
   - **Test Vocacional** — badge de estado + fechas + botón "Ver respuestas"
   - **Documentos** — lista con tamaño, tipo, fecha, verificado + botón "Verificar/Verificado" por documento
     - POST `accion=verificar_doc` + `doc_id` → toggle campo `verificado` en tabla `documentos`
+    - **Subir/reemplazar documento como admin** (v5): formulario `enctype="multipart/form-data"` con `accion=subir_doc`, `aspirante_id` y `_redirect` → `AdminController::subirDocumentoAdmin()`. Si el aspirante ya tiene ese tipo de documento, lo reemplaza (usa `DocumentoModel::porTipo()`)
   - **Meta** — email cuenta, último acceso, fechas registro/actualización, nota evaluador
 - Modal cambio estatus general del aspirante (tabla `aspirantes.estatus`)
 
@@ -557,6 +566,26 @@ POST:
 ---
 
 ## REGISTRO DE CAMBIOS EN PRODUCCIÓN
+
+### v5 — 17/06/2026 — Popup de convocatoria, subida de documentos por admin y reset de clave
+
+**Cambios de funcionalidad:**
+
+| Archivo | Cambio |
+|---------|--------|
+| `views/publico/home.php` | Popup de convocatoria: eliminado el bloque "Cupos disponibles" y su `fetch('/api/cupos')`. Quedan solo Inicio y Cierre de convocatoria |
+| `views/publico/home.php` | Fix móvil: se bloquea el scroll de la página de fondo mientras el popup está abierto (clase `body.popup-abierto` con `overflow:hidden`, añadida/quitada en JS al abrir/cerrar). En móvil la tarjeta queda centrada con `max-height:90vh` y scroll interno, ya no descuadra la página al cerrar |
+| `controllers/AdminController.php` | Nuevo método `subirDocumentoAdmin()` — sube/reemplaza documentos de un candidato desde el panel admin |
+| `models/DocumentoModel.php` | Nuevo método `porTipo($aspirante_id, $tipo)` — busca documento existente de un tipo para reemplazarlo |
+| `views/admin/ver_candidato.php` | Formulario de subida de documento por admin en el bloque Documentos |
+
+**Acceso admin / reset de clave:**
+- Admin de producción: `jfer22@gmail.com` (rol `admin`), tabla `usuarios`, columna `password` (hash bcrypt vía `password_hash`/`password_verify`)
+- Procedimiento de reset olvidado: script temporal `reset-admin-tmp.php` (token + rol admin/evaluador) que fija un nuevo hash. Se sube a la raíz, se ejecuta por navegador y **se borra del hosting** después. NO se versiona en git
+
+**Notas de despliegue:**
+- Archivos temporales `reset-admin-tmp.php` y `reset-clave-tmp.php` quedan fuera de git y deben borrarse del hosting tras usarse
+- Commits: `0940da1` (popup home) y `3b2b10c` (subida documentos admin) en `main`
 
 ### v4 — 31/03/2026 — Correcciones producción post-deploy
 
