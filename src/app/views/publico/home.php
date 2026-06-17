@@ -1521,13 +1521,6 @@
                     </div>
                 </div>
                 <div class="popup-stat">
-                    <i class="fas fa-users"></i>
-                    <div>
-                        <strong>Cupos disponibles</strong>
-                        <span id="popup-cupos-texto">40 por cohorte</span>
-                    </div>
-                </div>
-                <div class="popup-stat">
                     <i class="fas fa-clock"></i>
                     <div>
                         <strong>Cierre convocatoria</strong>
@@ -1574,6 +1567,8 @@
     display: flex;
     animation: popupFadeIn 0.35s ease;
 }
+/* Bloquea el scroll de la página mientras el popup está abierto */
+body.popup-abierto { overflow: hidden; }
 @keyframes popupFadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
@@ -1783,19 +1778,18 @@
 @media (max-width: 640px) {
     .popup-backdrop {
         padding: 1rem;
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
-        overflow-y: auto;
+        overflow: hidden;
         padding-top: max(1rem, env(safe-area-inset-top, 1rem));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
     }
     .popup-card {
         grid-template-columns: 1fr;
         border-radius: 20px;
-        max-height: none;
-        overflow-y: visible;
+        max-height: 90vh;
+        overflow-y: auto;
         width: 100%;
-        margin-top: 0.5rem;
-        margin-bottom: 1rem;
     }
     .popup-visual { display: none; }
     .popup-cuerpo { padding: 2rem 1.5rem 1.5rem; }
@@ -1821,6 +1815,7 @@
     function cerrarPopup() {
         popup.style.animation = 'popupFadeIn 0.25s ease reverse forwards';
         setTimeout(function () { popup.classList.remove('visible'); }, 220);
+        document.body.classList.remove('popup-abierto');
         sessionStorage.setItem(KEY, '1');
     }
     window.cerrarPopup = cerrarPopup;
@@ -1828,6 +1823,7 @@
     // Mostrar con delay (la página carga primero)
     setTimeout(function () {
         popup.classList.add('visible');
+        document.body.classList.add('popup-abierto');
     }, 1200);
 
     // Cerrar con botón X
@@ -1849,19 +1845,6 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && popup.classList.contains('visible')) cerrarPopup();
     });
-
-    // Cupos disponibles — carga dinámica desde API
-    fetch('/api/cupos')
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            var el = document.getElementById('popup-cupos-texto');
-            if (el && typeof d.disponibles !== 'undefined') {
-                el.textContent = d.disponibles > 0
-                    ? d.disponibles + ' disponibles de ' + d.total
-                    : 'Sin cupos disponibles';
-            }
-        })
-        .catch(function() { /* mantiene el texto por defecto */ });
 
     // Días restantes para el cierre de convocatoria
     var fin = new Date('2026-06-30T23:59:59');
