@@ -372,6 +372,34 @@
                         <?php endforeach; ?>
                     </div>
                     <?php endif; ?>
+
+                    <!-- Subir / reemplazar documento (admin) ── -->
+                    <form method="POST" action="/admin/candidatos"
+                          enctype="multipart/form-data" class="doc-upload">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="accion"       value="subir_doc">
+                        <input type="hidden" name="aspirante_id" value="<?= $aspirante['id'] ?>">
+                        <input type="hidden" name="_redirect"    value="/admin/candidatos?ver=<?= $aspirante['id'] ?>">
+                        <div class="doc-upload__campos">
+                            <select name="tipo" required class="doc-upload__select">
+                                <option value="">Tipo de documento…</option>
+                                <option value="cedula_identidad">Cédula de Identidad</option>
+                                <option value="titulo_bachiller">Título de Bachiller</option>
+                                <option value="carta_pastoral">Carta Pastoral</option>
+                                <option value="carta_motivacion">Carta de Motivación</option>
+                                <option value="foto_personal">Foto Personal</option>
+                                <option value="otro">Otro documento</option>
+                            </select>
+                            <input type="file" name="archivo" required
+                                   accept=".pdf,.jpg,.jpeg,.png" class="doc-upload__file">
+                            <button type="submit" class="btn btn--naranja btn--sm">
+                                <i class="fas fa-upload"></i> Subir
+                            </button>
+                        </div>
+                        <p class="doc-upload__hint">
+                            PDF, JPG o PNG · máximo 5 MB. Si eliges un tipo que ya existe, reemplaza el documento anterior.
+                        </p>
+                    </form>
                 </div>
 
                 <!-- Meta del registro ────────────────────── -->
@@ -591,6 +619,29 @@
 .doc-item__tipo { font-size: 0.82rem; font-weight: 600; color: #1e293b; }
 .doc-item__meta { font-size: 0.72rem; color: var(--gris); }
 .doc-item__acciones { display: flex; align-items: center; gap: 0.4rem; }
+
+/* Subida de documento (admin) */
+.doc-upload {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #e2e8f0;
+}
+.doc-upload__campos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+.doc-upload__select {
+    flex: 1 1 12rem;
+    min-width: 10rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.4rem;
+    font-size: 0.82rem;
+}
+.doc-upload__file { flex: 1 1 12rem; font-size: 0.78rem; }
+.doc-upload__hint { margin: 0.5rem 0 0; font-size: 0.72rem; color: var(--gris); }
 
 /* Movilidad */
 .movilidad-ok { color: var(--verde); font-weight: 600; }

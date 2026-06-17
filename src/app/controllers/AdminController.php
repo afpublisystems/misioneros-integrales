@@ -316,6 +316,12 @@ class AdminController extends Controller {
             return;
         }
 
+        // Si viene accion=subir_doc, el admin sube o reemplaza un documento del candidato
+        if (($_POST['accion'] ?? '') === 'subir_doc') {
+            $this->subirDocumentoAdmin();
+            return;
+        }
+
         $id        = (int) ($_POST['id'] ?? 0);
         $estatus   = $_POST['estatus'] ?? '';
         $nota      = trim($_POST['nota'] ?? '');
@@ -374,6 +380,85 @@ class AdminController extends Controller {
             $this->flash('exito', 'Estado del documento actualizado.');
         }
 
+        $this->redirigir($redirect);
+    }
+
+    // ── POST /admin/candidatos (accion=subir_doc) — admin sube/reemplaza documento ──
+    public function subirDocumentoAdmin(): void {
+        $this->requireAdminOEvaluador();
+
+        $aspirante_id = (int) ($_POST['aspirante_id'] ?? 0);
+        $tipo         = $_POST['tipo'] ?? '';
+        $redirect     = $this->safeRedirect($_POST['_redirect'] ?? '', '/admin/candidatos');
+
+        $aspirante = $this->aspirantes->porId($aspirante_id);
+        if (!$aspirante) {
+            $this->flash('error', 'Candidato no encontrado.');
+            $this->redirigir('/admin/candidatos');
+        }
+
+        // Validar archivo recibido
+        $err_php = $_FILES['archivo']['error'] ?? UPLOAD_ERR_NO_FILE;
+        if ($err_php !== UPLOAD_ERR_OK) {
+            $grande  = in_array($err_php, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true);
+            $this->flash('error', $grande
+                ? 'El archivo es demasiado grande. Máximo permitido: 5 MB.'
+                : 'No se recibió ningún archivo. Intenta de nuevo.');
+            $this->redirigir($redirect);
+        }
+
+        $tipos_validos = ['cedula_identidad','titulo_bachiller','carta_pastoral','carta_motivacion','foto_personal','otro'];
+        if (!in_array($tipo, $tipos_validos, true)) {
+            $this->flash('error', 'Tipo de documento no válido.');
+            $this->redirigir($redirect);
+        }
+
+        $archivo = $_FILES['archivo'];
+
+        $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['pdf','jpg','jpeg','png'], true)) {
+            $this->flash('error', 'Formato no permitido. Usa PDF, JPG o PNG.');
+            $this->redirigir($redirect);
+        }
+        if ($archivo['size'] > 5 * 1024 * 1024) {
+            $this->flash('error', 'El archivo supera los 5 MB permitidos.');
+            $this->redirigir($redirect);
+        }
+
+        $nombre_archivo = $aspirante_id . '_' . $tipo . '_' . time() . '.' . $ext;
+        $dir_destino    = BASE_PATH . '/uploads/documentos/';
+        if (!is_dir($dir_destino)) {
+            mkdir($dir_destino, 0755, true);
+        }
+        if (!move_uploaded_file($archivo['tmp_name'], $dir_destino . $nombre_archivo)) {
+            $this->flash('error', 'No se pudo guardar el archivo en el servidor.');
+            $this->redirigir($redirect);
+        }
+
+        require_once APP_PATH . '/models/DocumentoModel.php';
+        $docModel = new DocumentoModel();
+
+        // Si ya existe uno del mismo tipo, borrar el archivo físico anterior para no dejar huérfanos
+        $previo = $docModel->porTipo($aspirante_id, $tipo);
+        if ($previo && !empty($previo['ruta'])) {
+            $ruta_previa = BASE_PATH . '/' . $previo['ruta'];
+            if (is_file($ruta_previa)) {
+                @unlink($ruta_previa);
+            }
+        }
+
+        $docModel->guardar([
+            'aspirante_id'  => $aspirante_id,
+            'tipo'          => $tipo,
+            'nombre_archivo'=> $nombre_archivo,
+            'ruta'          => 'uploads/documentos/' . $nombre_archivo,
+            'mime_type'     => $archivo['type'],
+            'tamanio_kb'    => (int) ceil($archivo['size'] / 1024),
+        ]);
+
+        $this->flash('exito', $previo
+            ? 'Documento reemplazado correctamente.'
+            : 'Documento subido correctamente.');
         $this->redirigir($redirect);
     }
 

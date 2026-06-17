@@ -22,6 +22,17 @@ class DocumentoModel extends Model {
     }
 
     /**
+     * Buscar un documento de un aspirante por tipo
+     */
+    public function porTipo(int $aspirante_id, string $tipo): array|false {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM documentos WHERE aspirante_id = :aid AND tipo = :tipo LIMIT 1"
+        );
+        $stmt->execute([':aid' => $aspirante_id, ':tipo' => $tipo]);
+        return $stmt->fetch();
+    }
+
+    /**
      * Guardar o reemplazar documento por tipo
      */
     public function guardar(array $datos) {
