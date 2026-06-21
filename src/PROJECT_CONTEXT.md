@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT.md
 # Proyecto: Misioneros Integrales — Sistema Web CNBV/DIME
-# Última actualización: 17/06/2026 (v5)
+# Última actualización: 21/06/2026 (v6)
 # Roles: Gemini = Arquitecto | Claude = Ejecutor (código PHP/MVC/CSS)
 
 ---
@@ -126,8 +126,10 @@ C:\xampp\htdocs\misioneros-integrales\
     │       ├── admin/
     │       │   ├── dashboard.php           ✅ KPIs + últimas postulaciones + por estado
     │       │   ├── candidatos.php          ✅ Tabla + filtros + modal cambio estatus
-    │       │   ├── ver_candidato.php       ✅ Detalle + flujo editable + docs + test
+    │       │   ├── ver_candidato.php       ✅ Detalle + flujo editable + docs + test + botón ficha
     │       │   ├── ver_test.php            ✅ 60 respuestas test vocacional admin
+    │       │   ├── ficha_candidato.php     ✅ v6 — ficha imprimible/PDF de un postulante (sin layout)
+    │       │   ├── listado_candidatos.php  ✅ v6 — listado imprimible/PDF de todos (sin layout)
     │       │   ├── perfil.php              ✅ Cambiar datos personales y contraseña
     │       │   └── estadisticas.php        ✅ Vista editable contadores públicos
     │       └── errors/
@@ -230,6 +232,9 @@ GET:
   /admin/candidatos       → AdminController::candidatos
     ?ver=ID               → AdminController::verCandidato()  (delegado internamente)
     ?ver=ID&test=1        → AdminController::verTest()       (delegado internamente)
+    ?ver=ID&ficha=1       → AdminController::fichaCandidato()    (v6, ficha imprimible)
+    ?listado=1            → AdminController::listadoCandidatos() (v6, listado imprimible)
+    ?exportar=1           → AdminController::exportarCSV()
   /admin/estadisticas     → AdminController::estadisticas
   /admin/galeria          → AdminController::galeria  ✅
     ?sede=ID              → muestra ítems de la sede
@@ -566,6 +571,30 @@ POST:
 ---
 
 ## REGISTRO DE CAMBIOS EN PRODUCCIÓN
+
+### v6 — 21/06/2026 — Reportes de postulantes (ficha individual y listado) + fix buscador admin
+
+**Cambios de funcionalidad:**
+
+| Archivo | Cambio |
+|---------|--------|
+| `controllers/AdminController.php` | Nuevo método `fichaCandidato()` — ficha imprimible/PDF de un postulante (foto, resumen de presentación autogenerado con concordancia de género, datos eclesiales/contacto, perfil vocacional si el test está completo, estado del proceso). Se entra por `?ver=ID&ficha=1` (delegación en `candidatos()`, igual patrón que `?test=1`). Renderiza con `renderParcial()` (documento HTML completo sin layout admin) |
+| `controllers/AdminController.php` | Nuevo método `listadoCandidatos()` — listado imprimible/PDF de todos los postulantes. Se entra por `?listado=1`. Respeta filtro de estatus y búsqueda. La foto de cada uno se trae con subconsulta correlacionada (`foto_personal`, sin N+1). Columnas: #, foto, nombre, cédula (solo dígitos vía `preg_replace('/\D+/','',...)`, en una línea), edad, teléfono, ciudad/estado, iglesia, pastor. Filtro de estatus propio en la barra (dropdown que conserva la búsqueda) |
+| `views/admin/ficha_candidato.php` | **Nueva** — hoja A4 vertical, CSS de impresión, paleta oficial, botón "Imprimir / Guardar PDF" |
+| `views/admin/listado_candidatos.php` | **Nueva** — hoja apaisada (`@page { size: landscape }`), botón imprimir, filtro de estatus, miniaturas de foto |
+| `views/admin/ver_candidato.php` | Botón "Generar ficha" en el encabezado (abre `?ver=ID&ficha=1` en pestaña nueva) |
+| `views/admin/candidatos.php` | Botón "Imprimir listado" junto a "Exportar CSV" (conserva filtro y búsqueda activos) |
+
+**Bug corregido (afectaba producción):**
+
+| Archivo | Bug | Causa | Fix |
+|---------|-----|-------|-----|
+| `controllers/AdminController.php` | Error fatal `PDOException HY093: Invalid parameter number` al usar el buscador (lupa) de `/admin/candidatos` | El placeholder nombrado `:q` se repetía 4 veces en el `LIKE`, y la conexión usa `PDO::ATTR_EMULATE_PREPARES => false` (no permite reusar un placeholder) | Placeholders únicos `:q1`–`:q4` con el mismo valor. Mismo fix aplicado en `candidatos()` y `listadoCandidatos()` |
+
+**Notas técnicas:**
+- Las fotos en los reportes salen de la tabla `documentos` (tipo `foto_personal`, `mime_type LIKE 'image/%'`); URL servida desde `/uploads/documentos/...` (la columna `ruta` se guarda sin slash inicial y la vista antepone `/`)
+- Los logos en los reportes usan `/public/assets/logos/` (`logo-mi-w.png` blanco en la ficha sobre fondo verde, `logo-mi-t.png` a color en el listado)
+- Sin cambios en base de datos. Archivos a subir por FTP: `AdminController.php`, `ver_candidato.php`, `candidatos.php` (reemplazo) + `ficha_candidato.php`, `listado_candidatos.php` (nuevos)
 
 ### v5 — 17/06/2026 — Popup de convocatoria, subida de documentos por admin y reset de clave
 

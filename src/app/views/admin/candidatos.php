@@ -17,10 +17,16 @@
                 <h1>Candidatos</h1>
                 <p>Gestión y evaluación de postulaciones</p>
             </div>
-            <a href="/admin/candidatos?exportar=1<?= $filtro_estatus ? '&estatus='.urlencode($filtro_estatus) : '' ?>"
-               class="btn btn--outline btn--sm" title="Descargar lista como CSV">
-                <i class="fas fa-file-csv"></i> Exportar CSV
-            </a>
+            <div style="display:flex; gap:.5rem;">
+                <a href="/admin/candidatos?listado=1<?= $filtro_estatus ? '&estatus='.urlencode($filtro_estatus) : '' ?><?= $busqueda ? '&q='.urlencode($busqueda) : '' ?>"
+                   target="_blank" class="btn btn--outline btn--sm" title="Listado imprimible / PDF">
+                    <i class="fas fa-print"></i> Imprimir listado
+                </a>
+                <a href="/admin/candidatos?exportar=1<?= $filtro_estatus ? '&estatus='.urlencode($filtro_estatus) : '' ?>"
+                   class="btn btn--outline btn--sm" title="Descargar lista como CSV">
+                    <i class="fas fa-file-csv"></i> Exportar CSV
+                </a>
+            </div>
         </div>
 
         <!-- Filtros rápidos por estatus ─────────────────────── -->

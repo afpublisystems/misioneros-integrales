@@ -76,6 +76,8 @@ class AdminController extends Controller {
             // Si además viene ?test=1, mostramos el test vocacional
             if (isset($_GET['test'])) {
                 $this->verTest();
+            } elseif (isset($_GET['ficha'])) {
+                $this->fichaCandidato();
             } else {
                 $this->verCandidato();
             }
@@ -85,6 +87,12 @@ class AdminController extends Controller {
         // Si viene ?exportar=1, generar CSV
         if (isset($_GET['exportar'])) {
             $this->exportarCSV();
+            return;
+        }
+
+        // Si viene ?listado=1, mostrar listado imprimible
+        if (isset($_GET['listado'])) {
+            $this->listadoCandidatos();
             return;
         }
 
@@ -100,8 +108,12 @@ class AdminController extends Controller {
             $params[':estatus'] = $filtro_estatus;
         }
         if ($busqueda) {
-            $sql .= " AND (a.nombres LIKE :q OR a.apellidos LIKE :q OR a.cedula LIKE :q OR a.iglesia LIKE :q)";
-            $params[':q'] = "%{$busqueda}%";
+            $sql .= " AND (a.nombres LIKE :q1 OR a.apellidos LIKE :q2 OR a.cedula LIKE :q3 OR a.iglesia LIKE :q4)";
+            $like = "%{$busqueda}%";
+            $params[':q1'] = $like;
+            $params[':q2'] = $like;
+            $params[':q3'] = $like;
+            $params[':q4'] = $like;
         }
 
         $sql .= " ORDER BY a.created_at DESC";
@@ -207,6 +219,50 @@ class AdminController extends Controller {
         exit;
     }
 
+    // ── GET /admin/candidatos?listado=1 — listado imprimible ─────
+    public function listadoCandidatos(): void {
+        $this->requireAdminOEvaluador();
+
+        $db             = Database::getConnection();
+        $filtro_estatus = $_GET['estatus'] ?? '';
+        $busqueda       = trim($_GET['q'] ?? '');
+
+        $sql    = "SELECT a.*, u.email,
+                   (SELECT d.ruta FROM documentos d
+                    WHERE d.aspirante_id = a.id
+                      AND d.tipo = 'foto_personal'
+                      AND d.mime_type LIKE 'image/%'
+                    ORDER BY d.id DESC LIMIT 1) AS foto_ruta
+                   FROM aspirantes a
+                   LEFT JOIN usuarios u ON u.id = a.usuario_id
+                   WHERE 1=1";
+        $params = [];
+
+        if ($filtro_estatus) {
+            $sql .= " AND a.estatus = :estatus";
+            $params[':estatus'] = $filtro_estatus;
+        }
+        if ($busqueda) {
+            $sql .= " AND (a.nombres LIKE :q1 OR a.apellidos LIKE :q2 OR a.cedula LIKE :q3 OR a.iglesia LIKE :q4)";
+            $like = "%{$busqueda}%";
+            $params[':q1'] = $like;
+            $params[':q2'] = $like;
+            $params[':q3'] = $like;
+            $params[':q4'] = $like;
+        }
+        $sql .= " ORDER BY a.apellidos, a.nombres";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $lista = $stmt->fetchAll();
+
+        $this->renderParcial('admin/listado_candidatos', [
+            'lista'          => $lista,
+            'filtro_estatus' => $filtro_estatus,
+            'busqueda'       => $busqueda,
+        ]);
+    }
+
     // ── GET /admin/candidatos?ver=ID — ver detalle ───────────────
     public function verCandidato(): void {
         $this->requireAdminOEvaluador();
@@ -249,6 +305,59 @@ class AdminController extends Controller {
             'flujo'      => $flujo,
             'test'       => $test,
         ], 'admin');
+    }
+
+    // ── GET /admin/candidatos?ver=ID&ficha=1 — ficha imprimible ──
+    public function fichaCandidato(): void {
+        $this->requireAdminOEvaluador();
+
+        $id = (int) ($_GET['ver'] ?? 0);
+        $db = Database::getConnection();
+
+        $stmt = $db->prepare("
+            SELECT a.*, u.email
+            FROM aspirantes a
+            LEFT JOIN usuarios u ON u.id = a.usuario_id
+            WHERE a.id = :id LIMIT 1
+        ");
+        $stmt->execute([':id' => $id]);
+        $aspirante = $stmt->fetch();
+
+        if (!$aspirante) {
+            $this->redirigir('/admin/candidatos');
+            return;
+        }
+
+        // Foto del aspirante (documento tipo foto_personal)
+        require_once APP_PATH . '/models/DocumentoModel.php';
+        $docModel = new DocumentoModel();
+        $foto     = $docModel->porTipo($id, 'foto_personal');
+        $foto_ruta = ($foto && str_starts_with($foto['mime_type'] ?? '', 'image/'))
+            ? '/' . ltrim($foto['ruta'], '/')
+            : null;
+
+        // Flujo del proceso
+        $stmt2 = $db->prepare("SELECT * FROM flujo_proceso WHERE aspirante_id = :id ORDER BY etapa");
+        $stmt2->execute([':id' => $id]);
+        $flujo = $stmt2->fetchAll();
+
+        // Perfil vocacional (si el test está completado)
+        $stmt3 = $db->prepare("SELECT * FROM test_vocacional WHERE aspirante_id = ? LIMIT 1");
+        $stmt3->execute([$id]);
+        $test = $stmt3->fetch() ?: null;
+
+        $scoring = null;
+        if ($test && !empty($test['completado']) && !empty($test['respuestas'])) {
+            $respuestas = json_decode($test['respuestas'], true) ?: [];
+            $scoring = TestScorer::calcular($respuestas);
+        }
+
+        $this->renderParcial('admin/ficha_candidato', [
+            'aspirante' => $aspirante,
+            'foto_ruta' => $foto_ruta,
+            'flujo'     => $flujo,
+            'scoring'   => $scoring,
+        ]);
     }
 
     // ── GET /admin/candidatos?ver=ID&test=1 — ver test vocacional ──

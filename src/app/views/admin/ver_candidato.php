@@ -33,6 +33,10 @@
                 <span class="badge badge--<?= $aspirante['estatus'] ?>" style="font-size:0.9rem; padding:0.35rem 1rem;">
                     <?= ucfirst(str_replace('_', ' ', $aspirante['estatus'])) ?>
                 </span>
+                <a href="/admin/candidatos?ver=<?= $aspirante['id'] ?>&ficha=1" target="_blank"
+                   class="btn btn--outline">
+                    <i class="fas fa-id-card"></i> Generar ficha
+                </a>
                 <button type="button" class="btn btn--verde"
                         onclick="document.getElementById('modal-estatus').style.display='flex'">
                     <i class="fas fa-exchange-alt"></i> Cambiar estatus
