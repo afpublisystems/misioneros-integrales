@@ -1,0 +1,20 @@
+# Material de trabajo personal del coordinador — NO es parte del sitio web ni del sistema
+# (presupuesto, documentación interna y archivos de gestión del programa)
+/PRESUPUESTO-CICLO1.md
+/Presupuesto-Ciclo1-MisionerosIntegrales.xlsx
+/Presupuesto-Ciclo1-Completo.pdf
+/Presupuesto-Ciclo1-Resumen-3hojas.pdf
+/Presupuesto Ciclo1 Resumen-.pdf
+/Presupuesto-Ciclo1-*.pdf
+/Presupuesto-Ciclo1-*.xlsx
+
+# Material de gestión del programa (cartas, presupuestos, plenaria) — no va al sitio
+/Carta-Solicitud-Apoyo-CNBV.docx
+/presupuesto-bolsa-ayuda-terremoto.xlsx
+/guion-plenaria.html
+/presentacion-plenaria.html
+/RUTA.jpeg
+
+# Scripts temporales sensibles (no subir nunca)
+/src/reset-admin-tmp.php
+/src/reset-clave-tmp.php
