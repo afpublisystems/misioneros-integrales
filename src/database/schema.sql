@@ -25,15 +25,13 @@ CREATE TABLE IF NOT EXISTS sedes (
     updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Datos iniciales del itinerario
+-- Datos iniciales del itinerario (Ciclo 1 reprogramado por la contingencia de La Guaira)
 INSERT INTO sedes (nombre, estado, mes, orden, fecha_inicio, fecha_fin) VALUES
-('Los Teques',   'Miranda',   'Julio',            1, '2026-07-01', '2026-07-31'),
-('Maracay',      'Aragua',    'Agosto',            2, '2026-08-01', '2026-08-31'),
-('San Felipe',   'Yaracuy',   'Septiembre',        3, '2026-09-01', '2026-09-30'),
-('Valencia',     'Carabobo',  'Octubre',           4, '2026-10-01', '2026-10-31'),
-('Acarigua',     'Portuguesa','Noviembre',         5, '2026-11-01', '2026-11-30'),
-('Barquisimeto', 'Lara',      'Diciembre-Enero',   6, '2026-12-15', '2027-01-15'),
-('Trujillo',     'Trujillo',  'Febrero',           7, '2027-02-01', '2027-02-28');
+('La Guaira',    'La Guaira',  'Septiembre-Diciembre', 1, '2026-09-15', '2026-12-14'),
+('Barquisimeto', 'Lara',       'Enero-Febrero',        2, '2027-01-19', '2027-02-15'),
+('Acarigua',     'Portuguesa', 'Febrero-Marzo',        3, '2027-02-16', '2027-03-15'),
+('San Felipe',   'Yaracuy',    'Marzo-Abril',          4, '2027-03-16', '2027-04-12'),
+('Valencia',     'Carabobo',   'Abril-Mayo',           5, '2027-04-13', '2027-05-10');
 
 -- ------------------------------------------------------------
 -- TABLA: usuarios

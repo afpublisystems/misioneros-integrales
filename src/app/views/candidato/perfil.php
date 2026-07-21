@@ -324,8 +324,8 @@
                         <i class="fas fa-route movilidad-banner__icono"></i>
                         <div>
                             <h3>Requisito fundamental del programa</h3>
-                            <p>El programa recorre <strong>7 ciudades</strong> en 8 meses
-                            (Julio 2026 – Febrero 2027). El candidato debe poder trasladarse
+                            <p>El programa recorre <strong>5 ciudades</strong> en 8 meses
+                            (Septiembre 2026 – Mayo 2027). El candidato debe poder trasladarse
                             mensualmente sin impedimentos.</p>
                         </div>
                     </div>
@@ -334,13 +334,11 @@
                     <div class="ruta-mini">
                         <?php
                         $paradas = [
-                            ['ciudad' => 'Los Teques', 'mes' => 'Jul'],
-                            ['ciudad' => 'Maracay',    'mes' => 'Ago'],
-                            ['ciudad' => 'San Felipe', 'mes' => 'Sep'],
-                            ['ciudad' => 'Valencia',   'mes' => 'Oct'],
-                            ['ciudad' => 'Acarigua',   'mes' => 'Nov'],
-                            ['ciudad' => 'Barquisimeto','mes' => 'Dic-Ene'],
-                            ['ciudad' => 'Trujillo',   'mes' => 'Feb'],
+                            ['ciudad' => 'La Guaira',    'mes' => 'Sep-Dic'],
+                            ['ciudad' => 'Barquisimeto', 'mes' => 'Ene-Feb'],
+                            ['ciudad' => 'Acarigua',     'mes' => 'Feb-Mar'],
+                            ['ciudad' => 'San Felipe',   'mes' => 'Mar-Abr'],
+                            ['ciudad' => 'Valencia',     'mes' => 'Abr-May'],
                         ];
                         foreach ($paradas as $i => $p): ?>
                         <div class="ruta-mini__parada">
@@ -362,7 +360,7 @@
                         </div>
                         <p class="pregunta-clave__texto">
                             ¿Tienes algún compromiso ineludible que te impida trasladarte mensualmente
-                            entre julio 2026 y febrero 2027?
+                            entre septiembre 2026 y mayo 2027?
                         </p>
                         <div class="pregunta-clave__opciones">
                             <label class="radio-label radio-label--verde">

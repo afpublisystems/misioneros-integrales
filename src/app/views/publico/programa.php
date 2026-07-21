@@ -40,7 +40,7 @@
                 </p>
                 <p>
                     El programa se desarrolla en <strong>3 ciclos de 8 meses cada uno</strong>: el
-                    <strong>1er Ciclo</strong> es inmersión local en 7 ciudades, mientras que el
+                    <strong>1er Ciclo</strong> es inmersión local en varias ciudades del país, mientras que el
                     <strong>2do y 3er Ciclo</strong> amplían la misión a rotación nacional en
                     <strong>21 estados</strong> y ciudades fronterizas.
                 </p>
@@ -55,7 +55,7 @@
                     </div>
                     <div class="dato-chip">
                         <i class="fas fa-calendar-alt"></i>
-                        <span>8 meses · 7 ciudades</span>
+                        <span>8 meses · 5 ciudades</span>
                     </div>
                     <div class="dato-chip">
                         <i class="fas fa-graduation-cap"></i>
@@ -69,7 +69,7 @@
                          alt="Misioneros en campo" loading="lazy">
                     <div class="img-badge">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span>Ciclo 1 · Julio 2026</span>
+                        <span>Ciclo 1 · Septiembre 2026</span>
                     </div>
                 </div>
             </div>
@@ -177,15 +177,15 @@
             <div class="prog-semana__visual">
                 <div class="ciclo-info-card">
                     <div class="ciclo-badge">Ciclo 1 · Inscripción Abierta</div>
-                    <h3>Julio 2026 — Febrero 2027</h3>
-                    <p>7 ciudades · 7 estados · 8 meses</p>
+                    <h3>Septiembre 2026 — Mayo 2027</h3>
+                    <p>5 ciudades · 8 meses</p>
                     <div class="ciclo-meta">
                         <i class="fas fa-users"></i>
                         <span>Cupos disponibles: <strong>40</strong></span>
                     </div>
                     <div class="ciclo-certif">
                         <i class="fas fa-calendar-check"></i>
-                        <span>Inscripciones: <strong>Marzo – Junio 2026</strong></span>
+                        <span>Inscripciones: <strong>Abiertas</strong></span>
                     </div>
                     <div class="ciclo-certif">
                         <i class="fas fa-certificate"></i>
@@ -208,7 +208,19 @@
         <div class="seccion-header centrado">
             <span class="seccion-label">Itinerario</span>
             <h2>El recorrido del <span class="highlight-dorado">Ciclo 1</span></h2>
-            <p class="seccion-subtitulo">7 ciudades. 7 iglesias sede. 8 meses de formación en territorio.</p>
+            <p class="seccion-subtitulo">5 ciudades. 8 meses de formación en territorio. Empezamos en La Guaira.</p>
+        </div>
+
+        <!-- Nota de reprogramación por la contingencia -->
+        <div class="itinerario-nota">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <strong>Recorrido reprogramado</strong>
+                <p>El inicio se movió a septiembre por la situación tras los sismos en La Guaira.
+                Los primeros 3 meses los dedicamos a acompañar a las iglesias de la zona: fortalecer
+                las que ya están y empezar obras nuevas. Los Teques, Maracay y Trujillo entran en el
+                2do ciclo de este grupo.</p>
+            </div>
         </div>
 
         <div class="timeline-scroll-wrap">
@@ -218,10 +230,10 @@
                     <div class="parada-numero">01</div>
                     <div class="parada-conector"></div>
                     <div class="parada-card">
-                        <span class="parada-mes">Julio 2026</span>
-                        <h4>Los Teques</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Miranda</p>
-                        <p class="parada-sede">Sede: STBV</p>
+                        <span class="parada-mes">Sep – Dic 2026</span>
+                        <h4>La Guaira</h4>
+                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> La Guaira</p>
+                        <p class="parada-sede">3 meses · apoyo a iglesias</p>
                     </div>
                 </div>
 
@@ -229,9 +241,9 @@
                     <div class="parada-numero">02</div>
                     <div class="parada-conector"></div>
                     <div class="parada-card">
-                        <span class="parada-mes">Agosto 2026</span>
-                        <h4>Maracay</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Aragua</p>
+                        <span class="parada-mes">Ene – Feb 2027</span>
+                        <h4>Barquisimeto</h4>
+                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Lara</p>
                     </div>
                 </div>
 
@@ -239,9 +251,9 @@
                     <div class="parada-numero">03</div>
                     <div class="parada-conector"></div>
                     <div class="parada-card">
-                        <span class="parada-mes">Septiembre 2026</span>
-                        <h4>San Felipe</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Yaracuy</p>
+                        <span class="parada-mes">Feb – Mar 2027</span>
+                        <h4>Acarigua</h4>
+                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Portuguesa</p>
                     </div>
                 </div>
 
@@ -249,40 +261,18 @@
                     <div class="parada-numero">04</div>
                     <div class="parada-conector"></div>
                     <div class="parada-card">
-                        <span class="parada-mes">Octubre 2026</span>
-                        <h4>Valencia</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Carabobo</p>
-                        <p class="parada-sede">Sede: CBCC</p>
-                    </div>
-                </div>
-
-                <div class="timeline-parada">
-                    <div class="parada-numero">05</div>
-                    <div class="parada-conector"></div>
-                    <div class="parada-card">
-                        <span class="parada-mes">Noviembre 2026</span>
-                        <h4>Acarigua</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Portuguesa</p>
-                    </div>
-                </div>
-
-                <div class="timeline-parada">
-                    <div class="parada-numero">06</div>
-                    <div class="parada-conector"></div>
-                    <div class="parada-card">
-                        <span class="parada-mes">Dic 2026 – Ene 2027</span>
-                        <h4>Barquisimeto</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Lara</p>
-                        <p class="parada-sede">15 días c/u</p>
+                        <span class="parada-mes">Mar – Abr 2027</span>
+                        <h4>San Felipe</h4>
+                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Yaracuy</p>
                     </div>
                 </div>
 
                 <div class="timeline-parada ultima">
-                    <div class="parada-numero">07</div>
+                    <div class="parada-numero">05</div>
                     <div class="parada-card">
-                        <span class="parada-mes">Febrero 2027</span>
-                        <h4>Trujillo</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Trujillo</p>
+                        <span class="parada-mes">Abr – May 2027</span>
+                        <h4>Valencia</h4>
+                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Carabobo</p>
                         <span class="parada-final-badge">Cierre de Ciclo</span>
                     </div>
                 </div>
@@ -387,7 +377,7 @@
                         <i class="fas fa-calendar-alt"></i>
                         <div>
                             <strong>Inscripciones abiertas</strong>
-                            <span>A partir de la LXXIV Asamblea Nacional Anual · 26-28 Mar 2026 · Campo de Carabobo</span>
+                            <span>Postúlate ahora y asegura tu cupo en la 1ª cohorte del programa</span>
                         </div>
                     </div>
                     <div class="beca-cta">
@@ -830,6 +820,18 @@
     background: linear-gradient(180deg, #f8fffe 0%, var(--verde-light) 100%);
 }
 .prog-itinerario h2 { font-size: 2rem; font-weight: 800; color: #1a1a1a; margin: 0.5rem 0 0; }
+
+.itinerario-nota {
+    display: flex; gap: 1rem; align-items: flex-start;
+    max-width: 760px; margin: 0 auto 1rem;
+    background: #fff; border: 1px solid rgba(247,148,29,0.4);
+    border-left: 4px solid var(--naranja);
+    border-radius: 12px; padding: 1.15rem 1.35rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+}
+.itinerario-nota i { color: var(--naranja); font-size: 1.35rem; flex-shrink: 0; margin-top: 0.1rem; }
+.itinerario-nota strong { display: block; color: var(--verde-dark); font-size: 0.92rem; margin-bottom: 0.3rem; }
+.itinerario-nota p { margin: 0; font-size: 0.875rem; color: #555; line-height: 1.6; }
 
 .timeline-scroll-wrap { overflow-x: auto; padding-bottom: 1rem; }
 .timeline-horizontal {

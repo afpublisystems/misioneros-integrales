@@ -71,46 +71,13 @@
     <div class="container countdown-band__inner">
         <div class="countdown-band__texto">
             <i class="fas fa-calendar-alt"></i>
-            <span>Convocatoria <strong>Ciclo 1 · 2026</strong> — Postulaciones abiertas</span>
-        </div>
-        <div class="countdown-wrap">
-            <div class="countdown-item" id="cd-dias"><span class="cd-num">--</span><span class="cd-label">días</span></div>
-            <div class="countdown-sep">:</div>
-            <div class="countdown-item" id="cd-horas"><span class="cd-num">--</span><span class="cd-label">horas</span></div>
-            <div class="countdown-sep">:</div>
-            <div class="countdown-item" id="cd-mins"><span class="cd-num">--</span><span class="cd-label">min</span></div>
-            <div class="countdown-sep">:</div>
-            <div class="countdown-item" id="cd-segs"><span class="cd-num">--</span><span class="cd-label">seg</span></div>
+            <span>Convocatoria <strong>Ciclo 1</strong> — Inicio <strong>septiembre 2026</strong> · Postulaciones abiertas</span>
         </div>
         <a href="/registro" class="btn btn--naranja btn--sm">
             <i class="fas fa-user-plus"></i> Postularme
         </a>
     </div>
 </section>
-
-<script>
-(function() {
-    var fin = new Date('2026-06-30T23:59:59');
-    function actualizar() {
-        var ahora = new Date();
-        var diff  = fin - ahora;
-        if (diff <= 0) {
-            document.querySelector('.countdown-band__texto span').textContent = 'El plazo de postulación ha cerrado.';
-            return;
-        }
-        var d = Math.floor(diff / 86400000);
-        var h = Math.floor((diff % 86400000) / 3600000);
-        var m = Math.floor((diff % 3600000) / 60000);
-        var s = Math.floor((diff % 60000) / 1000);
-        document.querySelector('#cd-dias .cd-num').textContent  = String(d).padStart(2,'0');
-        document.querySelector('#cd-horas .cd-num').textContent = String(h).padStart(2,'0');
-        document.querySelector('#cd-mins .cd-num').textContent  = String(m).padStart(2,'0');
-        document.querySelector('#cd-segs .cd-num').textContent  = String(s).padStart(2,'0');
-    }
-    actualizar();
-    setInterval(actualizar, 1000);
-})();
-</script>
 
 <style>
 .countdown-band {
@@ -266,7 +233,7 @@
                 <span class="est-stat__label">Materias en<br>3 ciclos anuales</span>
             </div>
             <div class="est-stat">
-                <span class="est-stat__num">7</span>
+                <span class="est-stat__num">5</span>
                 <span class="est-stat__label">Ciudades de<br>Venezuela sede</span>
             </div>
         </div>
@@ -1517,14 +1484,14 @@
                     <i class="fas fa-calendar-check"></i>
                     <div>
                         <strong>Inicio</strong>
-                        <span>Julio 2026</span>
+                        <span>Septiembre 2026</span>
                     </div>
                 </div>
                 <div class="popup-stat">
                     <i class="fas fa-clock"></i>
                     <div>
-                        <strong>Cierre convocatoria</strong>
-                        <span id="popup-dias-restantes">—</span>
+                        <strong>Duración</strong>
+                        <span>8 meses</span>
                     </div>
                 </div>
             </div>
@@ -1845,17 +1812,6 @@ body.popup-abierto { overflow: hidden; }
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && popup.classList.contains('visible')) cerrarPopup();
     });
-
-    // Días restantes para el cierre de convocatoria
-    var fin = new Date('2026-06-30T23:59:59');
-    var diff = fin - new Date();
-    var el   = document.getElementById('popup-dias-restantes');
-    if (el && diff > 0) {
-        var dias = Math.ceil(diff / 86400000);
-        el.textContent = dias + ' días restantes';
-    } else if (el) {
-        el.textContent = 'Convocatoria cerrada';
-    }
 })();
 </script>
 <?php endif; ?>

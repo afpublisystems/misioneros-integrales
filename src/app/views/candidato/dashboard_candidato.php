@@ -53,7 +53,7 @@
         <div class="dash-header">
             <div>
                 <h1>Mi Postulación</h1>
-                <p>Ciclo 1 — Julio 2026 · Programa de Formación Misioneros Integrales</p>
+                <p>Ciclo 1 — Septiembre 2026 · Programa de Formación Misioneros Integrales</p>
             </div>
             <?php if (empty($aspirante) || $aspirante['estatus'] === 'borrador'): ?>
             <a href="/candidato/perfil" class="btn btn--verde">

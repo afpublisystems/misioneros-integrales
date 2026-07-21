@@ -81,7 +81,7 @@
                 <div class="req-card__num">04</div>
                 <div class="req-card__icono"><i class="fas fa-map-marked-alt"></i></div>
                 <h3>Disponibilidad de Movilidad</h3>
-                <p>Disposición de <strong>trasladarse a las 7 sedes</strong> del itinerario durante los 8 meses del Ciclo 1 (Julio 2026 – Febrero 2027 para la Promoción 2026).</p>
+                <p>Disposición de <strong>trasladarse a las 5 sedes</strong> del itinerario durante los 8 meses del Ciclo 1 (Septiembre 2026 – Mayo 2027).</p>
             </div>
 
             <div class="req-card">
@@ -296,7 +296,7 @@
                 <div class="proceso-paso__icono"><i class="fas fa-check-circle"></i></div>
                 <h3>Confirmación</h3>
                 <p>Recibirás una notificación con la decisión final. Los admitidos recibirán instrucciones de inicio.</p>
-                <span class="proceso-paso__tiempo"><i class="fas fa-clock"></i> Julio 2026</span>
+                <span class="proceso-paso__tiempo"><i class="fas fa-clock"></i> Septiembre 2026</span>
             </div>
 
         </div>

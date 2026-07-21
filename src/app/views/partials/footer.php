@@ -39,7 +39,7 @@
         <div class="footer__postulate">
             <h4>¿Sientes el llamado?</h4>
             <p style="font-size:0.85rem;color:rgba(255,255,255,0.7);margin-bottom:1rem;line-height:1.5">
-                Postúlate para el Ciclo 1<br>que inicia en <strong style="color:var(--dorado)">Julio 2026</strong>
+                Postúlate para el Ciclo 1<br>que inicia en <strong style="color:var(--dorado)">Septiembre 2026</strong>
             </p>
             <a href="/registro" class="btn btn--naranja btn--block">
                 <i class="fas fa-user-plus"></i> Postularme

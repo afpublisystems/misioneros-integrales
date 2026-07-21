@@ -176,9 +176,9 @@
 
             <div class="imp-meta-card">
                 <div class="imp-meta-card__icono"><i class="fas fa-map-marked-alt"></i></div>
-                <div class="imp-meta-card__num">7</div>
+                <div class="imp-meta-card__num">5</div>
                 <div class="imp-meta-card__label">Estados recorridos</div>
-                <p>Miranda, Aragua, Yaracuy, Carabobo, Portuguesa, Lara y Trujillo — formación itinerante real.</p>
+                <p>La Guaira, Lara, Portuguesa, Yaracuy y Carabobo — formación itinerante real.</p>
             </div>
 
             <div class="imp-meta-card">
@@ -273,7 +273,7 @@
                     <h3>Impacto Eclesial</h3>
                     <p>
                         Cada egresado vuelve a su iglesia con formación teológica, un oficio y experiencia
-                        de campo en 7 ciudades. Muchos quedan sirviendo en las ciudades donde fueron enviados.
+                        de campo en 5 ciudades. Muchos quedan sirviendo en las ciudades donde fueron enviados.
                     </p>
                     <ul class="imp-dimension__lista">
                         <li><i class="fas fa-check"></i> Plantación de nuevas iglesias</li>
@@ -300,13 +300,11 @@
         <div class="imp-itinerario">
             <?php
             $sedes_itinerario = [
-                ['Los Teques',   'Miranda',    'Julio 2026',          '1'],
-                ['Maracay',      'Aragua',     'Agosto 2026',         '2'],
-                ['San Felipe',   'Yaracuy',    'Septiembre 2026',     '3'],
-                ['Valencia',     'Carabobo',   'Octubre 2026',        '4'],
-                ['Acarigua',     'Portuguesa', 'Noviembre 2026',      '5'],
-                ['Barquisimeto', 'Lara',       'Dic. 2026 – Ene. 2027','6'],
-                ['Trujillo',     'Trujillo',   'Febrero 2027',        '7'],
+                ['La Guaira',    'La Guaira',  'Sep – Dic 2026',      '1'],
+                ['Barquisimeto', 'Lara',       'Ene – Feb 2027',      '2'],
+                ['Acarigua',     'Portuguesa', 'Feb – Mar 2027',      '3'],
+                ['San Felipe',   'Yaracuy',    'Mar – Abr 2027',      '4'],
+                ['Valencia',     'Carabobo',   'Abr – May 2027',      '5'],
             ];
             foreach ($sedes_itinerario as $s):
             ?>
@@ -332,7 +330,7 @@
         <span class="seccion-label" style="color:var(--dorado)">Promoción 2026</span>
         <h2 class="seccion__titulo">Postúlate para el Ciclo 1</h2>
         <p class="seccion__subtitulo" style="max-width:500px; margin:0 auto 2rem;">
-            El programa inicia en julio 2026. Cada año se abre una nueva promoción.
+            El programa inicia en septiembre 2026. Cada año se abre una nueva promoción.
         </p>
         <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
             <a href="/registro" class="btn-cta-naranja">

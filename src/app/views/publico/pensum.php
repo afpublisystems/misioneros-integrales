@@ -242,7 +242,7 @@ foreach ($pensum as $anio) {
     <div class="pensum-cta__card">
         <div class="pensum-cta__texto">
             <h3>¿Este camino es tuyo?</h3>
-            <p>La primera cohorte inicia en julio 2026. Las postulaciones están abiertas.</p>
+            <p>La primera cohorte inicia en septiembre 2026. Las postulaciones están abiertas.</p>
         </div>
         <div class="pensum-cta__acciones">
             <a href="/registro" class="btn btn--verde">

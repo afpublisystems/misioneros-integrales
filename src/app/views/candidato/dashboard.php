@@ -54,7 +54,7 @@
             <div>
                 <h1>Mi Postulación</h1>
                 <p>
-                    Ciclo 1 — Julio 2026 · Programa de Formación Misioneros Integrales
+                    Ciclo 1 — Septiembre 2026 · Programa de Formación Misioneros Integrales
                     &nbsp;·&nbsp;
                     <span style="color:var(--naranja); font-weight:700;">
                         <i class="fas fa-calendar-alt"></i> Plazo: 30 jun. 2026

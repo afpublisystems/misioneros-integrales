@@ -48,11 +48,11 @@
             <div class="gal-vacia__icono"><i class="fas fa-images"></i></div>
             <h2>La galería se irá llenando</h2>
             <p>
-                El Ciclo 1 del programa inicia en <strong>Julio 2026</strong>.
+                El Ciclo 1 del programa inicia en <strong>Septiembre 2026</strong>.
                 Aquí publicaremos fotos y videos de cada sede a medida que avancemos por Venezuela.
             </p>
             <p style="font-size:0.9rem; color:#6b7280; margin-top:0.5rem;">
-                Sedes del itinerario: Los Teques · Maracay · San Felipe · Valencia · Acarigua · Barquisimeto · Trujillo
+                Sedes del itinerario: La Guaira · Barquisimeto · Acarigua · San Felipe · Valencia
             </p>
             <a href="/registro" class="btn-cta-naranja" style="margin-top:1.5rem;">
                 <i class="fas fa-user-plus"></i> Sé parte de este programa
@@ -106,8 +106,8 @@
     <div class="container">
         <div class="seccion__encabezado">
             <span class="seccion-label">Itinerario</span>
-            <h2 class="seccion__titulo">Las 7 Sedes del Programa</h2>
-            <p class="seccion__subtitulo">Ciclo 1 · Julio 2026 — Febrero 2027</p>
+            <h2 class="seccion__titulo">Las 5 Sedes del Programa</h2>
+            <p class="seccion__subtitulo">Ciclo 1 · Septiembre 2026 — Mayo 2027</p>
         </div>
 
         <div class="sedes-grid">
@@ -139,7 +139,7 @@
     <div class="container" style="text-align:center;">
         <h2 class="seccion__titulo">Postúlate para el Ciclo 1</h2>
         <p class="seccion__subtitulo" style="max-width:500px; margin:0 auto 2rem;">
-            Julio 2026 · 7 ciudades en Venezuela. Un ciclo de 8 meses itinerantes.
+            Septiembre 2026 · 5 ciudades en Venezuela. Un ciclo de 8 meses itinerantes.
         </p>
         <a href="/registro" class="btn-cta-naranja">
             <i class="fas fa-user-plus"></i> Postularme ahora

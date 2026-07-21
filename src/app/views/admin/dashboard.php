@@ -18,7 +18,7 @@
         <div class="admin-header">
             <div>
                 <h1>Panel de Administración</h1>
-                <p>Programa Misioneros Integrales — Ciclo 1 · Julio 2026</p>
+                <p>Programa Misioneros Integrales — Ciclo 1 · Septiembre 2026</p>
             </div>
             <div class="admin-header__fecha">
                 <i class="fas fa-calendar-alt"></i>

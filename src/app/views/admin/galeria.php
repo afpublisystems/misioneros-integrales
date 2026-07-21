@@ -70,7 +70,7 @@ unset($_SESSION['flash']);
             <div class="galeria-form__row">
                 <div class="form-grupo" style="flex:1">
                     <label>Título *</label>
-                    <input type="text" name="titulo" required placeholder="Ej. Inauguración sede Los Teques">
+                    <input type="text" name="titulo" required placeholder="Ej. Inauguración sede La Guaira">
                 </div>
                 <div class="form-grupo" style="flex:0 0 140px">
                     <label>&nbsp;</label>

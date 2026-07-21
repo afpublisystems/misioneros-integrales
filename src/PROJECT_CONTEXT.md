@@ -19,7 +19,23 @@
 
 ---
 
-## ITINERARIO CICLO 1 — Julio 2026 a Febrero 2027 (8 meses)
+## ITINERARIO CICLO 1 — VIGENTE (reprogramado) — Sep 2026 a May 2027 (8 meses)
+
+> ⚠️ **Reprogramado por la contingencia.** El arranque estaba previsto para julio 2026, pero
+> se pospuso por la situación tras el doble sismo en Venezuela. El Ciclo 1 de esta primera cohorte
+> arranca con 3 meses en La Guaira para acompañar a las iglesias de la zona (fortalecimiento y
+> apertura de obras nuevas). Los Teques, Maracay y Trujillo salen del Ciclo 1 de este grupo y se
+> ejecutan en su **2do ciclo**. Para cohortes de próximos años esas 3 ciudades vuelven al Ciclo 1.
+
+| # | Fechas | Ciudad | Estado | Nota |
+|---|--------|--------|--------|------|
+| 1 | 15-09 → 14-12-2026 | La Guaira | La Guaira | 3 meses · apoyo a iglesias (15-09/12-10, 14-10/16-11, 17-11/14-12) |
+| 2 | 19-01 → 15-02-2027 | Barquisimeto | Lara | — |
+| 3 | 16-02 → 15-03-2027 | Acarigua | Portuguesa | — |
+| 4 | 16-03 → 12-04-2027 | San Felipe | Yaracuy | — |
+| 5 | 13-04 → 10-05-2027 | Valencia | Carabobo | Cierre de ciclo |
+
+### Itinerario ORIGINAL (previo a la contingencia — archivado)
 
 | # | Mes | Ciudad | Estado | Sede |
 |---|-----|--------|--------|------|
@@ -572,7 +588,31 @@ POST:
 
 ## REGISTRO DE CAMBIOS EN PRODUCCIÓN
 
-### v6 — 21/06/2026 — Reportes de postulantes (ficha individual y listado) + fix buscador admin
+### v7 — 21/07/2026 — Itinerario Ciclo 1 reprogramado por la contingencia (sismos)
+
+**Contexto:** el arranque de julio 2026 se pospuso por el doble sismo en Venezuela. El Ciclo 1 de
+la primera cohorte se reajustó a 5 sedes (Sep 2026 – May 2027), empezando con 3 meses en La Guaira
+para acompañar a las iglesias de la zona. Los Teques, Maracay y Trujillo pasan al 2do ciclo de este
+grupo. Ver tabla al inicio (itinerario vigente + original archivado).
+
+| Archivo | Cambio |
+|---------|--------|
+| `views/publico/programa.php` | Timeline reescrito a 5 paradas (La Guaira → Barquisimeto → Acarigua → San Felipe → Valencia) + nota de reprogramación (`.itinerario-nota`). Fechas, "Julio 2026 → Sep 2026 – May 2027", "7 → 5 ciudades", inscripciones "Abiertas" |
+| `views/publico/home.php` | Countdown regresivo (vencido, target 30-jun-2026) eliminado; banda queda como aviso "Postulaciones abiertas". Popup: inicio Sep 2026, stat "Duración 8 meses" (antes "Cierre convocatoria" con días restantes). Stat "7 → 5 ciudades" |
+| `views/publico/impacto.php` | Array `$sedes_itinerario` y "Estados recorridos" a las 5 sedes/estados nuevos; "7 → 5 ciudades"; "julio → septiembre 2026" |
+| `views/publico/galeria.php` | "7 → 5 sedes", lista de sedes y fechas nuevas |
+| `views/publico/requisitos.php` | "7 → 5 sedes", fechas Sep 2026 – May 2027, paso "Confirmación" Sep 2026 |
+| `views/publico/pensum.php`, `partials/footer.php` | "julio → septiembre 2026" |
+| `views/candidato/perfil.php` | Ruta-mini de movilidad y pregunta clave a las 5 sedes / Sep 2026 – May 2027 |
+| `views/candidato/dashboard.php`, `dashboard_candidato.php`, `admin/dashboard.php` | Encabezado "Ciclo 1 · Julio → Septiembre 2026" |
+| `database/schema.sql` | Seed `sedes` reescrito a las 5 sedes nuevas |
+| `database/migracion_004_itinerario_reprogramado.sql` | **Nueva** — UPDATE de la tabla `sedes` en producción (ejecutar solo si la galería no tiene fotos ligadas a sedes) |
+
+**Decisiones de enfoque:**
+- El sitio público muestra el itinerario vigente + una nota honesta de la reprogramación (no se ocultó el cambio). El histórico completo queda solo en este doc, no en el sitio.
+- Countdown eliminado porque apuntaba a una fecha vencida; convocatoria queda como "abiertas" sin fecha.
+
+
 
 **Cambios de funcionalidad:**
 
