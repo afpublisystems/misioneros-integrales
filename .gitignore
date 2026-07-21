@@ -18,3 +18,6 @@
 # Scripts temporales sensibles (no subir nunca)
 /src/reset-admin-tmp.php
 /src/reset-clave-tmp.php
+
+# Deployers autoescribibles con token (se generan local, se suben por FTP, se borran del server)
+/deploy/
