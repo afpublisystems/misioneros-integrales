@@ -208,78 +208,102 @@
         <div class="seccion-header centrado">
             <span class="seccion-label">Itinerario</span>
             <h2>El recorrido del <span class="highlight-dorado">Ciclo 1</span></h2>
-            <p class="seccion-subtitulo">5 ciudades. 8 meses de formación en territorio. Empezamos en La Guaira.</p>
+            <p class="seccion-subtitulo">Dos fases: 3 meses de fortalecimiento en La Guaira y luego la ruta itinerante por el país.</p>
         </div>
 
-        <!-- Nota de reprogramación por la contingencia -->
+        <!-- Nota de reprogramación (sobria, un solo lugar) -->
         <div class="itinerario-nota">
             <i class="fas fa-info-circle"></i>
             <div>
                 <strong>Recorrido reprogramado</strong>
-                <p>El inicio se movió a septiembre por la situación tras los sismos en La Guaira.
-                Los primeros 3 meses los dedicamos a acompañar a las iglesias de la zona: fortalecer
-                las que ya están y empezar obras nuevas. Los Teques, Maracay y Trujillo entran en el
-                2do ciclo de este grupo.</p>
+                <p>El inicio se movió a septiembre. Empezamos en La Guaira, acompañando a las iglesias
+                afectadas por los sismos. Los Teques, Maracay y Trujillo pasan al 2do ciclo de este grupo.</p>
             </div>
         </div>
 
-        <div class="timeline-scroll-wrap">
-            <div class="timeline-horizontal">
-
-                <div class="timeline-parada activa destacada">
-                    <div class="parada-numero">01</div>
-                    <div class="parada-conector"></div>
-                    <div class="parada-card">
-                        <span class="parada-foco-badge"><i class="fas fa-star"></i> Punto de partida</span>
-                        <span class="parada-mes">Sep – Dic 2026</span>
-                        <h4>La Guaira</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> La Guaira</p>
-                        <p class="parada-sede">3 meses · apoyo a iglesias</p>
-                    </div>
-                </div>
-
-                <div class="timeline-parada">
-                    <div class="parada-numero">02</div>
-                    <div class="parada-conector"></div>
-                    <div class="parada-card">
-                        <span class="parada-mes">Ene – Feb 2027</span>
-                        <h4>Barquisimeto</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Lara</p>
-                    </div>
-                </div>
-
-                <div class="timeline-parada">
-                    <div class="parada-numero">03</div>
-                    <div class="parada-conector"></div>
-                    <div class="parada-card">
-                        <span class="parada-mes">Feb – Mar 2027</span>
-                        <h4>Acarigua</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Portuguesa</p>
-                    </div>
-                </div>
-
-                <div class="timeline-parada">
-                    <div class="parada-numero">04</div>
-                    <div class="parada-conector"></div>
-                    <div class="parada-card">
-                        <span class="parada-mes">Mar – Abr 2027</span>
-                        <h4>San Felipe</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Yaracuy</p>
-                    </div>
-                </div>
-
-                <div class="timeline-parada ultima">
-                    <div class="parada-numero">05</div>
-                    <div class="parada-card">
-                        <span class="parada-mes">Abr – May 2027</span>
-                        <h4>Valencia</h4>
-                        <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Carabobo</p>
-                        <span class="parada-final-badge">Cierre de Ciclo</span>
-                    </div>
-                </div>
-
+        <!-- FASE 1 — La Guaira -->
+        <div class="fase">
+            <div class="fase__label">
+                <span class="fase__num">Fase 1</span>
+                <span class="fase__nombre">Respuesta y fortalecimiento</span>
             </div>
-            <p class="timeline-hint"><i class="fas fa-hand-pointer"></i> Desliza para ver todo el recorrido</p>
+            <div class="fase1-card">
+                <div class="fase1-card__cabecera">
+                    <div class="fase1-card__icono"><i class="fas fa-hands-helping"></i></div>
+                    <div class="fase1-card__titulo">
+                        <span class="fase1-card__mes">Sep – Dic 2026 · 3 meses</span>
+                        <h4>La Guaira</h4>
+                        <p class="fase1-card__estado"><i class="fas fa-map-marker-alt"></i> La Guaira</p>
+                    </div>
+                    <span class="parada-foco-badge"><i class="fas fa-star"></i> Punto de partida</span>
+                </div>
+                <p class="fase1-card__desc">Inmersión total: fortalecer las iglesias de la zona y empezar obras nuevas.</p>
+                <div class="fase1-subs">
+                    <span class="fase1-sub">15 sep – 12 oct</span>
+                    <span class="fase1-sub">14 oct – 16 nov</span>
+                    <span class="fase1-sub">17 nov – 14 dic</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receso decembrino -->
+        <div class="receso">
+            <i class="fas fa-mug-hot"></i>
+            <span><strong>Receso decembrino</strong> · 15 dic – 18 ene · logística y descanso</span>
+        </div>
+
+        <!-- FASE 2 — Ruta itinerante -->
+        <div class="fase">
+            <div class="fase__label">
+                <span class="fase__num">Fase 2</span>
+                <span class="fase__nombre">Ruta itinerante</span>
+            </div>
+            <div class="timeline-scroll-wrap">
+                <div class="timeline-horizontal">
+
+                    <div class="timeline-parada activa">
+                        <div class="parada-numero">01</div>
+                        <div class="parada-conector"></div>
+                        <div class="parada-card">
+                            <span class="parada-mes">Ene – Feb 2027</span>
+                            <h4>Barquisimeto</h4>
+                            <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Lara</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-parada">
+                        <div class="parada-numero">02</div>
+                        <div class="parada-conector"></div>
+                        <div class="parada-card">
+                            <span class="parada-mes">Feb – Mar 2027</span>
+                            <h4>Acarigua</h4>
+                            <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Portuguesa</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-parada">
+                        <div class="parada-numero">03</div>
+                        <div class="parada-conector"></div>
+                        <div class="parada-card">
+                            <span class="parada-mes">Mar – Abr 2027</span>
+                            <h4>San Felipe</h4>
+                            <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Yaracuy</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-parada ultima">
+                        <div class="parada-numero">04</div>
+                        <div class="parada-card">
+                            <span class="parada-mes">Abr – May 2027</span>
+                            <h4>Valencia</h4>
+                            <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> Carabobo</p>
+                            <span class="parada-final-badge">Cierre de Ciclo</span>
+                        </div>
+                    </div>
+
+                </div>
+                <p class="timeline-hint"><i class="fas fa-hand-pointer"></i> Desliza para ver la ruta</p>
+            </div>
         </div>
     </div>
 </section>
@@ -834,6 +858,51 @@
 .itinerario-nota strong { display: block; color: var(--verde-dark); font-size: 0.92rem; margin-bottom: 0.3rem; }
 .itinerario-nota p { margin: 0; font-size: 0.875rem; color: #555; line-height: 1.6; }
 
+/* ─── ITINERARIO EN FASES ─── */
+.fase { max-width: 760px; margin: 0 auto; }
+.fase__label { display: flex; align-items: center; gap: 0.6rem; margin: 1.75rem 0 1rem; }
+.fase__num {
+    background: var(--verde); color: #fff;
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.28rem 0.75rem; border-radius: 50px;
+}
+.fase__nombre { font-weight: 800; color: var(--verde-dark); font-size: 1.02rem; }
+
+.fase1-card {
+    background: #fffdf5; border: 1px solid rgba(206,162,55,0.4);
+    border-left: 5px solid var(--dorado);
+    border-radius: 16px; padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(206,162,55,0.18);
+}
+.fase1-card__cabecera { display: flex; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.fase1-card__icono {
+    width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0;
+    background: var(--dorado); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 1.35rem;
+}
+.fase1-card__mes { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dorado); }
+.fase1-card__titulo h4 { font-size: 1.3rem; font-weight: 800; color: #1a1a1a; margin: 0.15rem 0; }
+.fase1-card__estado { font-size: 0.85rem; color: #666; margin: 0; }
+.fase1-card__estado i { color: var(--verde); font-size: 0.75rem; }
+.fase1-card__cabecera .parada-foco-badge { margin-left: auto; }
+.fase1-card__desc { color: #555; font-size: 0.92rem; line-height: 1.6; margin: 1rem 0 0.85rem; }
+.fase1-subs { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.fase1-sub {
+    background: #fff; border: 1px solid rgba(206,162,55,0.35);
+    color: var(--verde-dark); font-size: 0.78rem; font-weight: 600;
+    padding: 0.3rem 0.7rem; border-radius: 8px;
+}
+
+.receso {
+    max-width: 760px; margin: 1rem auto;
+    display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+    background: repeating-linear-gradient(45deg, #f5f7f9, #f5f7f9 10px, #eef1f4 10px, #eef1f4 20px);
+    border-radius: 10px; padding: 0.7rem 1rem;
+    color: #667085; font-size: 0.85rem; text-align: center;
+}
+.receso i { color: var(--naranja); }
+.receso strong { color: #444; }
+
 .timeline-scroll-wrap { overflow-x: auto; padding-bottom: 1rem; }
 .timeline-horizontal {
     display: flex; gap: 0; align-items: flex-start;
@@ -887,18 +956,6 @@
 .timeline-parada.ultima .parada-card { border-bottom-color: var(--dorado); }
 .parada-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
 
-/* La Guaira: parada destacada (3 meses, foco de arranque del ciclo) */
-.timeline-parada.destacada .parada-numero {
-    background: var(--dorado); border-color: var(--dorado); color: #fff;
-    box-shadow: 0 0 0 5px rgba(206,162,55,0.25);
-}
-.timeline-parada.destacada .parada-conector { background: linear-gradient(90deg, var(--dorado) 0%, #d1d5db 100%); }
-.timeline-parada.destacada .parada-card {
-    border-bottom-color: var(--dorado);
-    background: #fffdf5;
-    box-shadow: 0 10px 30px rgba(206,162,55,0.3);
-    transform: translateY(-6px);
-}
 .parada-foco-badge {
     display: inline-block; margin-bottom: 0.4rem;
     background: var(--dorado); color: #fff;
