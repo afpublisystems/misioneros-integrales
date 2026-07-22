@@ -226,10 +226,11 @@
         <div class="timeline-scroll-wrap">
             <div class="timeline-horizontal">
 
-                <div class="timeline-parada activa">
+                <div class="timeline-parada activa destacada">
                     <div class="parada-numero">01</div>
                     <div class="parada-conector"></div>
                     <div class="parada-card">
+                        <span class="parada-foco-badge"><i class="fas fa-star"></i> Punto de partida</span>
                         <span class="parada-mes">Sep – Dic 2026</span>
                         <h4>La Guaira</h4>
                         <p class="parada-estado"><i class="fas fa-map-marker-alt"></i> La Guaira</p>
@@ -837,11 +838,15 @@
 .timeline-horizontal {
     display: flex; gap: 0; align-items: flex-start;
     min-width: max-content; padding: 2rem 0;
+    /* Centra el recorrido cuando cabe; en pantallas angostas hace overflow y se desliza */
+    margin-inline: auto;
 }
 .timeline-hint {
     text-align: center; color: #999; font-size: 0.8rem; margin-top: 0.5rem;
     display: flex; align-items: center; justify-content: center; gap: 0.4rem;
 }
+/* En desktop las 5 paradas caben sin scroll: el aviso de deslizar sobra */
+@media (min-width: 920px) { .timeline-hint { display: none; } }
 
 .timeline-parada {
     display: flex; flex-direction: column; align-items: center;
@@ -881,6 +886,26 @@
 .timeline-parada.activa .parada-card { border-bottom-color: var(--verde); }
 .timeline-parada.ultima .parada-card { border-bottom-color: var(--dorado); }
 .parada-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+
+/* La Guaira: parada destacada (3 meses, foco de arranque del ciclo) */
+.timeline-parada.destacada .parada-numero {
+    background: var(--dorado); border-color: var(--dorado); color: #fff;
+    box-shadow: 0 0 0 5px rgba(206,162,55,0.25);
+}
+.timeline-parada.destacada .parada-conector { background: linear-gradient(90deg, var(--dorado) 0%, #d1d5db 100%); }
+.timeline-parada.destacada .parada-card {
+    border-bottom-color: var(--dorado);
+    background: #fffdf5;
+    box-shadow: 0 10px 30px rgba(206,162,55,0.3);
+    transform: translateY(-6px);
+}
+.parada-foco-badge {
+    display: inline-block; margin-bottom: 0.4rem;
+    background: var(--dorado); color: #fff;
+    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 0.22rem 0.6rem; border-radius: 50px;
+}
+.parada-foco-badge i { font-size: 0.58rem; margin-right: 0.15rem; }
 
 .parada-mes { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dorado); }
 .parada-card h4 { font-size: 1rem; font-weight: 800; color: #1a1a1a; margin: 0.3rem 0 0.2rem; }
