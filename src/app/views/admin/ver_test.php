@@ -1184,19 +1184,20 @@ $niveles_labels = ['ninguna' => 'Ninguna', 'basica' => 'Básica', 'intermedia' =
             <div class="vt-pregunta vt-pregunta--destacada">
                 <div class="vt-pregunta__num">56</div>
                 <div class="vt-pregunta__cuerpo">
-                    <p class="vt-pregunta__label">Declaración personal de compromiso con el programa <em>(mínimo 100 palabras)</em></p>
+                    <p class="vt-pregunta__label">Declaración personal de compromiso con el programa <em>(mínimo 40 palabras)</em></p>
                     <div class="vt-resp">
                         <?php
                         $decl = $rv('q56');
                         if ($decl): ?>
                             <div class="vt-declaracion"><?= nl2br(htmlspecialchars($decl)) ?></div>
                             <?php
-                            $palabras = str_word_count(strip_tags($decl));
+                            $texto = trim(strip_tags($decl));
+                            $palabras = $texto === '' ? 0 : count(preg_split('/\s+/u', $texto));
                             ?>
                             <div class="vt-contador-palabras">
                                 <i class="fas fa-file-word"></i>
                                 <?= $palabras ?> palabra<?= $palabras !== 1 ? 's' : '' ?>
-                                <?php if ($palabras < 100): ?>
+                                <?php if ($palabras < 40): ?>
                                     <span style="color:#ef4444; margin-left:.5rem;">(menos del mínimo requerido)</span>
                                 <?php else: ?>
                                     <span style="color:var(--verde); margin-left:.5rem;"><i class="fas fa-check"></i> Cumple el mínimo</span>

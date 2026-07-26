@@ -1403,15 +1403,15 @@ $partes = [
             <div class="test-pregunta test-pregunta--destacada">
                 <p class="test-pregunta__num">56</p>
                 <div class="test-pregunta__body">
-                    <label class="test-pregunta__label">Escriba una declaración personal de compromiso con el programa <em>(mínimo 100 palabras)</em>:</label>
+                    <label class="test-pregunta__label">Escriba una declaración personal de compromiso con el programa <em>(mínimo 40 palabras)</em>:</label>
                     <p class="test-pregunta__hint">«Me comprometo a...»</p>
                     <textarea name="respuestas[q56]" rows="8"
                               placeholder="Me comprometo a..."
-                              data-min-words="100"
+                              data-min-words="40"
                               id="q56-textarea"><?= $r('q56') ?></textarea>
                     <div class="contador-palabras">
                         <span id="q56-contador">0</span> palabras
-                        <span id="q56-min-aviso" class="aviso-min" style="display:none">— mínimo 100 palabras requerido</span>
+                        <span id="q56-min-aviso" class="aviso-min" style="display:none">— mínimo 40 palabras requerido</span>
                     </div>
                 </div>
             </div>
@@ -1721,11 +1721,11 @@ textarea { resize: vertical; min-height: 80px; }
 
     // ── Envío final ───────────────────────────────────────────
     window.enviarTest = function(e) {
-        // Validar Q56 (mínimo 100 palabras)
+        // Validar Q56 (mínimo 40 palabras)
         const ta = document.getElementById('q56-textarea');
         if (ta) {
             const palabras = contarPalabras(ta.value);
-            if (palabras < 100) {
+            if (palabras < 40) {
                 e.preventDefault();
                 document.getElementById('q56-min-aviso').style.display = 'inline';
                 ta.focus();
@@ -1797,8 +1797,8 @@ textarea { resize: vertical; min-height: 80px; }
         function actualizar() {
             const n = contarPalabras(ta.value);
             cont.textContent = n;
-            cont.style.color = n >= 100 ? 'var(--verde)' : '#dc2626';
-            if (aviso) aviso.style.display = n < 100 && n > 0 ? 'inline' : 'none';
+            cont.style.color = n >= 40 ? 'var(--verde)' : '#dc2626';
+            if (aviso) aviso.style.display = n < 40 && n > 0 ? 'inline' : 'none';
         }
         ta.addEventListener('input', actualizar);
         actualizar();

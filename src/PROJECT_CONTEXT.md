@@ -429,7 +429,7 @@ POST:
 | VII | Salud Emocional y Resiliencia | Q39–Q44 | radio, checkbox, escala 1-10, textarea |
 | VIII | Compromiso y Expectativas | Q45–Q50 | radio, text ×3, checkbox |
 | IX | Preguntas Situacionales | Q51–Q55 | textarea ×5 (escenarios) |
-| X | Compromiso Personal | Q56–Q60 | textarea (min 100 palabras), text, textarea ×3 |
+| X | Compromiso Personal | Q56–Q60 | textarea (min 40 palabras), text, textarea ×3 |
 
 ### Claves de respuestas en JSON (selección)
 - `q1` a `q60` — claves principales
