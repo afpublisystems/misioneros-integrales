@@ -130,7 +130,7 @@
                     <i class="fas fa-map-marker-alt"></i>
                     <div>
                         <strong>Requisito de movilidad:</strong>
-                        Este programa requiere trasladarse mensualmente entre julio y febrero
+                        Este programa requiere trasladarse mensualmente durante 8 meses
                         a diferentes ciudades de Venezuela. ¿Tienes disponibilidad total?
                     </div>
                 </div>

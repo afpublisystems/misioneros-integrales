@@ -115,7 +115,7 @@
                 <i class="fas fa-map-marker-alt"></i>
                 <div>
                     <strong>Requisito de movilidad:</strong>
-                    El programa requiere trasladarse mensualmente (julio–febrero) a distintas ciudades.
+                    El programa requiere trasladarse mensualmente durante 8 meses a distintas ciudades.
                     ¿Tienes disponibilidad?
                 </div>
             </div>
