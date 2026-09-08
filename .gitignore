@@ -10,6 +10,8 @@
 
 # Material de gestión del programa (cartas, presupuestos, plenaria) — no va al sitio
 /Carta-Solicitud-Apoyo-CNBV.docx
+/Carta-Apoyo-Participante.md
+/Carta-Apoyo-Participante.docx
 /presupuesto-bolsa-ayuda-terremoto.xlsx
 /guion-plenaria.html
 /presentacion-plenaria.html
@@ -21,3 +23,6 @@
 
 # Deployers autoescribibles con token (se generan local, se suben por FTP, se borran del server)
 /deploy/
+
+# Override local de puertos (no versionar)
+/docker-compose.override.yml

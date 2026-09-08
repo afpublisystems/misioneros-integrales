@@ -1,7 +1,16 @@
 <?php
 /**
  * PagoModel
- * Gestión de cuotas y abonos del programa de formación
+ * Cuotas de matrícula del participante.
+ *
+ * El monto que paga cada quien sale de su beca: costo_base_usd
+ * menos el porcentaje becado. La beca CNBV estándar es 50% sobre
+ * USD 1.500, así que la mayoría paga 750. Una beca del 100% deja
+ * las cuotas en cero y marcadas como exoneradas.
+ *
+ * Los abonos NO viven aquí: son filas de `ingresos` con
+ * origen = 'matricula'. Este modelo solo reparte lo confirmado
+ * sobre las cuotas, en orden.
  */
 
 require_once APP_PATH . '/models/Model.php';
@@ -10,287 +19,279 @@ class PagoModel extends Model {
 
     protected string $tabla = 'cuotas_estudiantes';
 
+    /** Cuotas mensuales del ciclo */
+    public const TOTAL_CUOTAS = 7;
+
+    /** Vencimiento de la primera cuota — el ciclo arranca el 15/09/2026 */
+    public const PRIMER_VENCIMIENTO = '2026-09-15';
+
     // ─────────────────────────────────────────────────────────
     // CUOTAS
     // ─────────────────────────────────────────────────────────
 
     /**
-     * Genera 7 cuotas al aprobar un estudiante.
-     * Las fechas de vencimiento inician en julio 2026 (+1 mes por cuota).
+     * Genera las cuotas de un participante según su beca.
+     * No hace nada si ya las tiene (para eso está regenerar()).
      */
-    public function generarCuotas(int $aspirante_id, int $total = 7, float $monto = 107.14): void {
-        // Verificar que no existan ya
+    public function generarCuotas(int $aspirante_id, int $total = self::TOTAL_CUOTAS): void {
         $stmt = $this->db->prepare(
             "SELECT COUNT(*) FROM cuotas_estudiantes WHERE aspirante_id = :id"
         );
         $stmt->execute([':id' => $aspirante_id]);
         if ((int) $stmt->fetchColumn() > 0) return;
 
-        $inicio = new DateTime('2026-07-01');
-        for ($i = 1; $i <= $total; $i++) {
-            $vencimiento = clone $inicio;
-            $vencimiento->modify('+' . ($i - 1) . ' month');
-            $this->db->prepare("
-                INSERT INTO cuotas_estudiantes
-                    (aspirante_id, cuota_numero, monto_esperado_usd, fecha_vencimiento)
-                VALUES (:asp, :num, :monto, :fecha)
-            ")->execute([
-                ':asp'   => $aspirante_id,
-                ':num'   => $i,
-                ':monto' => $monto,
-                ':fecha' => $vencimiento->format('Y-m-d'),
+        $montos = $this->montosPorCuota($aspirante_id, $total);
+        $inicio = new DateTime(self::PRIMER_VENCIMIENTO);
+
+        $insert = $this->db->prepare("
+            INSERT INTO cuotas_estudiantes
+                (aspirante_id, cuota_numero, monto_esperado_usd, estatus, fecha_vencimiento)
+            VALUES (:asp, :num, :monto, :estatus, :fecha)
+        ");
+
+        foreach ($montos as $i => $monto) {
+            $vencimiento = (clone $inicio)->modify('+' . $i . ' month');
+            $insert->execute([
+                ':asp'     => $aspirante_id,
+                ':num'     => $i + 1,
+                ':monto'   => $monto,
+                ':estatus' => $monto > 0 ? 'pendiente' : 'exonerada',
+                ':fecha'   => $vencimiento->format('Y-m-d'),
             ]);
         }
     }
 
     /**
-     * Cuotas de un aspirante con su último abono pendiente
+     * Recalcula los montos cuando cambia la beca del participante.
+     * Conserva lo ya pagado y vuelve a repartirlo.
+     */
+    public function regenerarCuotas(int $aspirante_id): void {
+        $cuotas = $this->cuotasPorAspirante($aspirante_id);
+        if (empty($cuotas)) {
+            $this->generarCuotas($aspirante_id);
+            $this->recalcularCuotas($aspirante_id);
+            return;
+        }
+
+        $montos = $this->montosPorCuota($aspirante_id, count($cuotas));
+        $upd = $this->db->prepare("
+            UPDATE cuotas_estudiantes
+            SET monto_esperado_usd = :monto
+            WHERE aspirante_id = :asp AND cuota_numero = :num
+        ");
+        foreach ($montos as $i => $monto) {
+            $upd->execute([':monto' => $monto, ':asp' => $aspirante_id, ':num' => $i + 1]);
+        }
+
+        $this->recalcularCuotas($aspirante_id);
+    }
+
+    /**
+     * Reparte los ingresos de matrícula confirmados sobre las cuotas,
+     * en orden. Un pago grande cubre varias cuotas de una vez; un
+     * rechazo posterior deshace el avance sin dejar rastros raros.
+     */
+    public function recalcularCuotas(int $aspirante_id): void {
+        $restante = $this->totalPagado($aspirante_id);
+
+        $upd = $this->db->prepare("
+            UPDATE cuotas_estudiantes
+            SET monto_acumulado_usd = :acum, estatus = :estatus
+            WHERE id = :id
+        ");
+
+        foreach ($this->cuotasPorAspirante($aspirante_id) as $c) {
+            $esperado = (float) $c['monto_esperado_usd'];
+
+            if ($esperado <= 0) {
+                $upd->execute([':acum' => 0, ':estatus' => 'exonerada', ':id' => $c['id']]);
+                continue;
+            }
+
+            $aplica    = min($restante, $esperado);
+            $restante -= $aplica;
+
+            $estatus = match (true) {
+                $aplica >= $esperado - 0.005 => 'completada',
+                $aplica > 0                  => 'parcial',
+                default                      => 'pendiente',
+            };
+
+            $upd->execute([
+                ':acum'    => round($aplica, 2),
+                ':estatus' => $estatus,
+                ':id'      => $c['id'],
+            ]);
+        }
+    }
+
+    /**
+     * Total confirmado que ha abonado un participante a su matrícula
+     */
+    public function totalPagado(int $aspirante_id): float {
+        $stmt = $this->db->prepare("
+            SELECT COALESCE(SUM(monto_usd), 0)
+            FROM ingresos
+            WHERE aspirante_id = :id AND origen = 'matricula' AND estatus = 'confirmado'
+        ");
+        $stmt->execute([':id' => $aspirante_id]);
+        return (float) $stmt->fetchColumn();
+    }
+
+    /**
+     * Cuotas de un participante
      */
     public function cuotasPorAspirante(int $aspirante_id): array {
         $stmt = $this->db->prepare("
-            SELECT c.*,
-                   (SELECT a.id FROM abonos a
-                    WHERE a.cuota_id = c.id AND a.estatus = 'pendiente'
-                    ORDER BY a.created_at DESC LIMIT 1) AS abono_pendiente_id,
-                   (SELECT a.monto_declarado_usd FROM abonos a
-                    WHERE a.cuota_id = c.id AND a.estatus = 'rechazado'
-                    ORDER BY a.created_at DESC LIMIT 1) AS ultimo_monto_rechazado,
-                   (SELECT a.notas_admin FROM abonos a
-                    WHERE a.cuota_id = c.id AND a.estatus = 'rechazado'
-                    ORDER BY a.created_at DESC LIMIT 1) AS nota_rechazo
-            FROM cuotas_estudiantes c
-            WHERE c.aspirante_id = :id
-            ORDER BY c.cuota_numero ASC
+            SELECT * FROM cuotas_estudiantes
+            WHERE aspirante_id = :id
+            ORDER BY cuota_numero ASC
         ");
         $stmt->execute([':id' => $aspirante_id]);
         return $stmt->fetchAll();
     }
 
     /**
-     * Resumen de pagos de todos los estudiantes (para admin)
+     * Estado de cuenta de un participante: cuánto le toca pagar,
+     * cuánto lleva y cuánto debe.
+     */
+    public function estadoCuenta(int $aspirante_id): array {
+        $stmt = $this->db->prepare("
+            SELECT costo_base_usd, beca_pct, beca_notas
+            FROM aspirantes WHERE id = :id LIMIT 1
+        ");
+        $stmt->execute([':id' => $aspirante_id]);
+        $asp = $stmt->fetch();
+
+        $costo   = (float) ($asp['costo_base_usd'] ?? 1500);
+        $beca    = (float) ($asp['beca_pct'] ?? 50);
+        $a_pagar = round($costo * (1 - $beca / 100), 2);
+        $pagado  = $this->totalPagado($aspirante_id);
+
+        return [
+            'costo_base'   => $costo,
+            'beca_pct'     => $beca,
+            'beca_notas'   => $asp['beca_notas'] ?? null,
+            'monto_becado' => round($costo - $a_pagar, 2),
+            'total_a_pagar'=> $a_pagar,
+            'total_pagado' => $pagado,
+            'saldo'        => round(max($a_pagar - $pagado, 0), 2),
+            'saldo_favor'  => round(max($pagado - $a_pagar, 0), 2),
+            'porcentaje'   => $a_pagar > 0 ? min(round($pagado / $a_pagar * 100), 100) : 100,
+        ];
+    }
+
+    /**
+     * Resumen de matrículas de toda la cohorte (para admin)
      */
     public function resumenPorEstudiante(): array {
         $stmt = $this->db->query("
             SELECT a.id AS aspirante_id,
                    CONCAT(a.nombres, ' ', a.apellidos) AS nombre,
                    a.cedula,
-                   COUNT(c.id)                                         AS total_cuotas,
-                   SUM(c.estatus = 'completada')                       AS cuotas_completadas,
-                   SUM(c.monto_acumulado_usd)                          AS total_pagado_usd,
-                   SUM(c.monto_esperado_usd) - SUM(c.monto_acumulado_usd) AS saldo_pendiente_usd
+                   a.estatus,
+                   a.costo_base_usd,
+                   a.beca_pct,
+                   ROUND(a.costo_base_usd * (1 - a.beca_pct / 100), 2) AS total_a_pagar,
+                   COALESCE((
+                       SELECT SUM(i.monto_usd) FROM ingresos i
+                       WHERE i.aspirante_id = a.id
+                         AND i.origen  = 'matricula'
+                         AND i.estatus = 'confirmado'
+                   ), 0) AS total_pagado,
+                   COALESCE((
+                       SELECT COUNT(*) FROM ingresos i
+                       WHERE i.aspirante_id = a.id
+                         AND i.origen  = 'matricula'
+                         AND i.estatus = 'pendiente'
+                   ), 0) AS abonos_pendientes,
+                   (SELECT COUNT(*) FROM cuotas_estudiantes c
+                    WHERE c.aspirante_id = a.id AND c.estatus = 'completada') AS cuotas_completadas,
+                   (SELECT COUNT(*) FROM cuotas_estudiantes c
+                    WHERE c.aspirante_id = a.id) AS total_cuotas,
+                   (SELECT MIN(c.fecha_vencimiento) FROM cuotas_estudiantes c
+                    WHERE c.aspirante_id = a.id
+                      AND c.estatus IN ('pendiente','parcial')) AS proximo_vencimiento
             FROM aspirantes a
-            JOIN cuotas_estudiantes c ON c.aspirante_id = a.id
-            GROUP BY a.id
-            ORDER BY a.apellidos ASC
+            WHERE a.estatus = 'aprobada'
+            ORDER BY a.apellidos ASC, a.nombres ASC
         ");
         return $stmt->fetchAll();
     }
 
     /**
-     * KPIs financieros globales
+     * Totales de matrícula de toda la cohorte
      */
-    public function kpis(): array {
+    public function totalesMatricula(): array {
         $row = $this->db->query("
             SELECT
-                SUM(monto_esperado_usd)  AS total_esperado,
-                SUM(monto_acumulado_usd) AS total_cobrado
-            FROM cuotas_estudiantes
+                COUNT(*)                                                   AS participantes,
+                COALESCE(SUM(costo_base_usd), 0)                           AS costo_total,
+                COALESCE(SUM(costo_base_usd * (1 - beca_pct / 100)), 0)    AS esperado,
+                COALESCE(SUM(costo_base_usd * beca_pct / 100), 0)          AS becado
+            FROM aspirantes
+            WHERE estatus = 'aprobada'
         ")->fetch();
 
-        $gastos = $this->db->query("
-            SELECT COALESCE(SUM(monto_usd), 0) AS total_gastos FROM gastos
+        $cobrado = (float) $this->db->query("
+            SELECT COALESCE(SUM(monto_usd), 0) FROM ingresos
+            WHERE origen = 'matricula' AND estatus = 'confirmado'
         ")->fetchColumn();
 
+        $esperado = (float) $row['esperado'];
+
         return [
-            'total_esperado' => (float)($row['total_esperado'] ?? 0),
-            'total_cobrado'  => (float)($row['total_cobrado']  ?? 0),
-            'total_gastos'   => (float)$gastos,
-            'saldo_neto'     => (float)($row['total_cobrado'] ?? 0) - (float)$gastos,
+            'participantes' => (int) $row['participantes'],
+            'costo_total'   => (float) $row['costo_total'],
+            'becado'        => (float) $row['becado'],
+            'esperado'      => $esperado,
+            'cobrado'       => $cobrado,
+            'por_cobrar'    => round(max($esperado - $cobrado, 0), 2),
+            'porcentaje'    => $esperado > 0 ? min(round($cobrado / $esperado * 100), 100) : 0,
         ];
     }
 
-    // ─────────────────────────────────────────────────────────
-    // ABONOS
-    // ─────────────────────────────────────────────────────────
-
     /**
-     * Registrar un abono enviado por el estudiante
+     * Cambia la beca de un participante y rehace sus cuotas
      */
-    public function registrarAbono(array $datos): int {
-        $stmt = $this->db->prepare("
-            INSERT INTO abonos
-                (cuota_id, aspirante_id, monto_declarado_usd, monto_declarado_ves,
-                 tasa_cambio, metodo_pago, banco_origen, referencia,
-                 comprobante_ruta, fecha_pago_declarado)
-            VALUES
-                (:cuota_id, :aspirante_id, :monto_usd, :monto_ves,
-                 :tasa, :metodo, :banco, :ref,
-                 :ruta, :fecha)
-        ");
-        $stmt->execute([
-            ':cuota_id'    => $datos['cuota_id'],
-            ':aspirante_id'=> $datos['aspirante_id'],
-            ':monto_usd'   => $datos['monto_declarado_usd'],
-            ':monto_ves'   => $datos['monto_declarado_ves'] ?? null,
-            ':tasa'        => $datos['tasa_cambio'] ?? null,
-            ':metodo'      => $datos['metodo_pago'],
-            ':banco'       => $datos['banco_origen'] ?? null,
-            ':ref'         => $datos['referencia'] ?? null,
-            ':ruta'        => $datos['comprobante_ruta'] ?? null,
-            ':fecha'       => $datos['fecha_pago_declarado'],
-        ]);
-        return (int) $this->db->lastInsertId();
-    }
+    public function actualizarBeca(int $aspirante_id, float $beca_pct, ?string $notas, ?float $costo_base = null): void {
+        $sql    = "UPDATE aspirantes SET beca_pct = :beca, beca_notas = :notas";
+        $params = [':beca' => $beca_pct, ':notas' => $notas, ':id' => $aspirante_id];
 
-    /**
-     * Abonos pendientes de confirmación (para admin)
-     */
-    public function abonosPendientes(): array {
-        $stmt = $this->db->query("
-            SELECT ab.*,
-                   CONCAT(a.nombres, ' ', a.apellidos) AS nombre_estudiante,
-                   a.cedula,
-                   c.cuota_numero,
-                   c.monto_esperado_usd,
-                   c.monto_acumulado_usd
-            FROM abonos ab
-            JOIN cuotas_estudiantes c ON c.id = ab.cuota_id
-            JOIN aspirantes a         ON a.id = ab.aspirante_id
-            WHERE ab.estatus = 'pendiente'
-            ORDER BY ab.created_at ASC
-        ");
-        return $stmt->fetchAll();
-    }
-
-    /**
-     * Obtener abono por ID con datos de cuota y aspirante
-     */
-    public function abonoCompleto(int $id): array|false {
-        $stmt = $this->db->prepare("
-            SELECT ab.*, c.cuota_numero, c.monto_esperado_usd, c.monto_acumulado_usd,
-                   c.aspirante_id AS asp_id
-            FROM abonos ab
-            JOIN cuotas_estudiantes c ON c.id = ab.cuota_id
-            WHERE ab.id = :id LIMIT 1
-        ");
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetch();
-    }
-
-    /**
-     * Confirmar un abono y actualizar acumulado de la cuota.
-     * Si hay excedente lo aplica a la cuota siguiente.
-     */
-    public function confirmarAbono(int $abono_id, int $admin_id, ?string $notas = null): bool {
-        $abono = $this->abonoCompleto($abono_id);
-        if (!$abono || $abono['estatus'] !== 'pendiente') return false;
-
-        // Marcar abono como confirmado
-        $this->db->prepare("
-            UPDATE abonos
-            SET estatus = 'confirmado',
-                fecha_confirmacion = NOW(),
-                confirmado_por = :admin,
-                notas_admin = :notas
-            WHERE id = :id
-        ")->execute([':admin' => $admin_id, ':notas' => $notas, ':id' => $abono_id]);
-
-        // Calcular nuevo acumulado
-        $cuota_id      = $abono['cuota_id'];
-        $aspirante_id  = $abono['asp_id'];
-        $monto         = (float)$abono['monto_declarado_usd'];
-        $acumulado     = (float)$abono['monto_acumulado_usd'] + $monto;
-        $esperado      = (float)$abono['monto_esperado_usd'];
-        $num_cuota     = (int)$abono['cuota_numero'];
-
-        if ($acumulado >= $esperado) {
-            // Cuota completada
-            $this->db->prepare("
-                UPDATE cuotas_estudiantes
-                SET monto_acumulado_usd = :acum, estatus = 'completada'
-                WHERE id = :id
-            ")->execute([':acum' => $acumulado, ':id' => $cuota_id]);
-
-            // Aplicar excedente a la siguiente cuota
-            $excedente = round($acumulado - $esperado, 2);
-            if ($excedente > 0) {
-                $this->db->prepare("
-                    UPDATE cuotas_estudiantes
-                    SET monto_acumulado_usd = monto_acumulado_usd + :exc,
-                        estatus = CASE
-                            WHEN monto_acumulado_usd + :exc2 >= monto_esperado_usd THEN 'completada'
-                            ELSE 'parcial'
-                        END
-                    WHERE aspirante_id = :asp AND cuota_numero = :num
-                ")->execute([
-                    ':exc'  => $excedente,
-                    ':exc2' => $excedente,
-                    ':asp'  => $aspirante_id,
-                    ':num'  => $num_cuota + 1,
-                ]);
-            }
-        } else {
-            // Pago parcial
-            $this->db->prepare("
-                UPDATE cuotas_estudiantes
-                SET monto_acumulado_usd = :acum, estatus = 'parcial'
-                WHERE id = :id
-            ")->execute([':acum' => $acumulado, ':id' => $cuota_id]);
+        if ($costo_base !== null) {
+            $sql .= ", costo_base_usd = :costo";
+            $params[':costo'] = $costo_base;
         }
 
-        return true;
+        $this->db->prepare($sql . " WHERE id = :id")->execute($params);
+        $this->regenerarCuotas($aspirante_id);
     }
 
-    /**
-     * Rechazar un abono (no modifica el acumulado)
-     */
-    public function rechazarAbono(int $abono_id, int $admin_id, string $notas): bool {
-        return (bool) $this->db->prepare("
-            UPDATE abonos
-            SET estatus = 'rechazado',
-                fecha_confirmacion = NOW(),
-                confirmado_por = :admin,
-                notas_admin = :notas
-            WHERE id = :id AND estatus = 'pendiente'
-        ")->execute([':admin' => $admin_id, ':notas' => $notas, ':id' => $abono_id]);
-    }
+    // ─────────────────────────────────────────────────────────
+    // Reparto interno
+    // ─────────────────────────────────────────────────────────
 
     /**
-     * Todos los abonos de un aspirante (para historial candidato)
+     * Divide el monto a pagar en N cuotas. La última absorbe el
+     * redondeo para que la suma dé exacta.
      */
-    public function abonosPorAspirante(int $aspirante_id): array {
-        $stmt = $this->db->prepare("
-            SELECT ab.*, c.cuota_numero
-            FROM abonos ab
-            JOIN cuotas_estudiantes c ON c.id = ab.cuota_id
-            WHERE ab.aspirante_id = :id
-            ORDER BY c.cuota_numero ASC, ab.created_at DESC
-        ");
+    private function montosPorCuota(int $aspirante_id, int $total): array {
+        $stmt = $this->db->prepare(
+            "SELECT costo_base_usd, beca_pct FROM aspirantes WHERE id = :id LIMIT 1"
+        );
         $stmt->execute([':id' => $aspirante_id]);
-        return $stmt->fetchAll();
-    }
+        $asp = $stmt->fetch();
 
-    /**
-     * Todos los abonos confirmados (para exportar CSV)
-     */
-    public function todosParaExportar(): array {
-        $stmt = $this->db->query("
-            SELECT CONCAT(a.nombres, ' ', a.apellidos) AS estudiante,
-                   a.cedula,
-                   c.cuota_numero,
-                   ab.monto_declarado_usd,
-                   ab.monto_declarado_ves,
-                   ab.tasa_cambio,
-                   ab.metodo_pago,
-                   ab.referencia,
-                   ab.estatus,
-                   ab.fecha_pago_declarado,
-                   ab.fecha_confirmacion
-            FROM abonos ab
-            JOIN cuotas_estudiantes c ON c.id = ab.cuota_id
-            JOIN aspirantes a         ON a.id = ab.aspirante_id
-            ORDER BY ab.fecha_pago_declarado ASC
-        ");
-        return $stmt->fetchAll();
+        $costo   = (float) ($asp['costo_base_usd'] ?? 1500);
+        $beca    = (float) ($asp['beca_pct'] ?? 50);
+        $a_pagar = round($costo * (1 - $beca / 100), 2);
+
+        if ($a_pagar <= 0) return array_fill(0, $total, 0.00);
+
+        $base    = floor($a_pagar / $total * 100) / 100;
+        $montos  = array_fill(0, $total - 1, $base);
+        $montos[] = round($a_pagar - $base * ($total - 1), 2);
+
+        return $montos;
     }
 }

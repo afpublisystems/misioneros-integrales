@@ -65,6 +65,15 @@ function csrf_field(): string {
         . '">';
 }
 
+/**
+ * Formatea un monto en dólares. El signo va antes del símbolo
+ * para que un saldo negativo se lea -$45.00 y no $-45.00.
+ */
+function usd(float|string|null $monto): string {
+    $n = (float) $monto;
+    return ($n < 0 ? '-$' : '$') . number_format(abs($n), 2);
+}
+
 // Obtener la ruta solicitada
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = rtrim($uri, '/') ?: '/';
@@ -102,8 +111,11 @@ $rutas = [
         '/admin/estadisticas'   => ['AdminController',   'estadisticas'],
         '/admin/colaboradores'  => ['AdminController',   'colaboradores'],
         '/admin/perfil'         => ['AdminController',   'perfil'],
-        '/admin/finanzas'       => ['AdminController',   'finanzas'],
-        '/admin/finanzas/exportar' => ['AdminController','exportarFinanzas'],
+        '/admin/finanzas'           => ['AdminController', 'finanzas'],
+        '/admin/finanzas/movimientos'=> ['AdminController', 'movimientos'],
+        '/admin/finanzas/matriculas' => ['AdminController', 'matriculas'],
+        '/admin/finanzas/prestamos'  => ['AdminController', 'prestamos'],
+        '/admin/finanzas/exportar'   => ['AdminController', 'exportarFinanzas'],
         // Candidato — pagos
         '/candidato/pagos'      => ['CandidatoController', 'pagos'],
     ],
@@ -121,8 +133,12 @@ $rutas = [
         '/admin/estadisticas'       => ['AdminController',      'actualizarEstadisticas'],
         '/admin/colaboradores'      => ['AdminController',      'gestionarColaborador'],
         '/admin/perfil'             => ['AdminController',      'actualizarPerfil'],
+        '/admin/finanzas/ingreso'   => ['AdminController',      'registrarIngreso'],
         '/admin/finanzas/gasto'     => ['AdminController',      'registrarGasto'],
-        '/admin/finanzas/confirmar' => ['AdminController',      'confirmarAbono'],
+        '/admin/finanzas/confirmar' => ['AdminController',      'confirmarIngreso'],
+        '/admin/finanzas/beca'      => ['AdminController',      'actualizarBeca'],
+        '/admin/finanzas/prestamo'  => ['AdminController',      'registrarPrestamo'],
+        '/admin/finanzas/fondo'     => ['AdminController',      'crearFondo'],
         // Candidato — pagos
         '/candidato/pagos'          => ['CandidatoController',  'subirAbono'],
         '/colaborar'                => ['PublicoController',    'registrarColaborador'],

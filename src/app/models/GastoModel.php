@@ -1,7 +1,10 @@
 <?php
 /**
  * GastoModel
- * Gastos operativos del programa de formación
+ * Egresos del programa de formación.
+ *
+ * Las categorías siguen los rubros del presupuesto del Ciclo 1
+ * para que el informe salga directo, sin reclasificar nada.
  */
 
 require_once APP_PATH . '/models/Model.php';
@@ -10,53 +13,140 @@ class GastoModel extends Model {
 
     protected string $tabla = 'gastos';
 
+    public const CATEGORIAS = [
+        'alimentacion'           => 'Alimentación (olla común)',
+        'hospedaje'              => 'Hospedaje / alquiler de sede',
+        'transporte'             => 'Transporte y traslados',
+        'seminario_inscripcion'  => 'Seminario — inscripción',
+        'seminario_mensualidad'  => 'Seminario — mensualidad',
+        'materiales'             => 'Materiales y talleres',
+        'uniformes'              => 'Uniformes y franelas',
+        'personal_apoyo'         => 'Apoyo a cocineros y personal',
+        'viaticos_facilitadores' => 'Viáticos de facilitadores',
+        'coordinacion'           => 'Coordinación y logística',
+        'administrativo'         => 'Gastos administrativos',
+        'devolucion_prestamo'    => 'Devolución de préstamo',
+        'otro'                   => 'Otro',
+    ];
+
     /**
      * Registrar un gasto
      */
-    public function registrar(array $datos, int $usuario_id): int {
-        return $this->insertar([
-            'concepto'         => trim($datos['concepto']),
-            'categoria'        => $datos['categoria'],
-            'monto_usd'        => !empty($datos['monto_usd'])  ? (float)$datos['monto_usd']  : null,
-            'monto_ves'        => !empty($datos['monto_ves'])  ? (float)$datos['monto_ves']  : null,
-            'metodo_pago'      => $datos['metodo_pago'],
-            'referencia'       => trim($datos['referencia'] ?? ''),
-            'comprobante_ruta' => $datos['comprobante_ruta'] ?? null,
-            'fecha_gasto'      => $datos['fecha_gasto'],
+    public function registrar(array $d, int $usuario_id): int {
+        $id = $this->insertar([
+            'fecha_gasto'      => $d['fecha_gasto'],
+            'concepto'         => $d['concepto'],
+            'categoria'        => $d['categoria'],
+            'fondo_id'         => $d['fondo_id']    ?: null,
+            'cuenta_id'        => $d['cuenta_id']   ?: null,
+            'prestamo_id'      => $d['prestamo_id'] ?: null,
+            'beneficiario'     => $d['beneficiario'] ?: null,
+            'monto_usd'        => $d['monto_usd'],
+            'monto_ves'        => $d['monto_ves']   ?: null,
+            'tasa_cambio'      => $d['tasa_cambio'] ?: null,
+            'metodo_pago'      => $d['metodo_pago'],
+            'referencia'       => $d['referencia']  ?: null,
+            'comprobante_ruta' => $d['comprobante_ruta'] ?? null,
             'registrado_por'   => $usuario_id,
-            'notas'            => trim($datos['notas'] ?? ''),
+            'notas'            => $d['notas'] ?: null,
         ]);
+
+        if (!empty($d['prestamo_id'])) {
+            (new PrestamoModel())->actualizarEstatus((int) $d['prestamo_id']);
+        }
+
+        return $id;
     }
 
     /**
-     * Gastos recientes con nombre de quien registró
+     * Listado con filtros opcionales
      */
-    public function recientes(int $limite = 20): array {
+    public function listar(array $filtros = [], int $limite = 200): array {
+        $where  = ['1=1'];
+        $params = [];
+
+        if (!empty($filtros['categoria'])) {
+            $where[] = 'g.categoria = :cat';
+            $params[':cat'] = $filtros['categoria'];
+        }
+        if (!empty($filtros['fondo_id'])) {
+            $where[] = 'g.fondo_id = :fondo';
+            $params[':fondo'] = (int) $filtros['fondo_id'];
+        }
+        if (!empty($filtros['desde'])) {
+            $where[] = 'g.fecha_gasto >= :desde';
+            $params[':desde'] = $filtros['desde'];
+        }
+        if (!empty($filtros['hasta'])) {
+            $where[] = 'g.fecha_gasto <= :hasta';
+            $params[':hasta'] = $filtros['hasta'];
+        }
+
         $stmt = $this->db->prepare("
-            SELECT g.*, CONCAT(u.nombre, ' ', u.apellido) AS registrado_por_nombre
+            SELECT g.*,
+                   CONCAT(u.nombre, ' ', u.apellido) AS registrado_por_nombre,
+                   f.nombre AS fondo_nombre,
+                   c.nombre AS cuenta_nombre,
+                   p.prestamista
             FROM gastos g
-            JOIN usuarios u ON u.id = g.registrado_por
+            LEFT JOIN usuarios  u ON u.id = g.registrado_por
+            LEFT JOIN fondos    f ON f.id = g.fondo_id
+            LEFT JOIN cuentas   c ON c.id = g.cuenta_id
+            LEFT JOIN prestamos p ON p.id = g.prestamo_id
+            WHERE " . implode(' AND ', $where) . "
             ORDER BY g.fecha_gasto DESC, g.id DESC
             LIMIT :lim
         ");
+        foreach ($params as $k => $v) $stmt->bindValue($k, $v);
         $stmt->bindValue(':lim', $limite, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
     /**
+     * Gastos recientes
+     */
+    public function recientes(int $limite = 15): array {
+        return $this->listar([], $limite);
+    }
+
+    /**
+     * Total gastado
+     */
+    public function total(): float {
+        return (float) $this->db->query(
+            "SELECT COALESCE(SUM(monto_usd), 0) FROM gastos"
+        )->fetchColumn();
+    }
+
+    /**
+     * Gasto acumulado por categoría, de mayor a menor
+     */
+    public function totalesPorCategoria(): array {
+        return $this->db->query("
+            SELECT categoria, COALESCE(SUM(monto_usd), 0) AS total, COUNT(*) AS cantidad
+            FROM gastos
+            GROUP BY categoria
+            ORDER BY total DESC
+        ")->fetchAll();
+    }
+
+    /**
      * Todos los gastos para exportar CSV
      */
     public function todosParaExportar(): array {
-        $stmt = $this->db->query("
-            SELECT g.concepto, g.categoria, g.monto_usd, g.monto_ves,
-                   g.metodo_pago, g.referencia, g.fecha_gasto,
+        return $this->db->query("
+            SELECT g.fecha_gasto, g.concepto, g.categoria,
+                   f.nombre AS fondo, c.nombre AS cuenta,
+                   g.beneficiario, g.monto_usd, g.monto_ves, g.tasa_cambio,
+                   g.metodo_pago, g.referencia,
                    CONCAT(u.nombre, ' ', u.apellido) AS registrado_por,
                    g.notas
             FROM gastos g
-            JOIN usuarios u ON u.id = g.registrado_por
-            ORDER BY g.fecha_gasto ASC
-        ");
-        return $stmt->fetchAll();
+            LEFT JOIN usuarios u ON u.id = g.registrado_por
+            LEFT JOIN fondos   f ON f.id = g.fondo_id
+            LEFT JOIN cuentas  c ON c.id = g.cuenta_id
+            ORDER BY g.fecha_gasto ASC, g.id ASC
+        ")->fetchAll();
     }
 }

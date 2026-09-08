@@ -7,6 +7,7 @@
 require_once APP_PATH . '/controllers/Controller.php';
 require_once APP_PATH . '/models/AspiranteModel.php';
 require_once APP_PATH . '/models/PagoModel.php';
+require_once APP_PATH . '/models/IngresoModel.php';
 require_once APP_PATH . '/helpers/TestScorer.php';
 
 class CandidatoController extends Controller {
@@ -582,15 +583,14 @@ class CandidatoController extends Controller {
             return;
         }
 
-        $pagos  = new PagoModel();
-        $cuotas = $pagos->cuotasPorAspirante($aspirante['id']);
-        $abonos = $pagos->abonosPorAspirante($aspirante['id']);
+        $pagos = new PagoModel();
 
         $this->render('candidato/pagos', [
             'titulo'    => 'Mis Pagos',
             'aspirante' => $aspirante,
-            'cuotas'    => $cuotas,
-            'abonos'    => $abonos,
+            'estado'    => $pagos->estadoCuenta((int) $aspirante['id']),
+            'cuotas'    => $pagos->cuotasPorAspirante((int) $aspirante['id']),
+            'abonos'    => (new IngresoModel())->porAspirante((int) $aspirante['id']),
         ]);
     }
 
@@ -603,22 +603,19 @@ class CandidatoController extends Controller {
             return;
         }
 
-        $cuota_id  = (int) ($_POST['cuota_id'] ?? 0);
         $monto_usd = (float) ($_POST['monto_declarado_usd'] ?? 0);
+        $monto_ves = (float) ($_POST['monto_declarado_ves'] ?? 0);
+        $tasa      = (float) ($_POST['tasa_cambio'] ?? 0);
         $metodo    = $_POST['metodo_pago'] ?? '';
         $fecha     = $_POST['fecha_pago_declarado'] ?? '';
 
-        if (!$cuota_id || $monto_usd <= 0 || !$metodo || !$fecha) {
-            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Completa todos los campos obligatorios.'];
-            $this->redirigir('/candidato/pagos');
-            return;
+        // Si reportó solo en bolívares, se convierte con la tasa
+        if ($monto_usd <= 0 && $monto_ves > 0 && $tasa > 0) {
+            $monto_usd = round($monto_ves / $tasa, 2);
         }
 
-        // Verificar que la cuota pertenece a este aspirante
-        $pagos = new PagoModel();
-        $cuota = $pagos->porId($cuota_id);
-        if (!$cuota || (int)$cuota['aspirante_id'] !== (int)$aspirante['id']) {
-            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Cuota no válida.'];
+        if ($monto_usd <= 0 || !$metodo || !$fecha) {
+            $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'Completa el monto, el método y la fecha del pago.'];
             $this->redirigir('/candidato/pagos');
             return;
         }
@@ -635,22 +632,30 @@ class CandidatoController extends Controller {
             }
             $dir = BASE_PATH . '/../uploads/comprobantes/';
             if (!is_dir($dir)) mkdir($dir, 0755, true);
-            $nombre = 'asp' . $aspirante['id'] . '_cuota' . $cuota['cuota_numero'] . '_' . time() . '.' . $ext;
+            $nombre = 'asp' . $aspirante['id'] . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
             move_uploaded_file($_FILES['comprobante']['tmp_name'], $dir . $nombre);
             $ruta = 'uploads/comprobantes/' . $nombre;
         }
 
-        $pagos->registrarAbono([
-            'cuota_id'             => $cuota_id,
-            'aspirante_id'         => $aspirante['id'],
-            'monto_declarado_usd'  => $monto_usd,
-            'monto_declarado_ves'  => !empty($_POST['monto_declarado_ves']) ? (float)$_POST['monto_declarado_ves'] : null,
-            'tasa_cambio'          => !empty($_POST['tasa_cambio']) ? (float)$_POST['tasa_cambio'] : null,
-            'metodo_pago'          => $metodo,
-            'banco_origen'         => trim($_POST['banco_origen'] ?? ''),
-            'referencia'           => trim($_POST['referencia'] ?? ''),
-            'comprobante_ruta'     => $ruta,
-            'fecha_pago_declarado' => $fecha,
+        (new IngresoModel())->registrar([
+            'fecha'            => $fecha,
+            'origen'           => 'matricula',
+            'aspirante_id'     => (int) $aspirante['id'],
+            'fondo_id'         => null,
+            'cuenta_id'        => null,
+            'aportante'        => null,
+            'concepto'         => 'Abono a matrícula',
+            'monto_usd'        => $monto_usd,
+            'monto_ves'        => $monto_ves ?: null,
+            'tasa_cambio'      => $tasa ?: null,
+            'metodo_pago'      => $metodo,
+            'banco_origen'     => trim($_POST['banco_origen'] ?? ''),
+            'referencia'       => trim($_POST['referencia'] ?? ''),
+            'comprobante_ruta' => $ruta,
+            'estatus'          => 'pendiente',
+            'registrado_via'   => 'candidato',
+            'registrado_por'   => (int) $_SESSION['usuario_id'],
+            'notas'            => trim($_POST['notas'] ?? ''),
         ]);
 
         $_SESSION['flash'] = ['tipo' => 'exito', 'msg' => 'Comprobante enviado. El administrador lo revisará pronto.'];

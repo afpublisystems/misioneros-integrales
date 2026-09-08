@@ -10,6 +10,9 @@ require_once APP_PATH . '/models/AspiranteModel.php';
 require_once APP_PATH . '/models/UsuarioModel.php';
 require_once APP_PATH . '/models/PagoModel.php';
 require_once APP_PATH . '/models/GastoModel.php';
+require_once APP_PATH . '/models/IngresoModel.php';
+require_once APP_PATH . '/models/PrestamoModel.php';
+require_once APP_PATH . '/models/FinanzasModel.php';
 require_once APP_PATH . '/helpers/TestScorer.php';
 
 class AdminController extends Controller {
@@ -937,65 +940,182 @@ class AdminController extends Controller {
         $this->redirigir('/admin/colaboradores');
     }
 
+    // ══════════════════════════════════════════════════════════
+    // FINANZAS
+    // ══════════════════════════════════════════════════════════
+
     // ── GET /admin/finanzas ───────────────────────────────────
     public function finanzas(): void {
         $this->requireAdminOEvaluador();
 
-        $pagos  = new PagoModel();
-        $gastos = new GastoModel();
+        $fin       = new FinanzasModel();
+        $ingresos  = new IngresoModel();
+        $gastos    = new GastoModel();
+        $pagos     = new PagoModel();
 
         $this->render('admin/finanzas', [
-            'titulo'            => 'Finanzas',
-            'kpis'              => $pagos->kpis(),
-            'abonos_pendientes' => $pagos->abonosPendientes(),
-            'gastos_recientes'  => $gastos->recientes(15),
-            'resumen_estudiantes' => $pagos->resumenPorEstudiante(),
+            'titulo'              => 'Finanzas',
+            'kpis'                => $fin->kpis(),
+            'matricula'           => $pagos->totalesMatricula(),
+            'fondos'              => $fin->resumenPorFondo(),
+            'cuentas'             => $fin->resumenPorCuenta(),
+            'flujo'               => $fin->flujoMensual(),
+            'pendientes'          => $ingresos->pendientes(),
+            'ultimos_ingresos'    => $ingresos->listar([], 8),
+            'ultimos_gastos'      => $gastos->recientes(8),
+            'gastos_categoria'    => $gastos->totalesPorCategoria(),
+            'prestamos'           => (new PrestamoModel())->listar(),
         ], 'admin');
+    }
+
+    // ── GET /admin/finanzas/movimientos ───────────────────────
+    public function movimientos(): void {
+        $this->requireAdminOEvaluador();
+
+        $fin = new FinanzasModel();
+
+        $filtros = [
+            'origen'    => $_GET['origen']    ?? '',
+            'categoria' => $_GET['categoria'] ?? '',
+            'fondo_id'  => $_GET['fondo_id']  ?? '',
+            'desde'     => $_GET['desde']     ?? '',
+            'hasta'     => $_GET['hasta']     ?? '',
+        ];
+
+        $this->render('admin/finanzas_movimientos', [
+            'titulo'      => 'Ingresos y gastos',
+            'filtros'     => $filtros,
+            'ingresos'    => (new IngresoModel())->listar($filtros),
+            'gastos'      => (new GastoModel())->listar($filtros),
+            'fondos'      => $fin->fondos(),
+            'cuentas'     => $fin->cuentas(),
+            'categorias'  => GastoModel::CATEGORIAS,
+            'origenes'    => IngresoModel::ORIGENES,
+            'aprobados'   => (new AspiranteModel())->todosConEstatus('aprobada'),
+            'prestamos'   => (new PrestamoModel())->activos(),
+            'tab'         => $_GET['tab'] ?? 'ingresos',
+        ], 'admin');
+    }
+
+    // ── POST /admin/finanzas/ingreso ──────────────────────────
+    public function registrarIngreso(): void {
+        $this->requireAdminOEvaluador();
+
+        $origen  = $_POST['origen'] ?? '';
+        $montos  = $this->normalizarMontos($_POST);
+
+        if (!array_key_exists($origen, IngresoModel::ORIGENES) || $montos['monto_usd'] <= 0) {
+            $this->flash('error', 'Revisa el origen y el monto del ingreso.');
+            $this->redirigir('/admin/finanzas/movimientos');
+            return;
+        }
+
+        $concepto = trim($_POST['concepto'] ?? '');
+        if ($concepto === '') {
+            $this->flash('error', 'El concepto es obligatorio.');
+            $this->redirigir('/admin/finanzas/movimientos');
+            return;
+        }
+
+        $aspirante_id = $origen === 'matricula' ? (int) ($_POST['aspirante_id'] ?? 0) : 0;
+        if ($origen === 'matricula' && !$aspirante_id) {
+            $this->flash('error', 'Indica de qué participante es la matrícula.');
+            $this->redirigir('/admin/finanzas/movimientos');
+            return;
+        }
+
+        $ruta = null;
+        if (!empty($_FILES['comprobante']['name'])) {
+            $ruta = $this->subirComprobante($_FILES['comprobante'], 'ing');
+            if ($ruta === false) {
+                $this->flash('error', 'Archivo inválido. Usa JPG, PNG o PDF (máx 5 MB).');
+                $this->redirigir('/admin/finanzas/movimientos');
+                return;
+            }
+        }
+
+        (new IngresoModel())->registrar([
+            'fecha'            => $_POST['fecha'] ?: date('Y-m-d'),
+            'origen'           => $origen,
+            'aspirante_id'     => $aspirante_id ?: null,
+            'fondo_id'         => (int) ($_POST['fondo_id']  ?? 0),
+            'cuenta_id'        => (int) ($_POST['cuenta_id'] ?? 0),
+            'aportante'        => trim($_POST['aportante'] ?? ''),
+            'concepto'         => $concepto,
+            'monto_usd'        => $montos['monto_usd'],
+            'monto_ves'        => $montos['monto_ves'],
+            'tasa_cambio'      => $montos['tasa'],
+            'metodo_pago'      => $_POST['metodo_pago'] ?? 'efectivo',
+            'banco_origen'     => trim($_POST['banco_origen'] ?? ''),
+            'referencia'       => trim($_POST['referencia'] ?? ''),
+            'comprobante_ruta' => $ruta,
+            'estatus'          => 'confirmado',
+            'registrado_via'   => 'admin',
+            'registrado_por'   => (int) $_SESSION['usuario_id'],
+            'notas'            => trim($_POST['notas'] ?? ''),
+        ]);
+
+        $this->flash('exito', 'Ingreso registrado.');
+        $this->redirigir('/admin/finanzas/movimientos');
     }
 
     // ── POST /admin/finanzas/gasto ────────────────────────────
     public function registrarGasto(): void {
         $this->requireAdminOEvaluador();
 
-        $datos = [
-            'concepto'    => trim($_POST['concepto'] ?? ''),
-            'categoria'   => $_POST['categoria']   ?? 'otro',
-            'monto_usd'   => $_POST['monto_usd']   ?? null,
-            'monto_ves'   => $_POST['monto_ves']   ?? null,
-            'metodo_pago' => $_POST['metodo_pago'] ?? 'efectivo',
-            'referencia'  => trim($_POST['referencia'] ?? ''),
-            'fecha_gasto' => $_POST['fecha_gasto'] ?? date('Y-m-d'),
-            'notas'       => trim($_POST['notas']  ?? ''),
-        ];
+        $concepto  = trim($_POST['concepto'] ?? '');
+        $categoria = $_POST['categoria'] ?? '';
+        $montos    = $this->normalizarMontos($_POST);
 
-        if (empty($datos['concepto'])) {
-            $this->flash('error', 'El concepto es obligatorio.');
-            $this->redirigir('/admin/finanzas');
+        if ($concepto === '' || !array_key_exists($categoria, GastoModel::CATEGORIAS) || $montos['monto_usd'] <= 0) {
+            $this->flash('error', 'Concepto, categoría y monto son obligatorios.');
+            $this->redirigir('/admin/finanzas/movimientos?tab=gastos');
             return;
         }
 
-        // Upload comprobante opcional
-        $datos['comprobante_ruta'] = null;
+        $prestamo_id = (int) ($_POST['prestamo_id'] ?? 0);
+        if ($categoria === 'devolucion_prestamo' && !$prestamo_id) {
+            $this->flash('error', 'Indica a qué préstamo corresponde la devolución.');
+            $this->redirigir('/admin/finanzas/movimientos?tab=gastos');
+            return;
+        }
+
+        $ruta = null;
         if (!empty($_FILES['comprobante']['name'])) {
             $ruta = $this->subirComprobante($_FILES['comprobante'], 'gasto');
             if ($ruta === false) {
                 $this->flash('error', 'Archivo inválido. Usa JPG, PNG o PDF (máx 5 MB).');
-                $this->redirigir('/admin/finanzas');
+                $this->redirigir('/admin/finanzas/movimientos?tab=gastos');
                 return;
             }
-            $datos['comprobante_ruta'] = $ruta;
         }
 
-        (new GastoModel())->registrar($datos, (int)$_SESSION['usuario_id']);
-        $this->flash('exito', 'Gasto registrado correctamente.');
-        $this->redirigir('/admin/finanzas');
+        (new GastoModel())->registrar([
+            'fecha_gasto'      => $_POST['fecha_gasto'] ?: date('Y-m-d'),
+            'concepto'         => $concepto,
+            'categoria'        => $categoria,
+            'fondo_id'         => (int) ($_POST['fondo_id']  ?? 0),
+            'cuenta_id'        => (int) ($_POST['cuenta_id'] ?? 0),
+            'prestamo_id'      => $prestamo_id,
+            'beneficiario'     => trim($_POST['beneficiario'] ?? ''),
+            'monto_usd'        => $montos['monto_usd'],
+            'monto_ves'        => $montos['monto_ves'],
+            'tasa_cambio'      => $montos['tasa'],
+            'metodo_pago'      => $_POST['metodo_pago'] ?? 'efectivo',
+            'referencia'       => trim($_POST['referencia'] ?? ''),
+            'comprobante_ruta' => $ruta,
+            'notas'            => trim($_POST['notas'] ?? ''),
+        ], (int) $_SESSION['usuario_id']);
+
+        $this->flash('exito', 'Gasto registrado.');
+        $this->redirigir('/admin/finanzas/movimientos?tab=gastos');
     }
 
     // ── POST /admin/finanzas/confirmar ────────────────────────
-    public function confirmarAbono(): void {
+    public function confirmarIngreso(): void {
         $this->requireAdminOEvaluador();
 
-        $id     = (int) ($_POST['id']     ?? 0);
+        $id     = (int) ($_POST['id'] ?? 0);
         $accion = $_POST['accion'] ?? '';
         $notas  = trim($_POST['notas_admin'] ?? '');
 
@@ -1005,20 +1125,140 @@ class AdminController extends Controller {
             return;
         }
 
-        $pagos     = new PagoModel();
-        $admin_id  = (int) $_SESSION['usuario_id'];
+        $ingresos = new IngresoModel();
+        $admin_id = (int) $_SESSION['usuario_id'];
 
         if ($accion === 'confirmar') {
-            $ok = $pagos->confirmarAbono($id, $admin_id, $notas ?: null);
-            $this->flash($ok ? 'exito' : 'error', $ok ? 'Pago confirmado correctamente.' : 'No se pudo confirmar el pago.');
+            $ok = $ingresos->confirmar($id, $admin_id, $notas ?: null);
+            $this->flash($ok ? 'exito' : 'error', $ok ? 'Pago confirmado.' : 'No se pudo confirmar el pago.');
         } else {
-            if (empty($notas)) {
+            if ($notas === '') {
                 $this->flash('error', 'Debes indicar el motivo del rechazo.');
                 $this->redirigir('/admin/finanzas');
                 return;
             }
-            $ok = $pagos->rechazarAbono($id, $admin_id, $notas);
-            $this->flash($ok ? 'exito' : 'error', $ok ? 'Abono rechazado.' : 'No se pudo rechazar.');
+            $ok = $ingresos->rechazar($id, $admin_id, $notas);
+            $this->flash($ok ? 'exito' : 'error', $ok ? 'Pago rechazado.' : 'No se pudo rechazar.');
+        }
+
+        $this->redirigir('/admin/finanzas');
+    }
+
+    // ── GET /admin/finanzas/matriculas ────────────────────────
+    public function matriculas(): void {
+        $this->requireAdminOEvaluador();
+
+        $pagos = new PagoModel();
+        $resumen = $pagos->resumenPorEstudiante();
+
+        // Cuotas de cada participante, para el detalle desplegable
+        $cuotas = [];
+        foreach ($resumen as $r) {
+            $cuotas[$r['aspirante_id']] = $pagos->cuotasPorAspirante((int) $r['aspirante_id']);
+        }
+
+        $this->render('admin/finanzas_matriculas', [
+            'titulo'    => 'Matrículas y becas',
+            'resumen'   => $resumen,
+            'cuotas'    => $cuotas,
+            'totales'   => $pagos->totalesMatricula(),
+        ], 'admin');
+    }
+
+    // ── POST /admin/finanzas/beca ─────────────────────────────
+    public function actualizarBeca(): void {
+        $this->requireAdminOEvaluador();
+
+        $aspirante_id = (int) ($_POST['aspirante_id'] ?? 0);
+        $beca         = (float) ($_POST['beca_pct'] ?? -1);
+        $costo        = $_POST['costo_base_usd'] !== '' ? (float) $_POST['costo_base_usd'] : null;
+
+        if (!$aspirante_id || $beca < 0 || $beca > 100) {
+            $this->flash('error', 'La beca debe estar entre 0 y 100 por ciento.');
+            $this->redirigir('/admin/finanzas/matriculas');
+            return;
+        }
+
+        (new PagoModel())->actualizarBeca(
+            $aspirante_id,
+            $beca,
+            trim($_POST['beca_notas'] ?? '') ?: null,
+            $costo
+        );
+
+        $this->flash('exito', 'Beca actualizada y cuotas recalculadas.');
+        $this->redirigir('/admin/finanzas/matriculas');
+    }
+
+    // ── GET /admin/finanzas/prestamos ─────────────────────────
+    public function prestamos(): void {
+        $this->requireAdminOEvaluador();
+
+        $fin = new FinanzasModel();
+
+        $this->render('admin/finanzas_prestamos', [
+            'titulo'    => 'Préstamos',
+            'prestamos' => (new PrestamoModel())->listar(),
+            'saldo'     => (new PrestamoModel())->saldoTotal(),
+            'fondos'    => $fin->fondos(),
+            'cuentas'   => $fin->cuentas(),
+        ], 'admin');
+    }
+
+    // ── POST /admin/finanzas/prestamo ─────────────────────────
+    public function registrarPrestamo(): void {
+        $this->requireAdminOEvaluador();
+
+        $prestamista = trim($_POST['prestamista'] ?? '');
+        $concepto    = trim($_POST['concepto'] ?? '');
+        $montos      = $this->normalizarMontos($_POST);
+
+        if ($prestamista === '' || $concepto === '' || $montos['monto_usd'] <= 0) {
+            $this->flash('error', 'Quién prestó, para qué y cuánto son obligatorios.');
+            $this->redirigir('/admin/finanzas/prestamos');
+            return;
+        }
+
+        (new PrestamoModel())->registrar([
+            'prestamista'      => $prestamista,
+            'telefono'         => trim($_POST['telefono'] ?? ''),
+            'concepto'         => $concepto,
+            'fondo_id'         => (int) ($_POST['fondo_id']  ?? 0),
+            'cuenta_id'        => (int) ($_POST['cuenta_id'] ?? 0),
+            'monto_usd'        => $montos['monto_usd'],
+            'monto_ves'        => $montos['monto_ves'],
+            'tasa_cambio'      => $montos['tasa'],
+            'metodo_pago'      => $_POST['metodo_pago'] ?? 'efectivo',
+            'referencia'       => trim($_POST['referencia'] ?? ''),
+            'fecha_prestamo'   => $_POST['fecha_prestamo'] ?: date('Y-m-d'),
+            'fecha_compromiso' => $_POST['fecha_compromiso'] ?? '',
+            'notas'            => trim($_POST['notas'] ?? ''),
+        ], (int) $_SESSION['usuario_id']);
+
+        $this->flash('exito', 'Préstamo registrado. El monto entró a caja y quedó como deuda por pagar.');
+        $this->redirigir('/admin/finanzas/prestamos');
+    }
+
+    // ── POST /admin/finanzas/fondo ────────────────────────────
+    public function crearFondo(): void {
+        $this->requireAdminOEvaluador();
+
+        $nombre = trim($_POST['nombre'] ?? '');
+        if ($nombre === '') {
+            $this->flash('error', 'El fondo necesita un nombre.');
+            $this->redirigir('/admin/finanzas');
+            return;
+        }
+
+        try {
+            (new FinanzasModel())->crearFondo(
+                $nombre,
+                trim($_POST['descripcion'] ?? ''),
+                ($_POST['tipo'] ?? 'especifico') === 'general' ? 'general' : 'especifico'
+            );
+            $this->flash('exito', 'Fondo creado.');
+        } catch (PDOException $e) {
+            $this->flash('error', 'Ya existe un fondo con ese nombre.');
         }
 
         $this->redirigir('/admin/finanzas');
@@ -1028,42 +1268,79 @@ class AdminController extends Controller {
     public function exportarFinanzas(): void {
         $this->requireAdminOEvaluador();
 
-        $tipo = $_GET['tipo'] ?? 'pagos';
-        $pagos  = new PagoModel();
-        $gastos = new GastoModel();
+        $tipo  = $_GET['tipo'] ?? 'ingresos';
+        $fecha = date('Y-m-d');
 
         header('Content-Type: text/csv; charset=utf-8');
-        $fecha = date('Y-m-d');
 
         if ($tipo === 'gastos') {
             header("Content-Disposition: attachment; filename=gastos_{$fecha}.csv");
             $out = fopen('php://output', 'w');
             fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM UTF-8
-            fputcsv($out, ['Concepto','Categoría','Monto USD','Monto VES','Método','Referencia','Fecha','Registrado por','Notas'], ';');
-            foreach ($gastos->todosParaExportar() as $r) {
+            fputcsv($out, ['Fecha','Concepto','Categoría','Fondo','Cuenta','Beneficiario','Monto USD','Monto Bs','Tasa','Método','Referencia','Registrado por','Notas'], ';');
+            foreach ((new GastoModel())->todosParaExportar() as $r) {
                 fputcsv($out, [
-                    $r['concepto'], $r['categoria'], $r['monto_usd'], $r['monto_ves'],
-                    $r['metodo_pago'], $r['referencia'], $r['fecha_gasto'],
-                    $r['registrado_por'], $r['notas'],
+                    $r['fecha_gasto'], $r['concepto'],
+                    GastoModel::CATEGORIAS[$r['categoria']] ?? $r['categoria'],
+                    $r['fondo'], $r['cuenta'], $r['beneficiario'],
+                    $r['monto_usd'], $r['monto_ves'], $r['tasa_cambio'],
+                    $r['metodo_pago'], $r['referencia'], $r['registrado_por'], $r['notas'],
+                ], ';');
+            }
+        } elseif ($tipo === 'matriculas') {
+            header("Content-Disposition: attachment; filename=matriculas_{$fecha}.csv");
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($out, ['Participante','Cédula','Costo base USD','Beca %','A pagar USD','Pagado USD','Saldo USD','Cuotas completadas','Próximo vencimiento'], ';');
+            foreach ((new PagoModel())->resumenPorEstudiante() as $r) {
+                fputcsv($out, [
+                    $r['nombre'], $r['cedula'], $r['costo_base_usd'], $r['beca_pct'],
+                    $r['total_a_pagar'], $r['total_pagado'],
+                    round((float)$r['total_a_pagar'] - (float)$r['total_pagado'], 2),
+                    $r['cuotas_completadas'] . '/' . $r['total_cuotas'],
+                    $r['proximo_vencimiento'],
                 ], ';');
             }
         } else {
-            header("Content-Disposition: attachment; filename=pagos_{$fecha}.csv");
+            header("Content-Disposition: attachment; filename=ingresos_{$fecha}.csv");
             $out = fopen('php://output', 'w');
             fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            fputcsv($out, ['Estudiante','Cédula','Cuota #','Monto USD','Monto VES','Tasa','Método','Referencia','Estatus','Fecha pago','Fecha confirmación'], ';');
-            foreach ($pagos->todosParaExportar() as $r) {
+            fputcsv($out, ['Fecha','Origen','De quién','Concepto','Fondo','Cuenta','Monto USD','Monto Bs','Tasa','Método','Referencia','Estatus','Notas'], ';');
+            foreach ((new IngresoModel())->todosParaExportar() as $r) {
                 fputcsv($out, [
-                    $r['estudiante'], $r['cedula'], $r['cuota_numero'],
-                    $r['monto_declarado_usd'], $r['monto_declarado_ves'], $r['tasa_cambio'],
-                    $r['metodo_pago'], $r['referencia'], $r['estatus'],
-                    $r['fecha_pago_declarado'], $r['fecha_confirmacion'],
+                    $r['fecha'],
+                    IngresoModel::ORIGENES[$r['origen']] ?? $r['origen'],
+                    $r['de_quien'], $r['concepto'], $r['fondo'], $r['cuenta'],
+                    $r['monto_usd'], $r['monto_ves'], $r['tasa_cambio'],
+                    $r['metodo_pago'], $r['referencia'], $r['estatus'], $r['notas'],
                 ], ';');
             }
         }
+
         fclose($out);
         exit;
     }
+
+    /**
+     * Un movimiento puede venir en USD o en bolívares. Si viene en Bs
+     * con tasa, se convierte: todo se consolida en USD.
+     */
+    private function normalizarMontos(array $post): array {
+        $usd  = (float) ($post['monto_usd']   ?? 0);
+        $ves  = (float) ($post['monto_ves']   ?? 0);
+        $tasa = (float) ($post['tasa_cambio'] ?? 0);
+
+        if ($usd <= 0 && $ves > 0 && $tasa > 0) {
+            $usd = round($ves / $tasa, 2);
+        }
+
+        return [
+            'monto_usd' => $usd,
+            'monto_ves' => $ves ?: null,
+            'tasa'      => $tasa ?: null,
+        ];
+    }
+
 
     // ── Helpers ───────────────────────────────────────────────
     private function requireAdminOEvaluador(): void {
