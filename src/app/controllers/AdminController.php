@@ -1364,7 +1364,7 @@ class AdminController extends Controller {
         if (!in_array($ext, $extPermitidas)) return false;
         if ($file['size'] > 5 * 1024 * 1024) return false;
 
-        $dir = BASE_PATH . '/../uploads/comprobantes/';
+        $dir = BASE_PATH . '/uploads/comprobantes/';
         if (!is_dir($dir)) mkdir($dir, 0755, true);
 
         $nombre = $prefijo . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;

@@ -630,7 +630,7 @@ class CandidatoController extends Controller {
                 $this->redirigir('/candidato/pagos');
                 return;
             }
-            $dir = BASE_PATH . '/../uploads/comprobantes/';
+            $dir = BASE_PATH . '/uploads/comprobantes/';
             if (!is_dir($dir)) mkdir($dir, 0755, true);
             $nombre = 'asp' . $aspirante['id'] . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
             move_uploaded_file($_FILES['comprobante']['tmp_name'], $dir . $nombre);
