@@ -80,7 +80,8 @@
                                 && !empty($p['fecha_compromiso'])
                                 && $p['fecha_compromiso'] < date('Y-m-d');
                 ?>
-                <tr>
+                <?php $anul_p = $p['estatus'] === 'anulado'; ?>
+                <tr class="<?= $anul_p ? 'anulado' : '' ?>">
                     <td>
                         <strong><?= htmlspecialchars($p['prestamista']) ?></strong>
                         <?php if (!empty($p['telefono'])): ?>
@@ -94,7 +95,7 @@
                         <?php endif; ?>
                     </td>
                     <td class="texto-muted"><?= htmlspecialchars($p['fondo_nombre'] ?? '—') ?></td>
-                    <td><strong>$<?= number_format($p['monto_usd'], 2) ?></strong></td>
+                    <td><strong class="<?= $anul_p ? 'monto-anulado' : '' ?>">$<?= number_format($p['monto_usd'], 2) ?></strong></td>
                     <td class="texto-verde">$<?= number_format($devuelto, 2) ?></td>
                     <td class="<?= $falta > 0 ? 'texto-rojo' : 'texto-verde' ?>">$<?= number_format(max($falta, 0), 2) ?></td>
                     <td style="white-space:nowrap"><?= date('d/m/Y', strtotime($p['fecha_prestamo'])) ?></td>
@@ -107,12 +108,22 @@
                             $clase = match ($p['estatus']) {
                                 'pagado'    => 'badge--exito',
                                 'condonado' => 'badge--info',
+                                'anulado'   => 'badge--peligro',
                                 default     => 'badge--warning',
                             };
                         ?>
                         <span class="badge <?= $clase ?>"><?= ucfirst($p['estatus']) ?></span>
+                        <?php if ($anul_p && !empty($p['motivo_anulacion'])): ?>
+                        <span class="fin-motivo"><?= htmlspecialchars($p['motivo_anulacion']) ?></span>
+                        <?php endif; ?>
                     </td>
-                    <td>
+                    <td style="white-space:nowrap">
+                        <?php if ($anul_p): ?>
+                        <button type="button" class="btn btn--xs btn--outline" title="Reactivar"
+                                onclick="reactivarMov('prestamo', <?= $p['id'] ?>)">
+                            <i class="fas fa-rotate-left"></i>
+                        </button>
+                        <?php else: ?>
                         <button type="button" class="btn btn--xs btn--outline" title="Editar"
                                 data-editar-prestamo="<?= htmlspecialchars(json_encode([
                                     'id'               => $p['id'],
@@ -127,6 +138,11 @@
                                 ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
                             <i class="fas fa-pen"></i>
                         </button>
+                        <button type="button" class="btn btn--xs btn--outline" title="Anular"
+                                onclick="abrirAnular('prestamo', <?= $p['id'] ?>, '<?= htmlspecialchars(addslashes($p['prestamista'] . ' — $' . number_format($p['monto_usd'], 2)), ENT_QUOTES) ?>')">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>

@@ -106,6 +106,77 @@ class PrestamoModel extends Model {
     }
 
     /**
+     * Anula un préstamo y el ingreso que generó.
+     *
+     * Si ya tiene devoluciones registradas no se puede anular: habría
+     * que decidir qué pasa con esos pagos. Se anulan primero ellas.
+     */
+    public function anular(int $id, int $admin_id, string $motivo): array {
+        $prestamo = $this->porId($id);
+        if (!$prestamo) {
+            return ['ok' => false, 'msg' => 'No se encontró el préstamo.'];
+        }
+        if ($prestamo['estatus'] === 'anulado') {
+            return ['ok' => false, 'msg' => 'Ese préstamo ya está anulado.'];
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) FROM gastos
+            WHERE prestamo_id = :id AND estatus = 'activo'
+        ");
+        $stmt->execute([':id' => $id]);
+        if ((int) $stmt->fetchColumn() > 0) {
+            return [
+                'ok'  => false,
+                'msg' => 'Este préstamo tiene devoluciones registradas. Anula primero esas '
+                       . 'devoluciones en Ingresos y gastos, y después el préstamo.',
+            ];
+        }
+
+        $this->db->prepare("
+            UPDATE prestamos
+            SET estatus = 'anulado', anulado_en = NOW(),
+                anulado_por = :admin, motivo_anulacion = :motivo
+            WHERE id = :id
+        ")->execute([':admin' => $admin_id, ':motivo' => $motivo, ':id' => $id]);
+
+        // El ingreso espejo se va con él, o la caja quedaría inflada
+        $this->db->prepare("
+            UPDATE ingresos
+            SET estatus = 'anulado', anulado_en = NOW(),
+                anulado_por = :admin, motivo_anulacion = :motivo
+            WHERE prestamo_id = :id AND origen = 'prestamo'
+        ")->execute([':admin' => $admin_id, ':motivo' => $motivo, ':id' => $id]);
+
+        return ['ok' => true, 'msg' => 'Préstamo anulado. El ingreso en caja se anuló con él.'];
+    }
+
+    /**
+     * Devuelve un préstamo anulado a circulación, junto con su ingreso
+     */
+    public function reactivar(int $id): bool {
+        $prestamo = $this->porId($id);
+        if (!$prestamo || $prestamo['estatus'] !== 'anulado') return false;
+
+        $this->db->prepare("
+            UPDATE prestamos
+            SET estatus = 'activo', anulado_en = NULL,
+                anulado_por = NULL, motivo_anulacion = NULL
+            WHERE id = :id
+        ")->execute([':id' => $id]);
+
+        $this->db->prepare("
+            UPDATE ingresos
+            SET estatus = 'confirmado', anulado_en = NULL,
+                anulado_por = NULL, motivo_anulacion = NULL
+            WHERE prestamo_id = :id AND origen = 'prestamo'
+        ")->execute([':id' => $id]);
+
+        $this->actualizarEstatus($id);
+        return true;
+    }
+
+    /**
      * Préstamos con lo devuelto y el saldo vivo
      */
     public function listar(): array {
@@ -114,11 +185,11 @@ class PrestamoModel extends Model {
                    f.nombre AS fondo_nombre,
                    COALESCE((
                        SELECT SUM(g.monto_usd) FROM gastos g
-                       WHERE g.prestamo_id = p.id
+                       WHERE g.prestamo_id = p.id AND g.estatus = 'activo'
                    ), 0) AS devuelto_usd
             FROM prestamos p
             LEFT JOIN fondos f ON f.id = p.fondo_id
-            ORDER BY p.estatus = 'activo' DESC, p.fecha_prestamo DESC
+            ORDER BY p.estatus = 'anulado' ASC, p.estatus = 'activo' DESC, p.fecha_prestamo DESC
         ")->fetchAll();
     }
 
@@ -129,7 +200,8 @@ class PrestamoModel extends Model {
         return (float) $this->db->query("
             SELECT COALESCE(SUM(
                 p.monto_usd - COALESCE((
-                    SELECT SUM(g.monto_usd) FROM gastos g WHERE g.prestamo_id = p.id
+                    SELECT SUM(g.monto_usd) FROM gastos g
+                    WHERE g.prestamo_id = p.id AND g.estatus = 'activo'
                 ), 0)
             ), 0)
             FROM prestamos p
@@ -143,7 +215,8 @@ class PrestamoModel extends Model {
     public function actualizarEstatus(int $id): void {
         $stmt = $this->db->prepare("
             SELECT p.monto_usd,
-                   COALESCE((SELECT SUM(g.monto_usd) FROM gastos g WHERE g.prestamo_id = p.id), 0) AS devuelto
+                   COALESCE((SELECT SUM(g.monto_usd) FROM gastos g
+                             WHERE g.prestamo_id = p.id AND g.estatus = 'activo'), 0) AS devuelto
             FROM prestamos p WHERE p.id = :id
         ");
         $stmt->execute([':id' => $id]);
@@ -151,8 +224,10 @@ class PrestamoModel extends Model {
         if (!$p) return;
 
         $estatus = (float) $p['devuelto'] >= (float) $p['monto_usd'] - 0.005 ? 'pagado' : 'activo';
-        $this->db->prepare("UPDATE prestamos SET estatus = :e WHERE id = :id AND estatus <> 'condonado'")
-                 ->execute([':e' => $estatus, ':id' => $id]);
+        $this->db->prepare("
+            UPDATE prestamos SET estatus = :e
+            WHERE id = :id AND estatus NOT IN ('condonado', 'anulado')
+        ")->execute([':e' => $estatus, ':id' => $id]);
     }
 
     /**
@@ -161,7 +236,8 @@ class PrestamoModel extends Model {
     public function activos(): array {
         return $this->db->query("
             SELECT p.id, p.prestamista, p.concepto, p.monto_usd,
-                   COALESCE((SELECT SUM(g.monto_usd) FROM gastos g WHERE g.prestamo_id = p.id), 0) AS devuelto_usd
+                   COALESCE((SELECT SUM(g.monto_usd) FROM gastos g
+                             WHERE g.prestamo_id = p.id AND g.estatus = 'activo'), 0) AS devuelto_usd
             FROM prestamos p
             WHERE p.estatus = 'activo'
             ORDER BY p.fecha_prestamo ASC

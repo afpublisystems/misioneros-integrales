@@ -1365,6 +1365,92 @@ class AdminController extends Controller {
         ];
     }
 
+    // ── POST /admin/finanzas/anular ───────────────────────────
+    // Un movimiento no se borra: se anula. Se queda registrado,
+    // deja de contar en los totales y guarda quién y por qué.
+    public function anularMovimiento(): void {
+        $this->requireAdminOEvaluador();
+
+        $tipo   = $_POST['tipo']   ?? '';
+        $id     = (int) ($_POST['id'] ?? 0);
+        $motivo = trim($_POST['motivo'] ?? '');
+        $admin  = (int) $_SESSION['usuario_id'];
+
+        $destinos = [
+            'ingreso'  => '/admin/finanzas/movimientos',
+            'gasto'    => '/admin/finanzas/movimientos?tab=gastos',
+            'prestamo' => '/admin/finanzas/prestamos',
+        ];
+        $volver = $destinos[$tipo] ?? '/admin/finanzas';
+
+        if (!$id || !isset($destinos[$tipo])) {
+            $this->flash('error', 'Solicitud inválida.');
+            $this->redirigir($volver);
+            return;
+        }
+        if ($motivo === '') {
+            $this->flash('error', 'Escribe el motivo de la anulación.');
+            $this->redirigir($volver);
+            return;
+        }
+
+        if ($tipo === 'ingreso') {
+            $ingresos = new IngresoModel();
+            $ing      = $ingresos->porId($id);
+            if ($ing && $ing['origen'] === 'prestamo') {
+                $this->flash('error', 'Este ingreso viene de un préstamo. Anula el préstamo y el ingreso se va con él.');
+                $this->redirigir($volver);
+                return;
+            }
+            $ok = $ingresos->anular($id, $admin, $motivo);
+            $this->flash($ok ? 'exito' : 'error',
+                $ok ? 'Ingreso anulado. Ya no cuenta en los totales.' : 'No se pudo anular el ingreso.');
+
+        } elseif ($tipo === 'gasto') {
+            $ok = (new GastoModel())->anular($id, $admin, $motivo);
+            $this->flash($ok ? 'exito' : 'error',
+                $ok ? 'Gasto anulado. Ya no cuenta en los totales.' : 'No se pudo anular el gasto.');
+
+        } else {
+            $res = (new PrestamoModel())->anular($id, $admin, $motivo);
+            $this->flash($res['ok'] ? 'exito' : 'error', $res['msg']);
+        }
+
+        $this->redirigir($volver);
+    }
+
+    // ── POST /admin/finanzas/reactivar ────────────────────────
+    public function reactivarMovimiento(): void {
+        $this->requireAdminOEvaluador();
+
+        $tipo = $_POST['tipo'] ?? '';
+        $id   = (int) ($_POST['id'] ?? 0);
+
+        $destinos = [
+            'ingreso'  => '/admin/finanzas/movimientos',
+            'gasto'    => '/admin/finanzas/movimientos?tab=gastos',
+            'prestamo' => '/admin/finanzas/prestamos',
+        ];
+        $volver = $destinos[$tipo] ?? '/admin/finanzas';
+
+        if (!$id || !isset($destinos[$tipo])) {
+            $this->flash('error', 'Solicitud inválida.');
+            $this->redirigir($volver);
+            return;
+        }
+
+        $ok = match ($tipo) {
+            'ingreso'  => (new IngresoModel())->reactivar($id),
+            'gasto'    => (new GastoModel())->reactivar($id),
+            'prestamo' => (new PrestamoModel())->reactivar($id),
+        };
+
+        $this->flash($ok ? 'exito' : 'error',
+            $ok ? 'Movimiento reactivado. Vuelve a contar en los totales.'
+                : 'No se pudo reactivar el movimiento.');
+        $this->redirigir($volver);
+    }
+
     // ── GET /admin/finanzas/exportar ──────────────────────────
     public function exportarFinanzas(): void {
         $this->requireAdminOEvaluador();

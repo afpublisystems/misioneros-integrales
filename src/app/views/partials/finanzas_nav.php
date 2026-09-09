@@ -90,6 +90,15 @@ $secciones = [
 }
 .fin-nota strong { color: var(--gris-dark); }
 
+
+/* ── Movimiento anulado: se ve, pero se ve que no cuenta ──── */
+.tabla tr.anulado > td { opacity: 0.55; background: #fafafa; }
+.tabla tr.anulado .monto-anulado { text-decoration: line-through; }
+.fin-motivo {
+    display: block; font-size: 0.72rem; color: #991b1b;
+    margin-top: 0.2rem; font-style: italic;
+}
+
 /* ── Panel vacío ─────────────────────────────────────────── */
 .fin-vacio {
     text-align: center; padding: 2.5rem 1.5rem; color: var(--gris);
@@ -127,3 +136,56 @@ $secciones = [
     .fin-tab { padding: 0.55rem 0.7rem; font-size: 0.8rem; }
 }
 </style>
+
+<!-- Modal: anular movimiento ───────────────────────────────── -->
+<div class="modal-overlay" id="modal-anular">
+    <div class="modal">
+        <div class="modal__header">
+            <h3><i class="fas fa-ban"></i> Anular movimiento</h3>
+            <button class="modal__cerrar" onclick="cerrarModal('modal-anular')">&times;</button>
+        </div>
+        <form method="POST" action="/admin/finanzas/anular">
+            <?= csrf_field() ?>
+            <input type="hidden" name="tipo" id="anular-tipo">
+            <input type="hidden" name="id"   id="anular-id">
+            <div class="modal__body">
+                <p style="font-size:.85rem;color:var(--gris-dark);margin-bottom:1rem">
+                    El movimiento se queda registrado pero deja de contar en los totales.
+                    Podrás reactivarlo después si hace falta.
+                </p>
+                <p id="anular-detalle" style="font-size:.85rem;font-weight:700;margin-bottom:1rem"></p>
+                <div class="form-grupo">
+                    <label>Motivo <span class="req">*</span></label>
+                    <input type="text" name="motivo" id="anular-motivo" required maxlength="255"
+                           placeholder="Ej: se cargó dos veces por error">
+                    <span class="fin-nota">Queda guardado junto con tu nombre y la fecha.</span>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-anular')">Cancelar</button>
+                <button type="submit" class="btn btn--peligro"><i class="fas fa-ban"></i> Anular</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<form method="POST" action="/admin/finanzas/reactivar" id="form-reactivar" style="display:none">
+    <?= csrf_field() ?>
+    <input type="hidden" name="tipo" id="react-tipo">
+    <input type="hidden" name="id"   id="react-id">
+</form>
+
+<script>
+function abrirAnular(tipo, id, detalle) {
+    document.getElementById('anular-tipo').value = tipo;
+    document.getElementById('anular-id').value   = id;
+    document.getElementById('anular-detalle').textContent = detalle || '';
+    document.getElementById('anular-motivo').value = '';
+    document.getElementById('modal-anular').classList.add('abierto');
+}
+function reactivarMov(tipo, id) {
+    document.getElementById('react-tipo').value = tipo;
+    document.getElementById('react-id').value   = id;
+    document.getElementById('form-reactivar').submit();
+}
+</script>

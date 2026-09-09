@@ -48,7 +48,7 @@ class FinanzasModel extends Model {
         )->fetchColumn();
 
         $gastos = (float) $this->db->query(
-            "SELECT COALESCE(SUM(monto_usd), 0) FROM gastos"
+            "SELECT COALESCE(SUM(monto_usd), 0) FROM gastos WHERE estatus = 'activo'"
         )->fetchColumn();
 
         $deuda = (new PrestamoModel())->saldoTotal();
@@ -79,7 +79,8 @@ class FinanzasModel extends Model {
                        WHERE i.fondo_id = f.id AND i.estatus = 'confirmado'
                    ), 0) AS ingresos,
                    COALESCE((
-                       SELECT SUM(g.monto_usd) FROM gastos g WHERE g.fondo_id = f.id
+                       SELECT SUM(g.monto_usd) FROM gastos g
+                       WHERE g.fondo_id = f.id AND g.estatus = 'activo'
                    ), 0) AS gastos
             FROM fondos f
             WHERE f.activo = 1
@@ -98,7 +99,8 @@ class FinanzasModel extends Model {
                        WHERE i.cuenta_id = c.id AND i.estatus = 'confirmado'
                    ), 0) AS entradas,
                    COALESCE((
-                       SELECT SUM(g.monto_usd) FROM gastos g WHERE g.cuenta_id = c.id
+                       SELECT SUM(g.monto_usd) FROM gastos g
+                       WHERE g.cuenta_id = c.id AND g.estatus = 'activo'
                    ), 0) AS salidas
             FROM cuentas c
             WHERE c.activa = 1
@@ -119,7 +121,7 @@ class FinanzasModel extends Model {
                 FROM ingresos WHERE estatus = 'confirmado'
                 UNION ALL
                 SELECT DATE_FORMAT(fecha_gasto, '%Y-%m') AS mes, 0 AS entrada, monto_usd AS salida
-                FROM gastos
+                FROM gastos WHERE estatus = 'activo'
             ) m
             GROUP BY mes
             ORDER BY mes DESC

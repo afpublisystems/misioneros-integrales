@@ -84,20 +84,26 @@
                 </thead>
                 <tbody>
                 <?php foreach ($ingresos as $i): ?>
-                <tr>
+                <?php $anul_i = $i['estatus'] === 'anulado'; ?>
+                <tr class="<?= $anul_i ? 'anulado' : '' ?>">
                     <td style="white-space:nowrap"><?= date('d/m/Y', strtotime($i['fecha'])) ?></td>
                     <td><span class="badge badge--info"><?= htmlspecialchars($origenes[$i['origen']] ?? $i['origen']) ?></span></td>
                     <td><?= htmlspecialchars($i['nombre_estudiante'] ?? $i['aportante'] ?? '—') ?></td>
                     <td><?= htmlspecialchars($i['concepto']) ?></td>
                     <td class="texto-muted"><?= htmlspecialchars($i['fondo_nombre'] ?? '—') ?></td>
                     <td style="white-space:nowrap">
-                        <strong>$<?= number_format($i['monto_usd'], 2) ?></strong>
+                        <strong class="<?= $anul_i ? 'monto-anulado' : '' ?>">$<?= number_format($i['monto_usd'], 2) ?></strong>
                         <?php if (!empty($i['monto_ves'])): ?>
                         <br><small class="texto-muted">Bs <?= number_format($i['monto_ves'], 2) ?></small>
                         <?php endif; ?>
                     </td>
                     <td>
-                        <?php if ($i['estatus'] === 'confirmado'): ?>
+                        <?php if ($anul_i): ?>
+                        <span class="badge badge--peligro">Anulado</span>
+                        <?php if (!empty($i['motivo_anulacion'])): ?>
+                        <span class="fin-motivo"><?= htmlspecialchars($i['motivo_anulacion']) ?></span>
+                        <?php endif; ?>
+                        <?php elseif ($i['estatus'] === 'confirmado'): ?>
                         <span class="badge badge--exito">Confirmado</span>
                         <?php else: ?>
                         <span class="badge badge--warning">Pendiente</span>
@@ -112,11 +118,16 @@
                         <span class="texto-muted">—</span>
                         <?php endif; ?>
                     </td>
-                    <td>
+                    <td style="white-space:nowrap">
                         <?php if ($i['origen'] === 'prestamo'): ?>
-                        <span class="texto-muted" title="Se edita desde Préstamos">
+                        <span class="texto-muted" title="Se administra desde Préstamos">
                             <i class="fas fa-lock"></i>
                         </span>
+                        <?php elseif ($anul_i): ?>
+                        <button type="button" class="btn btn--xs btn--outline" title="Reactivar"
+                                onclick="reactivarMov('ingreso', <?= $i['id'] ?>)">
+                            <i class="fas fa-rotate-left"></i>
+                        </button>
                         <?php else: ?>
                         <button type="button" class="btn btn--xs btn--outline" title="Editar"
                                 data-editar-ingreso="<?= htmlspecialchars(json_encode([
@@ -138,6 +149,10 @@
                                 ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
                             <i class="fas fa-pen"></i>
                         </button>
+                        <button type="button" class="btn btn--xs btn--outline" title="Anular"
+                                onclick="abrirAnular('ingreso', <?= $i['id'] ?>, '<?= htmlspecialchars(addslashes($i['concepto'] . ' — $' . number_format($i['monto_usd'], 2)), ENT_QUOTES) ?>')">
+                            <i class="fas fa-ban"></i>
+                        </button>
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -153,7 +168,7 @@
             <div class="admin-panel__header">
                 <h2><i class="fas fa-arrow-up texto-rojo"></i> Gastos</h2>
                 <span class="badge badge--neutro">
-                    $<?= number_format(array_sum(array_map(fn($g) => (float)$g['monto_usd'], $gastos)), 2) ?>
+                    $<?= number_format(array_sum(array_map(fn($g) => $g['estatus'] === 'activo' ? (float)$g['monto_usd'] : 0, $gastos)), 2) ?>
                 </span>
             </div>
 
@@ -170,7 +185,8 @@
                 </thead>
                 <tbody>
                 <?php foreach ($gastos as $g): ?>
-                <tr>
+                <?php $anul_g = $g['estatus'] === 'anulado'; ?>
+                <tr class="<?= $anul_g ? 'anulado' : '' ?>">
                     <td style="white-space:nowrap"><?= date('d/m/Y', strtotime($g['fecha_gasto'])) ?></td>
                     <td>
                         <?= htmlspecialchars($g['concepto']) ?>
@@ -182,7 +198,13 @@
                     <td><?= htmlspecialchars($g['beneficiario'] ?? '—') ?></td>
                     <td class="texto-muted"><?= htmlspecialchars($g['fondo_nombre'] ?? '—') ?></td>
                     <td style="white-space:nowrap">
-                        <strong>$<?= number_format($g['monto_usd'], 2) ?></strong>
+                        <strong class="<?= $anul_g ? 'monto-anulado' : '' ?>">$<?= number_format($g['monto_usd'], 2) ?></strong>
+                        <?php if ($anul_g): ?>
+                        <br><span class="badge badge--peligro badge--xs">Anulado</span>
+                        <?php if (!empty($g['motivo_anulacion'])): ?>
+                        <span class="fin-motivo"><?= htmlspecialchars($g['motivo_anulacion']) ?></span>
+                        <?php endif; ?>
+                        <?php endif; ?>
                         <?php if (!empty($g['monto_ves'])): ?>
                         <br><small class="texto-muted">Bs <?= number_format($g['monto_ves'], 2) ?></small>
                         <?php endif; ?>
@@ -196,7 +218,13 @@
                         <span class="texto-muted">—</span>
                         <?php endif; ?>
                     </td>
-                    <td>
+                    <td style="white-space:nowrap">
+                        <?php if ($anul_g): ?>
+                        <button type="button" class="btn btn--xs btn--outline" title="Reactivar"
+                                onclick="reactivarMov('gasto', <?= $g['id'] ?>)">
+                            <i class="fas fa-rotate-left"></i>
+                        </button>
+                        <?php else: ?>
                         <button type="button" class="btn btn--xs btn--outline" title="Editar"
                                 data-editar-gasto="<?= htmlspecialchars(json_encode([
                                     'id'           => $g['id'],
@@ -216,6 +244,11 @@
                                 ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
                             <i class="fas fa-pen"></i>
                         </button>
+                        <button type="button" class="btn btn--xs btn--outline" title="Anular"
+                                onclick="abrirAnular('gasto', <?= $g['id'] ?>, '<?= htmlspecialchars(addslashes($g['concepto'] . ' — $' . number_format($g['monto_usd'], 2)), ENT_QUOTES) ?>')">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>

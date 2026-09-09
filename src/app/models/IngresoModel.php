@@ -113,6 +113,53 @@ class IngresoModel extends Model {
         return true;
     }
 
+    /**
+     * Anula un ingreso: se queda registrado pero deja de contar.
+     * No se borra para que el historial siga siendo auditable.
+     */
+    public function anular(int $id, int $admin_id, string $motivo): bool {
+        $ing = $this->porId($id);
+        if (!$ing || $ing['estatus'] === 'anulado') return false;
+
+        $this->db->prepare("
+            UPDATE ingresos
+            SET estatus = 'anulado', anulado_en = NOW(),
+                anulado_por = :admin, motivo_anulacion = :motivo
+            WHERE id = :id
+        ")->execute([':admin' => $admin_id, ':motivo' => $motivo, ':id' => $id]);
+
+        if ($ing['origen'] === 'matricula' && !empty($ing['aspirante_id'])) {
+            (new PagoModel())->recalcularCuotas((int) $ing['aspirante_id']);
+        }
+        return true;
+    }
+
+    /**
+     * Devuelve un ingreso anulado a circulación.
+     *
+     * El estatus anterior no se guarda, pero se puede deducir: si
+     * alguien lo confirmó en su momento vuelve a confirmado; si nunca
+     * pasó por revisión, vuelve a pendiente.
+     */
+    public function reactivar(int $id): bool {
+        $ing = $this->porId($id);
+        if (!$ing || $ing['estatus'] !== 'anulado') return false;
+
+        $estatus = !empty($ing['confirmado_por']) ? 'confirmado' : 'pendiente';
+
+        $this->db->prepare("
+            UPDATE ingresos
+            SET estatus = :estatus, anulado_en = NULL,
+                anulado_por = NULL, motivo_anulacion = NULL
+            WHERE id = :id
+        ")->execute([':estatus' => $estatus, ':id' => $id]);
+
+        if ($ing['origen'] === 'matricula' && !empty($ing['aspirante_id'])) {
+            (new PagoModel())->recalcularCuotas((int) $ing['aspirante_id']);
+        }
+        return true;
+    }
+
     private function fondoMatriculas(): ?int {
         $id = $this->db->query(
             "SELECT id FROM fondos WHERE nombre = 'Matrículas' AND activo = 1 LIMIT 1"
@@ -227,6 +274,7 @@ class IngresoModel extends Model {
         $stmt = $this->db->prepare("
             SELECT * FROM ingresos
             WHERE aspirante_id = :id AND origen = 'matricula'
+              AND estatus <> 'anulado'
             ORDER BY fecha DESC, id DESC
         ");
         $stmt->execute([':id' => $aspirante_id]);

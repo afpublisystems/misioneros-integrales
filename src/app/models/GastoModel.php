@@ -99,6 +99,46 @@ class GastoModel extends Model {
     }
 
     /**
+     * Anula un gasto: sigue en la base pero fuera de los totales.
+     */
+    public function anular(int $id, int $admin_id, string $motivo): bool {
+        $gasto = $this->porId($id);
+        if (!$gasto || $gasto['estatus'] === 'anulado') return false;
+
+        $this->db->prepare("
+            UPDATE gastos
+            SET estatus = 'anulado', anulado_en = NOW(),
+                anulado_por = :admin, motivo_anulacion = :motivo
+            WHERE id = :id
+        ")->execute([':admin' => $admin_id, ':motivo' => $motivo, ':id' => $id]);
+
+        if (!empty($gasto['prestamo_id'])) {
+            (new PrestamoModel())->actualizarEstatus((int) $gasto['prestamo_id']);
+        }
+        return true;
+    }
+
+    /**
+     * Devuelve un gasto anulado a los totales
+     */
+    public function reactivar(int $id): bool {
+        $gasto = $this->porId($id);
+        if (!$gasto || $gasto['estatus'] !== 'anulado') return false;
+
+        $this->db->prepare("
+            UPDATE gastos
+            SET estatus = 'activo', anulado_en = NULL,
+                anulado_por = NULL, motivo_anulacion = NULL
+            WHERE id = :id
+        ")->execute([':id' => $id]);
+
+        if (!empty($gasto['prestamo_id'])) {
+            (new PrestamoModel())->actualizarEstatus((int) $gasto['prestamo_id']);
+        }
+        return true;
+    }
+
+    /**
      * Listado con filtros opcionales
      */
     public function listar(array $filtros = [], int $limite = 200): array {
@@ -155,7 +195,7 @@ class GastoModel extends Model {
      */
     public function total(): float {
         return (float) $this->db->query(
-            "SELECT COALESCE(SUM(monto_usd), 0) FROM gastos"
+            "SELECT COALESCE(SUM(monto_usd), 0) FROM gastos WHERE estatus = 'activo'"
         )->fetchColumn();
     }
 
@@ -166,6 +206,7 @@ class GastoModel extends Model {
         return $this->db->query("
             SELECT categoria, COALESCE(SUM(monto_usd), 0) AS total, COUNT(*) AS cantidad
             FROM gastos
+            WHERE estatus = 'activo'
             GROUP BY categoria
             ORDER BY total DESC
         ")->fetchAll();
