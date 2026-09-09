@@ -79,7 +79,7 @@
                 <thead>
                     <tr>
                         <th>Fecha</th><th>Origen</th><th>De quién</th><th>Concepto</th>
-                        <th>Fondo</th><th>Monto</th><th>Estatus</th><th>Comp.</th>
+                        <th>Fondo</th><th>Monto</th><th>Estatus</th><th>Comp.</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -112,6 +112,34 @@
                         <span class="texto-muted">—</span>
                         <?php endif; ?>
                     </td>
+                    <td>
+                        <?php if ($i['origen'] === 'prestamo'): ?>
+                        <span class="texto-muted" title="Se edita desde Préstamos">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <?php else: ?>
+                        <button type="button" class="btn btn--xs btn--outline" title="Editar"
+                                data-editar-ingreso="<?= htmlspecialchars(json_encode([
+                                    'id'           => $i['id'],
+                                    'fecha'        => $i['fecha'],
+                                    'origen'       => $i['origen'],
+                                    'aspirante_id' => $i['aspirante_id'],
+                                    'fondo_id'     => $i['fondo_id'],
+                                    'cuenta_id'    => $i['cuenta_id'],
+                                    'aportante'    => $i['aportante'],
+                                    'concepto'     => $i['concepto'],
+                                    'monto_usd'    => $i['monto_usd'],
+                                    'monto_ves'    => $i['monto_ves'],
+                                    'tasa_cambio'  => $i['tasa_cambio'],
+                                    'metodo_pago'  => $i['metodo_pago'],
+                                    'banco_origen' => $i['banco_origen'],
+                                    'referencia'   => $i['referencia'],
+                                    'notas'        => $i['notas'],
+                                ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -137,7 +165,7 @@
                 <thead>
                     <tr>
                         <th>Fecha</th><th>Concepto</th><th>Rubro</th><th>Beneficiario</th>
-                        <th>Fondo</th><th>Monto</th><th>Comp.</th>
+                        <th>Fondo</th><th>Monto</th><th>Comp.</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -168,6 +196,27 @@
                         <span class="texto-muted">—</span>
                         <?php endif; ?>
                     </td>
+                    <td>
+                        <button type="button" class="btn btn--xs btn--outline" title="Editar"
+                                data-editar-gasto="<?= htmlspecialchars(json_encode([
+                                    'id'           => $g['id'],
+                                    'fecha_gasto'  => $g['fecha_gasto'],
+                                    'concepto'     => $g['concepto'],
+                                    'categoria'    => $g['categoria'],
+                                    'fondo_id'     => $g['fondo_id'],
+                                    'cuenta_id'    => $g['cuenta_id'],
+                                    'prestamo_id'  => $g['prestamo_id'],
+                                    'beneficiario' => $g['beneficiario'],
+                                    'monto_usd'    => $g['monto_usd'],
+                                    'monto_ves'    => $g['monto_ves'],
+                                    'tasa_cambio'  => $g['tasa_cambio'],
+                                    'metodo_pago'  => $g['metodo_pago'],
+                                    'referencia'   => $g['referencia'],
+                                    'notas'        => $g['notas'],
+                                ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -183,11 +232,12 @@
 <div class="modal-overlay" id="modal-ingreso">
     <div class="modal modal--ancho">
         <div class="modal__header">
-            <h3><i class="fas fa-arrow-down"></i> Registrar ingreso</h3>
+            <h3><i class="fas fa-arrow-down"></i> <span id="titulo-ingreso">Registrar ingreso</span></h3>
             <button class="modal__cerrar" onclick="cerrarModal('modal-ingreso')">&times;</button>
         </div>
-        <form method="POST" action="/admin/finanzas/ingreso" enctype="multipart/form-data">
+        <form method="POST" action="/admin/finanzas/ingreso" enctype="multipart/form-data" id="form-ingreso">
             <?= csrf_field() ?>
+            <input type="hidden" name="id" id="ing-id" value="">
             <div class="modal__body modal__body--scroll">
                 <div class="form-grid-2">
                     <div class="form-grupo">
@@ -299,7 +349,7 @@
             </div>
             <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-ingreso')">Cancelar</button>
-                <button type="submit" class="btn btn--verde"><i class="fas fa-save"></i> Guardar ingreso</button>
+                <button type="submit" class="btn btn--verde"><i class="fas fa-save"></i> <span id="btn-ingreso">Guardar ingreso</span></button>
             </div>
         </form>
     </div>
@@ -309,11 +359,12 @@
 <div class="modal-overlay" id="modal-gasto">
     <div class="modal modal--ancho">
         <div class="modal__header">
-            <h3><i class="fas fa-arrow-up"></i> Registrar gasto</h3>
+            <h3><i class="fas fa-arrow-up"></i> <span id="titulo-gasto">Registrar gasto</span></h3>
             <button class="modal__cerrar" onclick="cerrarModal('modal-gasto')">&times;</button>
         </div>
-        <form method="POST" action="/admin/finanzas/gasto" enctype="multipart/form-data">
+        <form method="POST" action="/admin/finanzas/gasto" enctype="multipart/form-data" id="form-gasto">
             <?= csrf_field() ?>
+            <input type="hidden" name="id" id="gasto-id" value="">
             <div class="modal__body modal__body--scroll">
                 <div class="form-grupo">
                     <label>Concepto <span class="req">*</span></label>
@@ -419,7 +470,7 @@
             </div>
             <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-gasto')">Cancelar</button>
-                <button type="submit" class="btn btn--peligro"><i class="fas fa-save"></i> Guardar gasto</button>
+                <button type="submit" class="btn btn--peligro"><i class="fas fa-save"></i> <span id="btn-gasto">Guardar gasto</span></button>
             </div>
         </form>
     </div>
@@ -443,6 +494,8 @@ document.addEventListener('keydown', function (e) {
 });
 document.querySelectorAll('[data-modal]').forEach(function (btn) {
     btn.addEventListener('click', function () {
+        if (btn.dataset.modal === 'modal-ingreso')   { modoIngreso(null); return; }
+        if (btn.dataset.modal === 'modal-gasto')     { modoGasto(null);   return; }
         document.getElementById(btn.dataset.modal).classList.add('abierto');
     });
 });
@@ -467,4 +520,59 @@ function alternarPrestamo() {
 }
 catSel.addEventListener('change', alternarPrestamo);
 alternarPrestamo();
+
+// ── Editar: se reusa el mismo modal, precargado ─────────────
+function llenarForm(form, datos) {
+    Object.keys(datos).forEach(function (campo) {
+        var el = form.elements[campo];
+        if (!el || el.type === 'file' || campo === 'id') return;
+        var v = datos[campo];
+        el.value = (v === null || v === undefined) ? '' : v;
+    });
+}
+
+function modoIngreso(datos) {
+    var form = document.getElementById('form-ingreso');
+    var esEdicion = !!datos;
+    form.action = esEdicion ? '/admin/finanzas/ingreso/editar' : '/admin/finanzas/ingreso';
+    document.getElementById('titulo-ingreso').textContent = esEdicion ? 'Editar ingreso' : 'Registrar ingreso';
+    document.getElementById('btn-ingreso').textContent    = esEdicion ? 'Guardar cambios' : 'Guardar ingreso';
+    if (esEdicion) {
+        llenarForm(form, datos);
+        document.getElementById('ing-id').value = datos.id;
+    } else {
+        form.reset();
+        document.getElementById('ing-id').value = '';
+    }
+    alternarParticipante();
+    document.getElementById('modal-ingreso').classList.add('abierto');
+}
+
+function modoGasto(datos) {
+    var form = document.getElementById('form-gasto');
+    var esEdicion = !!datos;
+    form.action = esEdicion ? '/admin/finanzas/gasto/editar' : '/admin/finanzas/gasto';
+    document.getElementById('titulo-gasto').textContent = esEdicion ? 'Editar gasto' : 'Registrar gasto';
+    document.getElementById('btn-gasto').textContent    = esEdicion ? 'Guardar cambios' : 'Guardar gasto';
+    if (esEdicion) {
+        llenarForm(form, datos);
+        document.getElementById('gasto-id').value = datos.id;
+    } else {
+        form.reset();
+        document.getElementById('gasto-id').value = '';
+    }
+    alternarPrestamo();
+    document.getElementById('modal-gasto').classList.add('abierto');
+}
+
+document.querySelectorAll('[data-editar-ingreso]').forEach(function (b) {
+    b.addEventListener('click', function () {
+        modoIngreso(JSON.parse(b.dataset.editarIngreso));
+    });
+});
+document.querySelectorAll('[data-editar-gasto]').forEach(function (b) {
+    b.addEventListener('click', function () {
+        modoGasto(JSON.parse(b.dataset.editarGasto));
+    });
+});
 </script>

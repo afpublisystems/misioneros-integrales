@@ -68,6 +68,7 @@
                         <th>Recibido</th>
                         <th>Compromiso</th>
                         <th>Estatus</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -111,6 +112,22 @@
                         ?>
                         <span class="badge <?= $clase ?>"><?= ucfirst($p['estatus']) ?></span>
                     </td>
+                    <td>
+                        <button type="button" class="btn btn--xs btn--outline" title="Editar"
+                                data-editar-prestamo="<?= htmlspecialchars(json_encode([
+                                    'id'               => $p['id'],
+                                    'prestamista'      => $p['prestamista'],
+                                    'telefono'         => $p['telefono'],
+                                    'concepto'         => $p['concepto'],
+                                    'fondo_id'         => $p['fondo_id'],
+                                    'monto_usd'        => $p['monto_usd'],
+                                    'fecha_prestamo'   => $p['fecha_prestamo'],
+                                    'fecha_compromiso' => $p['fecha_compromiso'],
+                                    'notas'            => $p['notas'],
+                                ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -131,11 +148,12 @@
 <div class="modal-overlay" id="modal-prestamo">
     <div class="modal modal--ancho">
         <div class="modal__header">
-            <h3><i class="fas fa-hand-holding-dollar"></i> Registrar préstamo</h3>
+            <h3><i class="fas fa-hand-holding-dollar"></i> <span id="titulo-prestamo">Registrar préstamo</span></h3>
             <button class="modal__cerrar" onclick="cerrarModal('modal-prestamo')">&times;</button>
         </div>
-        <form method="POST" action="/admin/finanzas/prestamo">
+        <form method="POST" action="/admin/finanzas/prestamo" id="form-prestamo">
             <?= csrf_field() ?>
+            <input type="hidden" name="id" id="prestamo-id" value="">
             <div class="modal__body modal__body--scroll">
                 <div class="form-grid-2">
                     <div class="form-grupo">
@@ -227,7 +245,7 @@
             </div>
             <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-prestamo')">Cancelar</button>
-                <button type="submit" class="btn btn--primario"><i class="fas fa-save"></i> Registrar</button>
+                <button type="submit" class="btn btn--primario"><i class="fas fa-save"></i> <span id="btn-prestamo">Registrar</span></button>
             </div>
         </form>
     </div>
@@ -251,7 +269,35 @@ document.addEventListener('keydown', function (e) {
 });
 document.querySelectorAll('[data-modal]').forEach(function (btn) {
     btn.addEventListener('click', function () {
+        if (btn.dataset.modal === 'modal-prestamo') { modoPrestamo(null); return; }
         document.getElementById(btn.dataset.modal).classList.add('abierto');
     });
 });
+// ── Editar préstamo: mismo modal, precargado ────────────────
+function modoPrestamo(datos) {
+    var form = document.getElementById('form-prestamo');
+    var esEdicion = !!datos;
+    form.action = esEdicion ? '/admin/finanzas/prestamo/editar' : '/admin/finanzas/prestamo';
+    document.getElementById('titulo-prestamo').textContent = esEdicion ? 'Editar préstamo' : 'Registrar préstamo';
+    document.getElementById('btn-prestamo').textContent    = esEdicion ? 'Guardar cambios' : 'Registrar';
+    if (esEdicion) {
+        Object.keys(datos).forEach(function (campo) {
+            var el = form.elements[campo];
+            if (!el || campo === 'id') return;
+            el.value = (datos[campo] === null || datos[campo] === undefined) ? '' : datos[campo];
+        });
+        document.getElementById('prestamo-id').value = datos.id;
+    } else {
+        form.reset();
+        document.getElementById('prestamo-id').value = '';
+    }
+    document.getElementById('modal-prestamo').classList.add('abierto');
+}
+
+document.querySelectorAll('[data-editar-prestamo]').forEach(function (b) {
+    b.addEventListener('click', function () {
+        modoPrestamo(JSON.parse(b.dataset.editarPrestamo));
+    });
+});
+
 </script>

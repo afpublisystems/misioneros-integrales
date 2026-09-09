@@ -67,6 +67,52 @@ class IngresoModel extends Model {
         return $id;
     }
 
+    /**
+     * Edita un ingreso ya registrado.
+     *
+     * Si cambia el monto o el participante hay que rehacer el reparto
+     * de cuotas, y de los dos: el que estaba antes y el que queda.
+     */
+    public function editar(int $id, array $d): bool {
+        $antes = $this->porId($id);
+        if (!$antes) return false;
+
+        $aspirante_id = $d['origen'] === 'matricula' ? ($d['aspirante_id'] ?: null) : null;
+        $fondo_id     = $d['fondo_id'] ?: null;
+        if ($fondo_id === null && $d['origen'] === 'matricula') {
+            $fondo_id = $this->fondoMatriculas();
+        }
+
+        $campos = [
+            'fecha'        => $d['fecha'],
+            'origen'       => $d['origen'],
+            'aspirante_id' => $aspirante_id,
+            'fondo_id'     => $fondo_id,
+            'cuenta_id'    => $d['cuenta_id'] ?: null,
+            'aportante'    => $d['aportante'] ?: null,
+            'concepto'     => $d['concepto'],
+            'monto_usd'    => $d['monto_usd'],
+            'monto_ves'    => $d['monto_ves'] ?: null,
+            'tasa_cambio'  => $d['tasa_cambio'] ?: null,
+            'metodo_pago'  => $d['metodo_pago'],
+            'banco_origen' => $d['banco_origen'] ?: null,
+            'referencia'   => $d['referencia'] ?: null,
+            'notas'        => $d['notas'] ?: null,
+        ];
+        // El comprobante solo se toca si subieron uno nuevo
+        if (!empty($d['comprobante_ruta'])) {
+            $campos['comprobante_ruta'] = $d['comprobante_ruta'];
+        }
+
+        $this->actualizar($id, $campos);
+
+        $pagos = new PagoModel();
+        foreach (array_unique(array_filter([$antes['aspirante_id'], $aspirante_id])) as $asp) {
+            $pagos->recalcularCuotas((int) $asp);
+        }
+        return true;
+    }
+
     private function fondoMatriculas(): ?int {
         $id = $this->db->query(
             "SELECT id FROM fondos WHERE nombre = 'Matrículas' AND activo = 1 LIMIT 1"

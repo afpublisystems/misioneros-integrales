@@ -55,6 +55,57 @@ class PrestamoModel extends Model {
     }
 
     /**
+     * Edita un préstamo y sincroniza el ingreso que generó.
+     *
+     * El préstamo y su ingreso son la misma plata vista de dos formas;
+     * si se editan por separado la caja deja de cuadrar.
+     */
+    public function editar(int $id, array $d): bool {
+        if (!$this->porId($id)) return false;
+
+        $this->actualizar($id, [
+            'prestamista'      => $d['prestamista'],
+            'telefono'         => $d['telefono'] ?: null,
+            'concepto'         => $d['concepto'],
+            'fondo_id'         => $d['fondo_id'] ?: null,
+            'monto_usd'        => $d['monto_usd'],
+            'fecha_prestamo'   => $d['fecha_prestamo'],
+            'fecha_compromiso' => $d['fecha_compromiso'] ?: null,
+            'notas'            => $d['notas'] ?: null,
+        ]);
+
+        $this->db->prepare("
+            UPDATE ingresos
+            SET fecha       = :fecha,
+                fondo_id    = :fondo,
+                cuenta_id   = :cuenta,
+                aportante   = :aportante,
+                concepto    = :concepto,
+                monto_usd   = :monto,
+                monto_ves   = :ves,
+                tasa_cambio = :tasa,
+                metodo_pago = :metodo,
+                referencia  = :ref
+            WHERE prestamo_id = :id AND origen = 'prestamo'
+        ")->execute([
+            ':fecha'     => $d['fecha_prestamo'],
+            ':fondo'     => $d['fondo_id']  ?: null,
+            ':cuenta'    => $d['cuenta_id'] ?: null,
+            ':aportante' => $d['prestamista'],
+            ':concepto'  => 'Préstamo: ' . $d['concepto'],
+            ':monto'     => $d['monto_usd'],
+            ':ves'       => $d['monto_ves']   ?: null,
+            ':tasa'      => $d['tasa_cambio'] ?: null,
+            ':metodo'    => $d['metodo_pago'] ?? 'efectivo',
+            ':ref'       => $d['referencia'] ?: null,
+            ':id'        => $id,
+        ]);
+
+        $this->actualizarEstatus($id);
+        return true;
+    }
+
+    /**
      * Préstamos con lo devuelto y el saldo vivo
      */
     public function listar(): array {

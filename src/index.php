@@ -138,6 +138,9 @@ $rutas = [
         '/admin/finanzas/confirmar' => ['AdminController',      'confirmarIngreso'],
         '/admin/finanzas/beca'      => ['AdminController',      'actualizarBeca'],
         '/admin/finanzas/prestamo'  => ['AdminController',      'registrarPrestamo'],
+        '/admin/finanzas/ingreso/editar'   => ['AdminController', 'editarIngreso'],
+        '/admin/finanzas/gasto/editar'     => ['AdminController', 'editarGasto'],
+        '/admin/finanzas/prestamo/editar'  => ['AdminController', 'editarPrestamo'],
         '/admin/finanzas/fondo'     => ['AdminController',      'crearFondo'],
         // Candidato — pagos
         '/candidato/pagos'          => ['CandidatoController',  'subirAbono'],

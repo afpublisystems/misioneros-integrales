@@ -59,6 +59,46 @@ class GastoModel extends Model {
     }
 
     /**
+     * Edita un gasto ya registrado.
+     *
+     * Si el gasto era (o pasa a ser) devolución de un préstamo, hay
+     * que revisar el estatus de los dos préstamos involucrados.
+     */
+    public function editar(int $id, array $d): bool {
+        $antes = $this->porId($id);
+        if (!$antes) return false;
+
+        $prestamo_id = $d['prestamo_id'] ?: null;
+
+        $campos = [
+            'fecha_gasto'  => $d['fecha_gasto'],
+            'concepto'     => $d['concepto'],
+            'categoria'    => $d['categoria'],
+            'fondo_id'     => $d['fondo_id']  ?: null,
+            'cuenta_id'    => $d['cuenta_id'] ?: null,
+            'prestamo_id'  => $prestamo_id,
+            'beneficiario' => $d['beneficiario'] ?: null,
+            'monto_usd'    => $d['monto_usd'],
+            'monto_ves'    => $d['monto_ves']   ?: null,
+            'tasa_cambio'  => $d['tasa_cambio'] ?: null,
+            'metodo_pago'  => $d['metodo_pago'],
+            'referencia'   => $d['referencia'] ?: null,
+            'notas'        => $d['notas'] ?: null,
+        ];
+        if (!empty($d['comprobante_ruta'])) {
+            $campos['comprobante_ruta'] = $d['comprobante_ruta'];
+        }
+
+        $this->actualizar($id, $campos);
+
+        $prestamos = new PrestamoModel();
+        foreach (array_unique(array_filter([$antes['prestamo_id'], $prestamo_id])) as $pid) {
+            $prestamos->actualizarEstatus((int) $pid);
+        }
+        return true;
+    }
+
+    /**
      * Listado con filtros opcionales
      */
     public function listar(array $filtros = [], int $limite = 200): array {
