@@ -25,8 +25,10 @@ Gestiona registro de candidatos, subida de documentos y evaluación de postulant
 - Auto-detección: `getenv('DB_HOST') ?: 'localhost'`
 
 ## BD
-- Nombre: `misioneros_integrales_db`
+- Nombre local (Docker): `misioneros_integrales_db`
+- Nombre en producción (cPanel): `hosting63201us_misioneros`
 - Conexión: `Database::getConnection()` (Singleton PDO)
+- Migraciones en `database/`, se aplican a mano por phpMyAdmin. La última es la 006.
 
 ## Estructura (producción)
 ```
@@ -56,6 +58,8 @@ public_html/misionerosintegrales.com/
 | `/candidato/documentos` | CandidatoController |
 | `/candidato/test` | CandidatoController |
 | `/admin` | AdminController |
+| `/admin/finanzas` | AdminController — resumen, movimientos, matrículas, préstamos |
+| `/candidato/pagos` | CandidatoController |
 
 ## Contactos del proyecto
 - José Ramos: 0424-5886540
@@ -67,3 +71,16 @@ public_html/misionerosintegrales.com/
 - Los cambios locales se suben por FTP; verificar acceso al Wepanel antes de empezar
 - Carpeta uploads/ tiene .htaccess que bloquea PHP — no mover ni eliminar ese archivo
 - El mkdir de uploads/documentos/ es automático en el código; no crear manualmente en producción
+
+## Módulo de finanzas
+- Detalle completo en `src/PROJECT_CONTEXT.md`, sección MÓDULO DE FINANZAS
+- Todo se consolida en USD; los movimientos en Bs guardan monto y tasa
+- Los movimientos no se borran, se anulan (queda motivo, responsable y fecha)
+- Al escribir una consulta que sume plata: las de `ingresos` filtran por
+  `estatus = 'confirmado'` y ya excluyen lo anulado; las de `gastos` necesitan
+  `estatus = 'activo'` explícito
+- Un préstamo y su ingreso espejo se editan y anulan juntos, nunca por separado
+- Las vistas usan las clases de `app.css` (`.admin-panel`, `.tabla`, `.form-grupo`,
+  `.modal-overlay`), no inventar clases nuevas
+- Comprobantes en `uploads/comprobantes/` — usar `BASE_PATH . '/uploads/...'`,
+  nunca `BASE_PATH . '/../uploads/...'`

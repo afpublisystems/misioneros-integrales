@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT.md
 # Proyecto: Misioneros Integrales — Sistema Web CNBV/DIME
-# Última actualización: 21/06/2026 (v6)
+# Última actualización: 09/09/2026 (v8)
 # Roles: Gemini = Arquitecto | Claude = Ejecutor (código PHP/MVC/CSS)
 
 ---
@@ -160,7 +160,7 @@ C:\xampp\htdocs\misioneros-integrales\
 
 ---
 
-## BASE DE DATOS — 8 tablas
+## BASE DE DATOS — 17 tablas
 
 | Tabla | Propósito | Estado |
 |-------|-----------|--------|
@@ -173,6 +173,13 @@ C:\xampp\htdocs\misioneros-integrales\
 | `multimedia` | Galería por sede | ✅ tabla creada, vista admin pendiente |
 | `mensajes_contacto` | Mensajes del formulario público de contacto | ✅ Migración 003 aplicada |
 | `impacto_estadisticas` | Contadores públicos editables | ✅ Con datos |
+| `login_intentos` | Control de intentos fallidos de acceso | ✅ Migración 002 |
+| `cuentas` | Dónde está el dinero (Zelle, pago móvil, efectivo) | ✅ Migración 005 |
+| `fondos` | Destinos etiquetados del dinero | ✅ Migración 005 |
+| `cuotas_estudiantes` | Cuotas de matrícula por participante | ✅ Migración 005 |
+| `ingresos` | Todo el dinero que entra (matrículas, CNBV, donaciones, préstamos) | ✅ Migración 005 |
+| `gastos` | Egresos del programa | ✅ Migración 005 + 006 |
+| `prestamos` | Dinero recibido que hay que devolver | ✅ Migración 005 + 006 |
 
 ### Schema flujo_proceso (importante)
 ```sql
@@ -255,6 +262,13 @@ GET:
   /admin/galeria          → AdminController::galeria  ✅
     ?sede=ID              → muestra ítems de la sede
   /admin/perfil           → AdminController::perfil
+  /admin/finanzas             → AdminController::finanzas       (resumen)
+  /admin/finanzas/movimientos → AdminController::movimientos    (ingresos y gastos)
+  /admin/finanzas/matriculas  → AdminController::matriculas     (becas y cuotas)
+  /admin/finanzas/prestamos   → AdminController::prestamos
+  /admin/finanzas/exportar    → AdminController::exportarFinanzas
+    ?tipo=ingresos|gastos|matriculas
+  /candidato/pagos        → CandidatoController::pagos
 
 POST:
   /login                  → AuthController::login
@@ -271,6 +285,18 @@ POST:
   /admin/perfil           → AdminController::actualizarPerfil
   /contacto               → PublicoController::enviarContacto  ✅ NUEVO
   /colaborar              → PublicoController::registrarColaborador
+  /candidato/pagos        → CandidatoController::subirAbono
+  /admin/finanzas/ingreso           → AdminController::registrarIngreso
+  /admin/finanzas/ingreso/editar    → AdminController::editarIngreso
+  /admin/finanzas/gasto             → AdminController::registrarGasto
+  /admin/finanzas/gasto/editar      → AdminController::editarGasto
+  /admin/finanzas/prestamo          → AdminController::registrarPrestamo
+  /admin/finanzas/prestamo/editar   → AdminController::editarPrestamo
+  /admin/finanzas/confirmar         → AdminController::confirmarIngreso  (confirmar/rechazar)
+  /admin/finanzas/anular            → AdminController::anularMovimiento
+  /admin/finanzas/reactivar         → AdminController::reactivarMovimiento
+  /admin/finanzas/beca              → AdminController::actualizarBeca
+  /admin/finanzas/fondo             → AdminController::crearFondo
 ```
 
 ---
@@ -439,6 +465,99 @@ POST:
 
 ---
 
+## MÓDULO DE FINANZAS
+
+Libro de ingresos y egresos del programa. Sustituye al diseño de la migración 004,
+que solo contemplaba cuotas y gastos con categorías genéricas y nunca llegó a
+crearse en la base de datos.
+
+### Las seis tablas y para qué sirve cada una
+
+| Tabla | Responde a |
+|-------|-----------|
+| `ingresos` | ¿De dónde vino la plata? Matrícula, aporte CNBV, donación, préstamo, reintegro |
+| `gastos` | ¿En qué se fue? Con rubro, beneficiario y comprobante |
+| `prestamos` | ¿Qué hay que devolver? Monto, prestamista y saldo vivo |
+| `fondos` | ¿Para qué estaba destinada? Permite decir "de lo que entró para franelas, cuánto queda" |
+| `cuentas` | ¿Dónde está físicamente? Zelle, pago móvil, efectivo USD, efectivo Bs |
+| `cuotas_estudiantes` | ¿Cuánto debe cada participante y cuánto lleva? |
+
+### Reglas que sostienen los números
+
+**Todo se consolida en dólares.** Un movimiento en bolívares se guarda con `monto_ves`
+y `tasa_cambio`, y el sistema calcula el `monto_usd`. Antes los gastos cargados en Bs
+no aparecían en ningún total.
+
+**Un préstamo es dos registros.** Al registrarlo se crea también un `ingreso` con
+`origen = 'prestamo'` apuntando a él, porque la plata sí entró a caja. Ese ingreso
+espejo no se edita ni se anula por separado: se hace desde el préstamo, que actualiza
+los dos a la vez. El controlador lo rechaza incluso por POST directo.
+
+**El disponible real descuenta la deuda.** Tener 300 en caja de los cuales 180 son
+prestados no son 300 propios. Un préstamo anulado quita la plata y la deuda a la vez,
+así que ese número no se mueve — sirve de comprobación.
+
+**Las cuotas se reparten, no se asignan.** `PagoModel::recalcularCuotas()` suma los
+ingresos de matrícula confirmados del participante y los reparte en orden sobre sus
+cuotas. Un pago grande cubre varias de una vez y un rechazo se deshace solo. Se dispara
+al confirmar, rechazar, editar o anular un ingreso de matrícula.
+
+**La beca define lo que paga cada quien.** `aspirantes.beca_pct` sobre
+`aspirantes.costo_base_usd` (1.500 por defecto). Beca 50% → paga 750; beca 100% → cuotas
+en cero con estatus `exonerada`. Cambiar la beca rehace las cuotas y reparte de nuevo
+lo ya pagado.
+
+### Anular, no borrar
+
+Un movimiento cargado por error no se elimina: se marca anulado. Se queda en la tabla,
+sale atenuado y con el monto tachado, y guarda motivo, responsable y fecha. Se puede
+reactivar.
+
+Cada tabla decide con **una sola columna** si el movimiento cuenta:
+
+| Tabla | Columna | Valor que lo saca de los totales |
+|-------|---------|----------------------------------|
+| `ingresos` | `estatus` | `anulado` (distinto de `rechazado`, que es un comprobante inválido) |
+| `gastos` | `estatus` | `anulado` |
+| `prestamos` | `estatus` | `anulado` |
+
+Anular arrastra lo que dependa del movimiento: una matrícula rehace las cuotas, una
+devolución devuelve el préstamo a activo, y un préstamo se lleva su ingreso espejo.
+Un préstamo con devoluciones registradas no se deja anular hasta que se anulen ellas.
+
+**Al agregar consultas que sumen plata, filtrar siempre.** Las de `ingresos` ya filtran
+por `estatus = 'confirmado'` y quedan cubiertas; las de `gastos` necesitan
+`estatus = 'activo'` explícito. El listado y la exportación CSV no filtran a propósito:
+ahí el anulado tiene que verse.
+
+### Modelos
+
+| Modelo | Responsabilidad |
+|--------|-----------------|
+| `IngresoModel` | Registrar, editar, confirmar, rechazar, anular y reactivar ingresos |
+| `GastoModel` | Egresos y sus rubros (constante `CATEGORIAS`, alineada al presupuesto del Ciclo 1) |
+| `PrestamoModel` | Préstamos, saldo vivo y sincronización con el ingreso espejo |
+| `PagoModel` | Cuotas, becas y reparto de lo cobrado. Constantes `TOTAL_CUOTAS` (7) y `PRIMER_VENCIMIENTO` (2026-09-15) |
+| `FinanzasModel` | Catálogos de fondos y cuentas, KPIs y consolidados |
+
+### Vistas
+
+`admin/finanzas.php` (resumen), `finanzas_movimientos.php` (ingresos y gastos),
+`finanzas_matriculas.php` (becas y cuotas), `finanzas_prestamos.php`, más el partial
+`partials/finanzas_nav.php` con las pestañas y los estilos que `app.css` no cubre.
+
+Del lado del participante, `candidato/pagos.php` muestra su estado de cuenta y le
+permite reportar pagos contra su matrícula, no contra una cuota específica.
+
+### Comprobantes
+
+Se guardan en `uploads/comprobantes/`, dentro de la raíz del sitio, protegidos por el
+`.htaccess` de `uploads/` que bloquea ejecución de PHP y solo sirve imágenes y PDF.
+La carpeta se crea sola. **No usar `BASE_PATH . '/../uploads/'`**: eso apunta fuera
+del web root y fue un bug real en producción.
+
+---
+
 ## ESTADO DE FASES
 
 | Fase | Descripción | Estado |
@@ -587,6 +706,37 @@ POST:
 ---
 
 ## REGISTRO DE CAMBIOS EN PRODUCCIÓN
+
+### v8 — 09/09/2026 — Módulo de finanzas y limpieza de la home
+
+**Contexto:** el programa empezó a recibir dinero antes de arrancar el ciclo (un préstamo
+para las franelas de los participantes), así que hizo falta un libro de ingresos y egresos
+de verdad, no solo el control de cuotas que estaba planteado.
+
+| Archivo | Cambio |
+|---------|--------|
+| `database/migracion_005_finanzas_v2.sql` | Esquema del módulo: `ingresos`, `gastos`, `prestamos`, `fondos`, `cuentas`, `cuotas_estudiantes`. Beca y costo base en `aspirantes`. Reemplaza a la 004, que nunca se aplicó |
+| `database/migracion_006_anulaciones.sql` | Estatus `anulado` y columnas de auditoría en las tres tablas de movimientos |
+| `database/fix_cuentas_duplicadas.sql` | Limpieza para bases donde la 005 se corrió dos veces. Reapunta los movimientos antes de borrar las cuentas repetidas |
+| `models/IngresoModel.php`, `PrestamoModel.php`, `FinanzasModel.php` | Nuevos |
+| `models/PagoModel.php` | Reescrito: cuotas por beca, reparto de lo cobrado, estado de cuenta |
+| `models/GastoModel.php` | Rubros del presupuesto del Ciclo 1, fondo, cuenta, beneficiario y tasa |
+| `controllers/AdminController.php` | Secciones de finanzas, registro/edición/anulación de movimientos, becas y exportación CSV |
+| `controllers/CandidatoController.php` | El participante reporta pagos contra su matrícula, no contra una cuota |
+| `views/admin/finanzas*.php`, `partials/finanzas_nav.php` | Vistas del módulo |
+| `views/candidato/pagos.php` | Estado de cuenta con beca, cuotas e historial de pagos reportados |
+| `views/publico/home.php` | Popup de convocatoria eliminado (markup, CSS y script) |
+| `index.php` | Rutas del módulo y helper `usd()` para montos negativos |
+
+**Bugs corregidos en el camino:**
+
+| Bug | Detalle |
+|-----|---------|
+| Comprobantes fuera del web root | Se guardaban en `BASE_PATH/../uploads/comprobantes`, un nivel por encima de la raíz del sitio. Los enlaces daban 404 y quedaban sin la protección del `.htaccess` |
+| Gastos en bolívares invisibles | `monto_usd` y `monto_ves` eran campos sueltos y los totales solo sumaban dólares |
+| Clases CSS inexistentes | Las vistas usaban `.admin-card`, `.admin-tabla`, `.form-control` y `.form-row`, que no existen en `app.css`. Además el partial redefinía `.modal` en oscuro sobre un admin claro: tablas sin estilo y etiquetas ilegibles |
+| Cuentas duplicadas | `cuentas.nombre` no tenía índice único; correr la migración dos veces duplicaba el selector |
+| Resumen mensual descuadrado | Faltaban dos rubros y el hospedaje nunca se repartía (comparaba `"Oeste"` contra `"Occidente"`) |
 
 ### v7 — 21/07/2026 — Itinerario Ciclo 1 reprogramado por la contingencia (sismos)
 
