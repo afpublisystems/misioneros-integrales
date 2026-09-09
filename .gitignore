@@ -26,3 +26,6 @@
 
 # Override local de puertos (no versionar)
 /docker-compose.override.yml
+
+# Paquete de deploy generado local (no versionar)
+/deploy-produccion-*.zip
