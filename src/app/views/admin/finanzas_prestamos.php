@@ -25,27 +25,38 @@
 
         <?php include __DIR__ . '/../partials/finanzas_nav.php'; ?>
 
-        <div class="fin-grid">
-            <div class="fin-kpi <?= $saldo > 0 ? 'fin-kpi--aviso' : 'fin-kpi--ok' ?>">
-                <span class="fin-kpi__label">Pendiente por devolver</span>
-                <span class="fin-kpi__num">$<?= number_format($saldo, 2) ?></span>
-                <span class="fin-kpi__pie">Suma de los préstamos activos</span>
+        <div class="fin-kpis">
+            <div class="kpi-card <?= $saldo > 0 ? 'kpi-card--revision' : 'kpi-card--aprobada' ?>">
+                <div class="kpi-card__icono"><i class="fas fa-hand-holding-dollar"></i></div>
+                <div class="kpi-card__datos">
+                    <span class="kpi-card__num">$<?= number_format($saldo, 2) ?></span>
+                    <span class="kpi-card__label">Pendiente por devolver</span>
+                    <span class="kpi-card__pie">Suma de los préstamos activos</span>
+                </div>
+            </div>
+            <div class="kpi-card kpi-card--neutro">
+                <div class="kpi-card__icono"><i class="fas fa-list"></i></div>
+                <div class="kpi-card__datos">
+                    <span class="kpi-card__num"><?= count(array_filter($prestamos, fn($p) => $p['estatus'] === 'activo')) ?></span>
+                    <span class="kpi-card__label">Préstamos activos</span>
+                    <span class="kpi-card__pie">de <?= count($prestamos) ?> registrados</span>
+                </div>
             </div>
         </div>
 
-        <section class="admin-card">
-            <div class="admin-card__head">
+        <section class="admin-panel">
+            <div class="admin-panel__header">
                 <h2><i class="fas fa-hand-holding-dollar"></i> Préstamos registrados</h2>
             </div>
 
             <?php if (empty($prestamos)): ?>
-            <p class="admin-empty">
+            <p class="fin-vacio">
                 <i class="fas fa-inbox"></i>
                 No hay préstamos registrados.
             </p>
             <?php else: ?>
-            <div class="tabla-responsive">
-            <table class="admin-tabla">
+            <div class="tabla-wrap">
+            <table class="tabla">
                 <thead>
                     <tr>
                         <th>Prestamista</th>
@@ -93,7 +104,7 @@
                     <td>
                         <?php
                             $clase = match ($p['estatus']) {
-                                'pagado'    => 'badge--success',
+                                'pagado'    => 'badge--exito',
                                 'condonado' => 'badge--info',
                                 default     => 'badge--warning',
                             };
@@ -105,7 +116,7 @@
                 </tbody>
             </table>
             </div>
-            <p class="ayuda" style="padding:0 1.25rem 1.25rem">
+            <p class="fin-nota" style="padding:0 1.25rem 1.25rem">
                 Para abonar a un préstamo, registra un gasto con el rubro
                 <strong>Devolución de préstamo</strong> desde Ingresos y gastos.
                 El saldo se actualiza solo y el préstamo se marca pagado al completarse.
@@ -117,46 +128,45 @@
 </div>
 
 <!-- Modal: Registrar préstamo ──────────────────────────────── -->
-<div class="modal" id="modal-prestamo" style="display:none">
-    <div class="modal__overlay" onclick="cerrarModal('modal-prestamo')"></div>
-    <div class="modal__box" style="max-width:600px">
-        <div class="modal__head">
+<div class="modal-overlay" id="modal-prestamo">
+    <div class="modal modal--ancho">
+        <div class="modal__header">
             <h3><i class="fas fa-hand-holding-dollar"></i> Registrar préstamo</h3>
             <button class="modal__cerrar" onclick="cerrarModal('modal-prestamo')">&times;</button>
         </div>
         <form method="POST" action="/admin/finanzas/prestamo">
             <?= csrf_field() ?>
-            <div class="modal__body">
-                <div class="form-row">
-                    <div class="form-group">
+            <div class="modal__body modal__body--scroll">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Quién prestó <span class="req">*</span></label>
-                        <input type="text" name="prestamista" class="form-control" required maxlength="150">
+                        <input type="text" name="prestamista" required maxlength="150">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Teléfono</label>
-                        <input type="text" name="telefono" class="form-control" maxlength="30">
+                        <input type="text" name="telefono" maxlength="30">
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Para qué <span class="req">*</span></label>
-                    <input type="text" name="concepto" class="form-control" required maxlength="200"
+                    <input type="text" name="concepto" required maxlength="200"
                            placeholder="Ej: Compra de franelas de los participantes">
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Fondo</label>
-                        <select name="fondo_id" class="form-control">
+                        <select name="fondo_id">
                             <option value="">Sin etiquetar</option>
                             <?php foreach ($fondos as $f): ?>
                             <option value="<?= $f['id'] ?>"><?= htmlspecialchars($f['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Entró a</label>
-                        <select name="cuenta_id" class="form-control">
+                        <select name="cuenta_id">
                             <option value="">Sin especificar</option>
                             <?php foreach ($cuentas as $c): ?>
                             <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre']) ?></option>
@@ -165,25 +175,25 @@
                     </div>
                 </div>
 
-                <div class="form-row--3">
-                    <div class="form-group">
+                <div class="form-grid-3">
+                    <div class="form-grupo">
                         <label>Monto USD</label>
-                        <input type="number" name="monto_usd" class="form-control" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" name="monto_usd" step="0.01" min="0" placeholder="0.00">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Monto Bs</label>
-                        <input type="number" name="monto_ves" class="form-control" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" name="monto_ves" step="0.01" min="0" placeholder="0.00">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Tasa</label>
-                        <input type="number" name="tasa_cambio" class="form-control" step="0.0001" min="0" placeholder="Bs por USD">
+                        <input type="number" name="tasa_cambio" step="0.0001" min="0" placeholder="Bs por USD">
                     </div>
                 </div>
 
-                <div class="form-row--3">
-                    <div class="form-group">
+                <div class="form-grid-3">
+                    <div class="form-grupo">
                         <label>Método <span class="req">*</span></label>
-                        <select name="metodo_pago" class="form-control" required>
+                        <select name="metodo_pago" required>
                             <option value="efectivo">Efectivo</option>
                             <option value="transferencia">Transferencia</option>
                             <option value="zelle">Zelle</option>
@@ -191,31 +201,31 @@
                             <option value="otro">Otro</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Fecha del préstamo <span class="req">*</span></label>
-                        <input type="date" name="fecha_prestamo" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                        <input type="date" name="fecha_prestamo" value="<?= date('Y-m-d') ?>" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Fecha de devolución</label>
-                        <input type="date" name="fecha_compromiso" class="form-control">
+                        <input type="date" name="fecha_compromiso">
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Referencia</label>
-                    <input type="text" name="referencia" class="form-control" maxlength="100">
+                    <input type="text" name="referencia" maxlength="100">
                 </div>
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Notas</label>
-                    <textarea name="notas" class="form-control" rows="2" maxlength="500"></textarea>
+                    <textarea name="notas" rows="2" maxlength="500"></textarea>
                 </div>
 
-                <p class="ayuda">
+                <p class="fin-nota">
                     Al guardar, el monto entra como ingreso a caja y queda registrado como deuda.
                     El disponible real del programa lo descuenta automáticamente.
                 </p>
             </div>
-            <div class="modal__foot">
+            <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-prestamo')">Cancelar</button>
                 <button type="submit" class="btn btn--primario"><i class="fas fa-save"></i> Registrar</button>
             </div>
@@ -225,11 +235,23 @@
 
 <script>
 function cerrarModal(id) {
-    document.getElementById(id).style.display = 'none';
+    document.getElementById(id).classList.remove('abierto');
 }
+// Cerrar al hacer clic en el fondo, fuera del cuadro
+document.querySelectorAll('.modal-overlay').forEach(function (ov) {
+    ov.addEventListener('click', function (e) {
+        if (e.target === ov) ov.classList.remove('abierto');
+    });
+});
+document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.modal-overlay.abierto').forEach(function (ov) {
+        ov.classList.remove('abierto');
+    });
+});
 document.querySelectorAll('[data-modal]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-        document.getElementById(btn.dataset.modal).style.display = 'flex';
+        document.getElementById(btn.dataset.modal).classList.add('abierto');
     });
 });
 </script>

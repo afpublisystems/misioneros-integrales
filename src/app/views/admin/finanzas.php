@@ -34,83 +34,98 @@
         <?php include __DIR__ . '/../partials/finanzas_nav.php'; ?>
 
         <!-- Números del programa ───────────────────────────── -->
-        <div class="fin-grid">
-            <div class="fin-kpi">
-                <span class="fin-kpi__label">Total ingresado</span>
-                <span class="fin-kpi__num">$<?= number_format($kpis['ingresos'], 2) ?></span>
-                <span class="fin-kpi__pie">Confirmado, de todas las fuentes</span>
+        <div class="fin-kpis">
+            <div class="kpi-card kpi-card--neutro">
+                <div class="kpi-card__icono"><i class="fas fa-arrow-down"></i></div>
+                <div class="kpi-card__datos">
+                    <span class="kpi-card__num">$<?= number_format($kpis['ingresos'], 2) ?></span>
+                    <span class="kpi-card__label">Total ingresado</span>
+                    <span class="kpi-card__pie">Confirmado, de todas las fuentes</span>
+                </div>
             </div>
-            <div class="fin-kpi">
-                <span class="fin-kpi__label">Total gastado</span>
-                <span class="fin-kpi__num">$<?= number_format($kpis['gastos'], 2) ?></span>
+            <div class="kpi-card kpi-card--rechazada">
+                <div class="kpi-card__icono"><i class="fas fa-arrow-up"></i></div>
+                <div class="kpi-card__datos">
+                    <span class="kpi-card__num">$<?= number_format($kpis['gastos'], 2) ?></span>
+                    <span class="kpi-card__label">Total gastado</span>
+                </div>
             </div>
-            <div class="fin-kpi <?= $kpis['en_caja'] >= 0 ? '' : 'fin-kpi--alerta' ?>">
-                <span class="fin-kpi__label">En caja</span>
-                <span class="fin-kpi__num"><?= usd($kpis['en_caja']) ?></span>
-                <span class="fin-kpi__pie">Ingresos menos gastos</span>
+            <div class="kpi-card <?= $kpis['en_caja'] >= 0 ? 'kpi-card--total' : 'kpi-card--rechazada' ?>">
+                <div class="kpi-card__icono"><i class="fas fa-wallet"></i></div>
+                <div class="kpi-card__datos">
+                    <span class="kpi-card__num"><?= usd($kpis['en_caja']) ?></span>
+                    <span class="kpi-card__label">En caja</span>
+                    <span class="kpi-card__pie">Ingresos menos gastos</span>
+                </div>
             </div>
-            <div class="fin-kpi <?= $kpis['deuda_prestamos'] > 0 ? 'fin-kpi--aviso' : '' ?>">
-                <span class="fin-kpi__label">Por devolver</span>
-                <span class="fin-kpi__num">$<?= number_format($kpis['deuda_prestamos'], 2) ?></span>
-                <span class="fin-kpi__pie">Préstamos pendientes</span>
+            <div class="kpi-card <?= $kpis['deuda_prestamos'] > 0 ? 'kpi-card--revision' : 'kpi-card--neutro' ?>">
+                <div class="kpi-card__icono"><i class="fas fa-hand-holding-dollar"></i></div>
+                <div class="kpi-card__datos">
+                    <span class="kpi-card__num">$<?= number_format($kpis['deuda_prestamos'], 2) ?></span>
+                    <span class="kpi-card__label">Por devolver</span>
+                    <span class="kpi-card__pie">Préstamos pendientes</span>
+                </div>
             </div>
-            <div class="fin-kpi <?= $kpis['disponible_real'] >= 0 ? 'fin-kpi--ok' : 'fin-kpi--alerta' ?>">
-                <span class="fin-kpi__label">Disponible real</span>
-                <span class="fin-kpi__num"><?= usd($kpis['disponible_real']) ?></span>
-                <span class="fin-kpi__pie">Ya descontada la deuda</span>
+            <div class="kpi-card <?= $kpis['disponible_real'] >= 0 ? 'kpi-card--aprobada' : 'kpi-card--rechazada' ?>">
+                <div class="kpi-card__icono"><i class="fas fa-scale-balanced"></i></div>
+                <div class="kpi-card__datos">
+                    <span class="kpi-card__num"><?= usd($kpis['disponible_real']) ?></span>
+                    <span class="kpi-card__label">Disponible real</span>
+                    <span class="kpi-card__pie">Ya descontada la deuda</span>
+                </div>
             </div>
         </div>
 
         <!-- Matrículas ─────────────────────────────────────── -->
-        <section class="admin-card" style="margin-bottom:1.5rem">
-            <div class="admin-card__head">
+        <section class="admin-panel" style="margin-bottom:1.5rem">
+            <div class="admin-panel__header">
                 <h2><i class="fas fa-graduation-cap"></i> Matrículas de la cohorte</h2>
                 <a href="/admin/finanzas/matriculas" class="btn btn--xs btn--outline">Ver detalle</a>
             </div>
             <div style="padding:1.25rem">
                 <?php if ($matricula['participantes'] === 0): ?>
-                <p class="admin-empty"><i class="fas fa-user-slash"></i> Todavía no hay participantes aprobados.</p>
+                <p class="fin-vacio"><i class="fas fa-user-slash"></i> Todavía no hay participantes aprobados.</p>
                 <?php else: ?>
-                <div class="fin-grid" style="margin-bottom:0">
-                    <div>
-                        <span class="fin-kpi__label">Participantes</span>
-                        <span class="fin-kpi__num" style="font-size:1.3rem"><?= $matricula['participantes'] ?></span>
-                    </div>
-                    <div>
-                        <span class="fin-kpi__label">Costo del ciclo</span>
-                        <span class="fin-kpi__num" style="font-size:1.3rem">$<?= number_format($matricula['costo_total'], 2) ?></span>
-                    </div>
-                    <div>
-                        <span class="fin-kpi__label">Cubierto por becas</span>
-                        <span class="fin-kpi__num" style="font-size:1.3rem;color:#0ea5e9">$<?= number_format($matricula['becado'], 2) ?></span>
-                    </div>
-                    <div>
-                        <span class="fin-kpi__label">Deben pagar</span>
-                        <span class="fin-kpi__num" style="font-size:1.3rem">$<?= number_format($matricula['esperado'], 2) ?></span>
-                    </div>
-                    <div>
-                        <span class="fin-kpi__label">Cobrado</span>
-                        <span class="fin-kpi__num" style="font-size:1.3rem;color:#22c55e">$<?= number_format($matricula['cobrado'], 2) ?></span>
-                        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:<?= $matricula['porcentaje'] ?>%"></div></div>
-                        <span class="fin-kpi__pie"><?= $matricula['porcentaje'] ?>% · faltan $<?= number_format($matricula['por_cobrar'], 2) ?></span>
-                    </div>
+                <div class="fin-dato">
+                    <span class="fin-dato__label">Participantes aprobados</span>
+                    <span class="fin-dato__valor"><?= $matricula['participantes'] ?></span>
+                </div>
+                <div class="fin-dato">
+                    <span class="fin-dato__label">Costo del ciclo, sin descontar becas</span>
+                    <span class="fin-dato__valor">$<?= number_format($matricula['costo_total'], 2) ?></span>
+                </div>
+                <div class="fin-dato">
+                    <span class="fin-dato__label">Cubierto por becas</span>
+                    <span class="fin-dato__valor" style="color:#0ea5e9">$<?= number_format($matricula['becado'], 2) ?></span>
+                </div>
+                <div class="fin-dato">
+                    <span class="fin-dato__label">Deben pagar los participantes</span>
+                    <span class="fin-dato__valor">$<?= number_format($matricula['esperado'], 2) ?></span>
+                </div>
+                <div class="fin-dato fin-dato--total">
+                    <span class="fin-dato__label">Cobrado hasta hoy</span>
+                    <span>
+                        <span class="fin-dato__valor">$<?= number_format($matricula['cobrado'], 2) ?></span>
+                        <div class="fin-barra"><div class="fin-barra__fill" style="width:<?= $matricula['porcentaje'] ?>%"></div></div>
+                        <small class="texto-muted"><?= $matricula['porcentaje'] ?>% · faltan $<?= number_format($matricula['por_cobrar'], 2) ?></small>
+                    </span>
                 </div>
                 <?php endif; ?>
             </div>
         </section>
 
         <!-- Pagos por confirmar ────────────────────────────── -->
-        <section class="admin-card" style="margin-bottom:1.5rem">
-            <div class="admin-card__head">
+        <section class="admin-panel" style="margin-bottom:1.5rem">
+            <div class="admin-panel__header">
                 <h2><i class="fas fa-clock"></i> Pagos por confirmar</h2>
                 <span class="badge badge--warning"><?= count($pendientes) ?></span>
             </div>
 
             <?php if (empty($pendientes)): ?>
-            <p class="admin-empty"><i class="fas fa-check-circle"></i> Nada pendiente por revisar.</p>
+            <p class="fin-vacio"><i class="fas fa-check-circle"></i> Nada pendiente por revisar.</p>
             <?php else: ?>
-            <div class="tabla-responsive">
-            <table class="admin-tabla">
+            <div class="tabla-wrap">
+            <table class="tabla">
                 <thead>
                     <tr>
                         <th>De quién</th>
@@ -155,10 +170,10 @@
                             <?php endif; ?>
                         </td>
                         <td style="white-space:nowrap">
-                            <button class="btn btn--xs btn--success" onclick="abrirConfirmar(<?= $p['id'] ?>, 'confirmar')">
+                            <button class="btn btn--xs btn--verde" onclick="abrirConfirmar(<?= $p['id'] ?>, 'confirmar')">
                                 <i class="fas fa-check"></i>
                             </button>
-                            <button class="btn btn--xs btn--danger" onclick="abrirConfirmar(<?= $p['id'] ?>, 'rechazar')">
+                            <button class="btn btn--xs btn--peligro" onclick="abrirConfirmar(<?= $p['id'] ?>, 'rechazar')">
                                 <i class="fas fa-times"></i>
                             </button>
                         </td>
@@ -173,15 +188,15 @@
         <div class="admin-cols">
 
             <!-- Fondos ─────────────────────────────────────── -->
-            <section class="admin-card" style="flex:1">
-                <div class="admin-card__head">
+            <section class="admin-panel" style="flex:1">
+                <div class="admin-panel__header">
                     <h2><i class="fas fa-tags"></i> Fondos</h2>
                     <button class="btn btn--xs btn--outline" data-modal="modal-fondo">
                         <i class="fas fa-plus"></i> Nuevo
                     </button>
                 </div>
-                <div class="tabla-responsive">
-                <table class="admin-tabla">
+                <div class="tabla-wrap">
+                <table class="tabla">
                     <thead>
                         <tr><th>Fondo</th><th>Entró</th><th>Salió</th><th>Queda</th></tr>
                     </thead>
@@ -192,7 +207,7 @@
                         <td>
                             <?= htmlspecialchars($f['nombre']) ?>
                             <?php if ($f['tipo'] === 'especifico'): ?>
-                            <span class="badge badge--secondary btn--xs">etiquetado</span>
+                            <span class="badge badge--neutro btn--xs">etiquetado</span>
                             <?php endif; ?>
                         </td>
                         <td>$<?= number_format($f['ingresos'], 2) ?></td>
@@ -208,12 +223,12 @@
             </section>
 
             <!-- Cuentas ────────────────────────────────────── -->
-            <section class="admin-card" style="flex:1">
-                <div class="admin-card__head">
+            <section class="admin-panel" style="flex:1">
+                <div class="admin-panel__header">
                     <h2><i class="fas fa-wallet"></i> Dónde está el dinero</h2>
                 </div>
-                <div class="tabla-responsive">
-                <table class="admin-tabla">
+                <div class="tabla-wrap">
+                <table class="tabla">
                     <thead>
                         <tr><th>Cuenta</th><th>Entró</th><th>Salió</th><th>Saldo</th></tr>
                     </thead>
@@ -229,7 +244,7 @@
                     <?php endforeach; ?>
                     </tbody>
                 </table>
-                <p class="ayuda" style="padding:0 1rem 1rem">Todo consolidado en dólares. Los movimientos en bolívares se convierten con la tasa que registres.</p>
+                <p class="fin-nota" style="padding:0 1rem 1rem">Todo consolidado en dólares. Los movimientos en bolívares se convierten con la tasa que registres.</p>
                 </div>
             </section>
 
@@ -238,12 +253,12 @@
         <div class="admin-cols" style="margin-top:1.5rem">
 
             <!-- Gasto por rubro ────────────────────────────── -->
-            <section class="admin-card" style="flex:1">
-                <div class="admin-card__head">
+            <section class="admin-panel" style="flex:1">
+                <div class="admin-panel__header">
                     <h2><i class="fas fa-chart-simple"></i> Gasto por rubro</h2>
                 </div>
                 <?php if (empty($gastos_categoria)): ?>
-                <p class="admin-empty"><i class="fas fa-inbox"></i> Sin gastos registrados.</p>
+                <p class="fin-vacio"><i class="fas fa-inbox"></i> Sin gastos registrados.</p>
                 <?php else: ?>
                 <?php $mayor = max(array_map(fn($g) => (float)$g['total'], $gastos_categoria)) ?: 1; ?>
                 <div style="padding:1rem 1.25rem">
@@ -253,8 +268,8 @@
                             <span><?= htmlspecialchars(GastoModel::CATEGORIAS[$g['categoria']] ?? $g['categoria']) ?></span>
                             <strong>$<?= number_format($g['total'], 2) ?></strong>
                         </div>
-                        <div class="progress-bar-wrap">
-                            <div class="progress-bar-fill" style="width:<?= round((float)$g['total'] / $mayor * 100) ?>%;background:#0ea5e9"></div>
+                        <div class="fin-barra">
+                            <div class="fin-barra__fill" style="width:<?= round((float)$g['total'] / $mayor * 100) ?>%;background:#0ea5e9"></div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -263,8 +278,8 @@
             </section>
 
             <!-- Últimos movimientos ────────────────────────── -->
-            <section class="admin-card" style="flex:1">
-                <div class="admin-card__head">
+            <section class="admin-panel" style="flex:1">
+                <div class="admin-panel__header">
                     <h2><i class="fas fa-list"></i> Últimos movimientos</h2>
                     <a href="/admin/finanzas/movimientos" class="btn btn--xs btn--outline">Ver todos</a>
                 </div>
@@ -280,10 +295,10 @@
                     $mov = array_slice($mov, 0, 10);
                 ?>
                 <?php if (empty($mov)): ?>
-                <p class="admin-empty"><i class="fas fa-inbox"></i> Todavía no hay movimientos.</p>
+                <p class="fin-vacio"><i class="fas fa-inbox"></i> Todavía no hay movimientos.</p>
                 <?php else: ?>
-                <div class="tabla-responsive">
-                <table class="admin-tabla">
+                <div class="tabla-wrap">
+                <table class="tabla">
                     <tbody>
                     <?php foreach ($mov as $m): ?>
                     <tr>
@@ -307,10 +322,9 @@
 </div>
 
 <!-- Modal: Confirmar / Rechazar pago ───────────────────────── -->
-<div class="modal" id="modal-confirmar" style="display:none">
-    <div class="modal__overlay" onclick="cerrarModal('modal-confirmar')"></div>
-    <div class="modal__box" style="max-width:420px">
-        <div class="modal__head">
+<div class="modal-overlay" id="modal-confirmar">
+    <div class="modal">
+        <div class="modal__header">
             <h3 id="modal-confirmar-titulo">Confirmar pago</h3>
             <button class="modal__cerrar" onclick="cerrarModal('modal-confirmar')">&times;</button>
         </div>
@@ -319,13 +333,13 @@
             <input type="hidden" name="id" id="conf-id">
             <input type="hidden" name="accion" id="conf-accion">
             <div class="modal__body">
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Notas para el participante</label>
-                    <textarea name="notas_admin" id="conf-notas" class="form-control" rows="3"
+                    <textarea name="notas_admin" id="conf-notas" rows="3"
                               placeholder="Opcional al confirmar, obligatorio al rechazar"></textarea>
                 </div>
             </div>
-            <div class="modal__foot">
+            <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-confirmar')">Cancelar</button>
                 <button type="submit" class="btn btn--primario" id="conf-btn">Confirmar</button>
             </div>
@@ -334,35 +348,34 @@
 </div>
 
 <!-- Modal: Nuevo fondo ─────────────────────────────────────── -->
-<div class="modal" id="modal-fondo" style="display:none">
-    <div class="modal__overlay" onclick="cerrarModal('modal-fondo')"></div>
-    <div class="modal__box" style="max-width:460px">
-        <div class="modal__head">
+<div class="modal-overlay" id="modal-fondo">
+    <div class="modal">
+        <div class="modal__header">
             <h3><i class="fas fa-tags"></i> Nuevo fondo</h3>
             <button class="modal__cerrar" onclick="cerrarModal('modal-fondo')">&times;</button>
         </div>
         <form method="POST" action="/admin/finanzas/fondo">
             <?= csrf_field() ?>
             <div class="modal__body">
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Nombre <span class="req">*</span></label>
-                    <input type="text" name="nombre" class="form-control" required maxlength="120"
+                    <input type="text" name="nombre" required maxlength="120"
                            placeholder="Ej: Franelas cohorte 1">
                 </div>
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Para qué es</label>
-                    <input type="text" name="descripcion" class="form-control" maxlength="255">
+                    <input type="text" name="descripcion" maxlength="255">
                 </div>
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Tipo</label>
-                    <select name="tipo" class="form-control">
+                    <select name="tipo">
                         <option value="especifico">Etiquetado — dinero con un destino puntual</option>
                         <option value="general">General — entra a la caja común</option>
                     </select>
-                    <span class="ayuda">Un fondo etiquetado te deja ver cuánto entró para ese fin y cuánto se gastó.</span>
+                    <span class="fin-nota">Un fondo etiquetado te deja ver cuánto entró para ese fin y cuánto se gastó.</span>
                 </div>
             </div>
-            <div class="modal__foot">
+            <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-fondo')">Cancelar</button>
                 <button type="submit" class="btn btn--primario"><i class="fas fa-save"></i> Crear fondo</button>
             </div>
@@ -377,16 +390,28 @@ function abrirConfirmar(id, accion) {
     var esRechazo = accion === 'rechazar';
     document.getElementById('modal-confirmar-titulo').textContent = esRechazo ? 'Rechazar pago' : 'Confirmar pago';
     document.getElementById('conf-btn').textContent               = esRechazo ? 'Rechazar' : 'Confirmar pago';
-    document.getElementById('conf-btn').className = 'btn ' + (esRechazo ? 'btn--danger' : 'btn--success');
+    document.getElementById('conf-btn').className = 'btn ' + (esRechazo ? 'btn--peligro' : 'btn--verde');
     document.getElementById('conf-notas').required = esRechazo;
-    document.getElementById('modal-confirmar').style.display = 'flex';
+    document.getElementById('modal-confirmar').classList.add('abierto');
 }
 function cerrarModal(id) {
-    document.getElementById(id).style.display = 'none';
+    document.getElementById(id).classList.remove('abierto');
 }
+// Cerrar al hacer clic en el fondo, fuera del cuadro
+document.querySelectorAll('.modal-overlay').forEach(function (ov) {
+    ov.addEventListener('click', function (e) {
+        if (e.target === ov) ov.classList.remove('abierto');
+    });
+});
+document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.modal-overlay.abierto').forEach(function (ov) {
+        ov.classList.remove('abierto');
+    });
+});
 document.querySelectorAll('[data-modal]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-        document.getElementById(btn.dataset.modal).style.display = 'flex';
+        document.getElementById(btn.dataset.modal).classList.add('abierto');
     });
 });
 </script>

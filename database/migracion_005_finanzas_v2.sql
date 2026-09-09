@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS cuentas (
     activa     TINYINT      NOT NULL DEFAULT 1,
     orden      TINYINT      NOT NULL DEFAULT 0,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_cuenta_nombre (nombre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO cuentas (nombre, tipo, moneda, orden) VALUES

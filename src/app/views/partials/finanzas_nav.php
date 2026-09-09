@@ -1,14 +1,16 @@
 <?php
 /**
- * Sub-navegación y estilos compartidos del módulo de finanzas.
- * Se incluye al inicio de cada vista de /admin/finanzas.
+ * Sub-navegación del módulo de finanzas.
+ * Los estilos aquí son solo los que app.css no cubre: las pestañas,
+ * el badge de saldo y unos utilitarios de texto. Todo lo demás
+ * (paneles, tablas, formularios, modales) usa las clases de app.css.
  */
 $uri_fin = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $secciones = [
-    '/admin/finanzas'             => ['fa-chart-pie',    'Resumen'],
-    '/admin/finanzas/movimientos' => ['fa-right-left',   'Ingresos y gastos'],
-    '/admin/finanzas/matriculas'  => ['fa-graduation-cap','Matrículas y becas'],
-    '/admin/finanzas/prestamos'   => ['fa-hand-holding-dollar', 'Préstamos'],
+    '/admin/finanzas'             => ['fa-chart-pie',            'Resumen'],
+    '/admin/finanzas/movimientos' => ['fa-right-left',           'Ingresos y gastos'],
+    '/admin/finanzas/matriculas'  => ['fa-graduation-cap',       'Matrículas y becas'],
+    '/admin/finanzas/prestamos'   => ['fa-hand-holding-dollar',  'Préstamos'],
 ];
 ?>
 <nav class="fin-tabs">
@@ -20,79 +22,108 @@ $secciones = [
 </nav>
 
 <style>
+/* ── Pestañas del módulo ─────────────────────────────────── */
 .fin-tabs {
-    display:flex; gap:.35rem; flex-wrap:wrap;
-    border-bottom:1px solid #1e3a2a; margin-bottom:1.5rem;
+    display: flex; gap: 0.25rem; flex-wrap: wrap;
+    border-bottom: 1px solid #e5e7eb; margin-bottom: 1.75rem;
 }
 .fin-tab {
-    padding:.65rem 1.1rem; color:#9ca3af; text-decoration:none;
-    font-size:.9rem; border-bottom:2px solid transparent;
-    display:flex; align-items:center; gap:.45rem; white-space:nowrap;
+    padding: 0.6rem 1rem; color: var(--gris); text-decoration: none;
+    font-size: 0.85rem; font-weight: 600; border-bottom: 2px solid transparent;
+    display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;
+    transition: var(--transicion);
 }
-.fin-tab:hover  { color:#d1d5db; }
-.fin-tab.activo { color:#22c55e; border-bottom-color:#22c55e; font-weight:600; }
+.fin-tab:hover  { color: var(--gris-dark); background: #f8fafc; }
+.fin-tab i      { font-size: 0.8rem; }
+.fin-tab.activo { color: var(--verde); border-bottom-color: var(--verde); }
 
-.texto-verde { color:#22c55e; }
-.texto-rojo  { color:#ef4444; }
-.texto-muted { color:#9ca3af; font-size:.85em; }
+/* ── Rejilla de KPIs que se adapta a la cantidad ─────────── */
+.fin-kpis {
+    display: grid; gap: 1rem; margin-bottom: 1.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+}
+.kpi-card__pie {
+    font-size: 0.7rem; color: var(--gris);
+    margin-top: 0.3rem; line-height: 1.35;
+}
+.kpi-card--azul   { border-left-color: #0ea5e9; }
+.kpi-card--azul   .kpi-card__icono { background: #e0f2fe; color: #0ea5e9; }
+.kpi-card--azul   .kpi-card__num   { color: #0ea5e9; }
+.kpi-card--neutro { border-left-color: #94a3b8; }
+.kpi-card--neutro .kpi-card__icono { background: #f1f5f9; color: #64748b; }
+.kpi-card--neutro .kpi-card__num   { color: #334155; }
+.kpi-card__num { font-size: 1.45rem; }
 
-.fin-grid {
-    display:grid; gap:1rem;
-    grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
-    margin-bottom:1.5rem;
-}
-.fin-kpi {
-    background:#0f2419; border:1px solid #1e3a2a; border-radius:12px;
-    padding:1.1rem 1.25rem;
-}
-.fin-kpi__label {
-    display:block; font-size:.78rem; color:#9ca3af;
-    text-transform:uppercase; letter-spacing:.04em; margin-bottom:.4rem;
-}
-.fin-kpi__num  { font-size:1.6rem; font-weight:800; color:#f0f6f1; line-height:1.1; }
-.fin-kpi__pie  { display:block; font-size:.8rem; color:#6b7280; margin-top:.35rem; }
-.fin-kpi--ok    .fin-kpi__num { color:#22c55e; }
-.fin-kpi--alerta .fin-kpi__num { color:#ef4444; }
-.fin-kpi--aviso  .fin-kpi__num { color:#f59e0b; }
+/* ── Utilitarios de texto ────────────────────────────────── */
+.texto-muted { color: var(--gris); font-size: 0.8rem; }
+.texto-verde { color: var(--verde); font-weight: 600; }
+.texto-rojo  { color: #dc2626; font-weight: 600; }
 
-.progress-bar-wrap {
-    background:#1e3a2a; border-radius:4px; height:6px;
-    width:100%; overflow:hidden; display:block; margin-top:.5rem;
-}
-.progress-bar-fill { background:#22c55e; height:100%; border-radius:4px; }
+/* ── Celdas de dinero: alineadas y sin partirse ──────────── */
+.tabla td.num, .tabla th.num { text-align: right; white-space: nowrap; }
+.tabla td.fecha { white-space: nowrap; }
 
-.badge--info      { background:#0ea5e9; color:#fff; }
-.badge--warning   { background:#f59e0b; color:#fff; }
-.badge--success   { background:#22c55e; color:#fff; }
-.badge--danger    { background:#ef4444; color:#fff; }
-.badge--secondary { background:#374151; color:#d1d5db; }
-.btn--success { background:#22c55e; color:#fff; border-color:#22c55e; }
-.btn--danger  { background:#ef4444; color:#fff; border-color:#ef4444; }
-.btn--xs { padding:.2rem .5rem; font-size:.78rem; }
+/* ── Barra de progreso ───────────────────────────────────── */
+.fin-barra {
+    background: #f1f5f9; border-radius: 999px; height: 6px;
+    overflow: hidden; margin-top: 0.35rem; min-width: 70px;
+}
+.fin-barra__fill { background: var(--verde); height: 100%; border-radius: 999px; }
 
-.form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-.form-row--3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; }
-@media (max-width:700px) {
-    .form-row, .form-row--3 { grid-template-columns:1fr; }
+/* ── Fila de dato suelto (cuadros sin tabla) ─────────────── */
+.fin-dato {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 1rem; padding: 0.6rem 0; border-bottom: 1px solid #f1f5f9;
 }
-.admin-empty { text-align:center; padding:2rem; color:#6b7280; }
+.fin-dato:last-child { border-bottom: none; }
+.fin-dato__label { font-size: 0.85rem; color: var(--gris-dark); }
+.fin-dato__valor { font-size: 0.95rem; font-weight: 700; white-space: nowrap; }
+.fin-dato--total { border-top: 2px solid #e5e7eb; margin-top: 0.35rem; padding-top: 0.8rem; }
+.fin-dato--total .fin-dato__label { font-weight: 700; }
+.fin-dato--total .fin-dato__valor { font-size: 1.15rem; color: var(--verde); }
+.fin-dato--alerta .fin-dato__valor { color: #dc2626; }
 
-.modal { position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center; }
-.modal__overlay { position:absolute; inset:0; background:rgba(0,0,0,.6); }
-.modal__box {
-    position:relative; z-index:1; background:#0f2419; border:1px solid #1e3a2a;
-    border-radius:12px; width:90%; max-height:90vh; overflow-y:auto;
+/* ── Nota explicativa larga (form-ayuda es flex y las parte) ── */
+.fin-nota {
+    display: block; font-size: 0.78rem; color: var(--gris);
+    line-height: 1.55; margin-top: 0.4rem;
 }
-.modal__head {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:1.25rem 1.5rem; border-bottom:1px solid #1e3a2a;
+.fin-nota strong { color: var(--gris-dark); }
+
+/* ── Panel vacío ─────────────────────────────────────────── */
+.fin-vacio {
+    text-align: center; padding: 2.5rem 1.5rem; color: var(--gris);
+    font-size: 0.85rem; font-style: italic;
 }
-.modal__head h3 { margin:0; font-size:1.1rem; color:#f0f6f1; }
-.modal__cerrar { background:none; border:none; color:#9ca3af; font-size:1.4rem; cursor:pointer; }
-.modal__body { padding:1.25rem 1.5rem; }
-.modal__foot {
-    padding:1rem 1.5rem; border-top:1px solid #1e3a2a;
-    display:flex; justify-content:flex-end; gap:.75rem;
+.fin-vacio i { display: block; font-size: 1.75rem; margin-bottom: 0.6rem; color: #d1d5db; }
+
+/* ── Badges que app.css no trae ──────────────────────────── */
+.badge--info      { background: #dbeafe; color: #1d4ed8; }
+.badge--warning   { background: #fef9c3; color: #92400e; }
+.badge--exito     { background: #dcfce7; color: #166534; }
+.badge--peligro   { background: #fee2e2; color: #991b1b; }
+.badge--neutro    { background: #f1f5f9; color: var(--gris); }
+.badge--xs        { padding: 0.15rem 0.5rem; font-size: 0.65rem; }
+
+.btn--xs {
+    padding: 0.3rem 0.6rem; font-size: 0.75rem;
+    display: inline-flex; align-items: center; gap: 0.3rem;
 }
-.ayuda { font-size:.8rem; color:#6b7280; margin-top:.3rem; display:block; }
+.btn--peligro {
+    background: #dc2626; color: var(--blanco); border: 2px solid #dc2626;
+}
+.btn--peligro:hover { background: #b91c1c; border-color: #b91c1c; }
+
+/* ── El modal de app.css nace oculto; se muestra con .abierto ── */
+.modal-overlay { display: none; }
+.modal-overlay.abierto { display: flex; }
+.modal--ancho { max-width: 640px; }
+.modal__body--scroll { max-height: 70vh; overflow-y: auto; }
+
+/* ── Barra de acciones del encabezado ────────────────────── */
+.fin-acciones { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+    .fin-tab { padding: 0.55rem 0.7rem; font-size: 0.8rem; }
+}
 </style>

@@ -19,10 +19,10 @@
                 <p>Todo el movimiento de dinero del programa</p>
             </div>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-                <button class="btn btn--sm btn--success" data-modal="modal-ingreso">
+                <button class="btn btn--sm btn--verde" data-modal="modal-ingreso">
                     <i class="fas fa-arrow-down"></i> Registrar ingreso
                 </button>
-                <button class="btn btn--sm btn--danger" data-modal="modal-gasto">
+                <button class="btn btn--sm btn--peligro" data-modal="modal-gasto">
                     <i class="fas fa-arrow-up"></i> Registrar gasto
                 </button>
             </div>
@@ -31,13 +31,13 @@
         <?php include __DIR__ . '/../partials/finanzas_nav.php'; ?>
 
         <!-- Filtros ────────────────────────────────────────── -->
-        <section class="admin-card" style="margin-bottom:1.5rem">
+        <section class="admin-panel" style="margin-bottom:1.5rem">
             <form method="GET" action="/admin/finanzas/movimientos" style="padding:1.25rem">
                 <input type="hidden" name="tab" value="<?= htmlspecialchars($tab) ?>">
-                <div class="form-row--3">
-                    <div class="form-group">
+                <div class="form-grid-3">
+                    <div class="form-grupo">
                         <label>Fondo</label>
-                        <select name="fondo_id" class="form-control">
+                        <select name="fondo_id">
                             <option value="">Todos</option>
                             <?php foreach ($fondos as $f): ?>
                             <option value="<?= $f['id'] ?>" <?= (string)$filtros['fondo_id'] === (string)$f['id'] ? 'selected' : '' ?>>
@@ -46,13 +46,13 @@
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Desde</label>
-                        <input type="date" name="desde" class="form-control" value="<?= htmlspecialchars($filtros['desde']) ?>">
+                        <input type="date" name="desde" value="<?= htmlspecialchars($filtros['desde']) ?>">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Hasta</label>
-                        <input type="date" name="hasta" class="form-control" value="<?= htmlspecialchars($filtros['hasta']) ?>">
+                        <input type="date" name="hasta" value="<?= htmlspecialchars($filtros['hasta']) ?>">
                     </div>
                 </div>
                 <div style="display:flex;gap:.5rem">
@@ -63,19 +63,19 @@
         </section>
 
         <!-- Ingresos ───────────────────────────────────────── -->
-        <section class="admin-card" style="margin-bottom:1.5rem">
-            <div class="admin-card__head">
+        <section class="admin-panel" style="margin-bottom:1.5rem">
+            <div class="admin-panel__header">
                 <h2><i class="fas fa-arrow-down texto-verde"></i> Ingresos</h2>
-                <span class="badge badge--secondary">
+                <span class="badge badge--neutro">
                     $<?= number_format(array_sum(array_map(fn($i) => $i['estatus'] === 'confirmado' ? (float)$i['monto_usd'] : 0, $ingresos)), 2) ?>
                 </span>
             </div>
 
             <?php if (empty($ingresos)): ?>
-            <p class="admin-empty"><i class="fas fa-inbox"></i> Sin ingresos en este filtro.</p>
+            <p class="fin-vacio"><i class="fas fa-inbox"></i> Sin ingresos en este filtro.</p>
             <?php else: ?>
-            <div class="tabla-responsive">
-            <table class="admin-tabla">
+            <div class="tabla-wrap">
+            <table class="tabla">
                 <thead>
                     <tr>
                         <th>Fecha</th><th>Origen</th><th>De quién</th><th>Concepto</th>
@@ -98,7 +98,7 @@
                     </td>
                     <td>
                         <?php if ($i['estatus'] === 'confirmado'): ?>
-                        <span class="badge badge--success">Confirmado</span>
+                        <span class="badge badge--exito">Confirmado</span>
                         <?php else: ?>
                         <span class="badge badge--warning">Pendiente</span>
                         <?php endif; ?>
@@ -121,19 +121,19 @@
         </section>
 
         <!-- Gastos ─────────────────────────────────────────── -->
-        <section class="admin-card">
-            <div class="admin-card__head">
+        <section class="admin-panel">
+            <div class="admin-panel__header">
                 <h2><i class="fas fa-arrow-up texto-rojo"></i> Gastos</h2>
-                <span class="badge badge--secondary">
+                <span class="badge badge--neutro">
                     $<?= number_format(array_sum(array_map(fn($g) => (float)$g['monto_usd'], $gastos)), 2) ?>
                 </span>
             </div>
 
             <?php if (empty($gastos)): ?>
-            <p class="admin-empty"><i class="fas fa-inbox"></i> Sin gastos en este filtro.</p>
+            <p class="fin-vacio"><i class="fas fa-inbox"></i> Sin gastos en este filtro.</p>
             <?php else: ?>
-            <div class="tabla-responsive">
-            <table class="admin-tabla">
+            <div class="tabla-wrap">
+            <table class="tabla">
                 <thead>
                     <tr>
                         <th>Fecha</th><th>Concepto</th><th>Rubro</th><th>Beneficiario</th>
@@ -150,7 +150,7 @@
                         <br><small class="texto-muted">Devolución a <?= htmlspecialchars($g['prestamista']) ?></small>
                         <?php endif; ?>
                     </td>
-                    <td><span class="badge badge--secondary"><?= htmlspecialchars($categorias[$g['categoria']] ?? $g['categoria']) ?></span></td>
+                    <td><span class="badge badge--neutro"><?= htmlspecialchars($categorias[$g['categoria']] ?? $g['categoria']) ?></span></td>
                     <td><?= htmlspecialchars($g['beneficiario'] ?? '—') ?></td>
                     <td class="texto-muted"><?= htmlspecialchars($g['fondo_nombre'] ?? '—') ?></td>
                     <td style="white-space:nowrap">
@@ -180,36 +180,35 @@
 </div>
 
 <!-- Modal: Registrar ingreso ───────────────────────────────── -->
-<div class="modal" id="modal-ingreso" style="display:none">
-    <div class="modal__overlay" onclick="cerrarModal('modal-ingreso')"></div>
-    <div class="modal__box" style="max-width:620px">
-        <div class="modal__head">
+<div class="modal-overlay" id="modal-ingreso">
+    <div class="modal modal--ancho">
+        <div class="modal__header">
             <h3><i class="fas fa-arrow-down"></i> Registrar ingreso</h3>
             <button class="modal__cerrar" onclick="cerrarModal('modal-ingreso')">&times;</button>
         </div>
         <form method="POST" action="/admin/finanzas/ingreso" enctype="multipart/form-data">
             <?= csrf_field() ?>
-            <div class="modal__body">
-                <div class="form-row">
-                    <div class="form-group">
+            <div class="modal__body modal__body--scroll">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Origen <span class="req">*</span></label>
-                        <select name="origen" id="ing-origen" class="form-control" required>
+                        <select name="origen" id="ing-origen" required>
                             <?php foreach ($origenes as $k => $v): ?>
                             <?php if ($k === 'prestamo') continue; ?>
                             <option value="<?= $k ?>"><?= $v ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <span class="ayuda">Los préstamos se registran en su propia sección.</span>
+                        <span class="fin-nota">Los préstamos se registran en su propia sección.</span>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Fecha <span class="req">*</span></label>
-                        <input type="date" name="fecha" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                        <input type="date" name="fecha" value="<?= date('Y-m-d') ?>" required>
                     </div>
                 </div>
 
-                <div class="form-group" id="ing-participante" style="display:none">
+                <div class="form-grupo" id="ing-participante" style="display:none">
                     <label>Participante <span class="req">*</span></label>
-                    <select name="aspirante_id" class="form-control">
+                    <select name="aspirante_id">
                         <option value="">— Selecciona —</option>
                         <?php foreach ($aprobados as $a): ?>
                         <option value="<?= $a['id'] ?>">
@@ -219,31 +218,31 @@
                     </select>
                 </div>
 
-                <div class="form-group" id="ing-aportante">
+                <div class="form-grupo" id="ing-aportante">
                     <label>Quién aportó</label>
-                    <input type="text" name="aportante" class="form-control" maxlength="150"
+                    <input type="text" name="aportante" maxlength="150"
                            placeholder="Nombre de la persona, iglesia u organización">
                 </div>
 
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Concepto <span class="req">*</span></label>
-                    <input type="text" name="concepto" class="form-control" required maxlength="200"
+                    <input type="text" name="concepto" required maxlength="200"
                            placeholder="Ej: Aporte para franelas de los participantes">
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Fondo</label>
-                        <select name="fondo_id" class="form-control">
+                        <select name="fondo_id">
                             <option value="">Sin etiquetar</option>
                             <?php foreach ($fondos as $f): ?>
                             <option value="<?= $f['id'] ?>"><?= htmlspecialchars($f['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Entró a</label>
-                        <select name="cuenta_id" class="form-control">
+                        <select name="cuenta_id">
                             <option value="">Sin especificar</option>
                             <?php foreach ($cuentas as $c): ?>
                             <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre']) ?></option>
@@ -252,26 +251,26 @@
                     </div>
                 </div>
 
-                <div class="form-row--3">
-                    <div class="form-group">
+                <div class="form-grid-3">
+                    <div class="form-grupo">
                         <label>Monto USD</label>
-                        <input type="number" name="monto_usd" class="form-control" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" name="monto_usd" step="0.01" min="0" placeholder="0.00">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Monto Bs</label>
-                        <input type="number" name="monto_ves" class="form-control" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" name="monto_ves" step="0.01" min="0" placeholder="0.00">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Tasa</label>
-                        <input type="number" name="tasa_cambio" class="form-control" step="0.0001" min="0" placeholder="Bs por USD">
+                        <input type="number" name="tasa_cambio" step="0.0001" min="0" placeholder="Bs por USD">
                     </div>
                 </div>
-                <span class="ayuda" style="margin-bottom:1rem">Si el pago fue en bolívares, llena monto en Bs y la tasa: el sistema calcula el equivalente en dólares.</span>
+                <span class="fin-nota" style="margin-bottom:1rem">Si el pago fue en bolívares, llena monto en Bs y la tasa: el sistema calcula el equivalente en dólares.</span>
 
-                <div class="form-row--3">
-                    <div class="form-group">
+                <div class="form-grid-3">
+                    <div class="form-grupo">
                         <label>Método <span class="req">*</span></label>
-                        <select name="metodo_pago" class="form-control" required>
+                        <select name="metodo_pago" required>
                             <option value="efectivo">Efectivo</option>
                             <option value="transferencia">Transferencia</option>
                             <option value="zelle">Zelle</option>
@@ -279,68 +278,67 @@
                             <option value="otro">Otro</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Banco</label>
-                        <input type="text" name="banco_origen" class="form-control" maxlength="100">
+                        <input type="text" name="banco_origen" maxlength="100">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Referencia</label>
-                        <input type="text" name="referencia" class="form-control" maxlength="100">
+                        <input type="text" name="referencia" maxlength="100">
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Comprobante (JPG/PNG/PDF, máx 5 MB)</label>
-                    <input type="file" name="comprobante" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                    <input type="file" name="comprobante" accept=".jpg,.jpeg,.png,.pdf">
                 </div>
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Notas</label>
-                    <textarea name="notas" class="form-control" rows="2" maxlength="500"></textarea>
+                    <textarea name="notas" rows="2" maxlength="500"></textarea>
                 </div>
             </div>
-            <div class="modal__foot">
+            <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-ingreso')">Cancelar</button>
-                <button type="submit" class="btn btn--success"><i class="fas fa-save"></i> Guardar ingreso</button>
+                <button type="submit" class="btn btn--verde"><i class="fas fa-save"></i> Guardar ingreso</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Modal: Registrar gasto ─────────────────────────────────── -->
-<div class="modal" id="modal-gasto" style="display:none">
-    <div class="modal__overlay" onclick="cerrarModal('modal-gasto')"></div>
-    <div class="modal__box" style="max-width:620px">
-        <div class="modal__head">
+<div class="modal-overlay" id="modal-gasto">
+    <div class="modal modal--ancho">
+        <div class="modal__header">
             <h3><i class="fas fa-arrow-up"></i> Registrar gasto</h3>
             <button class="modal__cerrar" onclick="cerrarModal('modal-gasto')">&times;</button>
         </div>
         <form method="POST" action="/admin/finanzas/gasto" enctype="multipart/form-data">
             <?= csrf_field() ?>
-            <div class="modal__body">
-                <div class="form-group">
+            <div class="modal__body modal__body--scroll">
+                <div class="form-grupo">
                     <label>Concepto <span class="req">*</span></label>
-                    <input type="text" name="concepto" class="form-control" required maxlength="200"
+                    <input type="text" name="concepto" required maxlength="200"
                            placeholder="Ej: Compra de 12 franelas">
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Rubro <span class="req">*</span></label>
-                        <select name="categoria" id="gasto-categoria" class="form-control" required>
+                        <select name="categoria" id="gasto-categoria" required>
                             <?php foreach ($categorias as $k => $v): ?>
                             <option value="<?= $k ?>"><?= $v ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Fecha <span class="req">*</span></label>
-                        <input type="date" name="fecha_gasto" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                        <input type="date" name="fecha_gasto" value="<?= date('Y-m-d') ?>" required>
                     </div>
                 </div>
 
-                <div class="form-group" id="gasto-prestamo" style="display:none">
+                <div class="form-grupo" id="gasto-prestamo" style="display:none">
                     <label>¿Qué préstamo estás devolviendo? <span class="req">*</span></label>
-                    <select name="prestamo_id" class="form-control">
+                    <select name="prestamo_id">
                         <option value="">— Selecciona —</option>
                         <?php foreach ($prestamos as $p): ?>
                         <option value="<?= $p['id'] ?>">
@@ -351,19 +349,19 @@
                     </select>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Fondo</label>
-                        <select name="fondo_id" class="form-control">
+                        <select name="fondo_id">
                             <option value="">Sin etiquetar</option>
                             <?php foreach ($fondos as $f): ?>
                             <option value="<?= $f['id'] ?>"><?= htmlspecialchars($f['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Salió de</label>
-                        <select name="cuenta_id" class="form-control">
+                        <select name="cuenta_id">
                             <option value="">Sin especificar</option>
                             <?php foreach ($cuentas as $c): ?>
                             <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre']) ?></option>
@@ -372,31 +370,31 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>A quién se le pagó</label>
-                    <input type="text" name="beneficiario" class="form-control" maxlength="150"
+                    <input type="text" name="beneficiario" maxlength="150"
                            placeholder="Ej: Seminario STBV, señora María (cocina), transportista">
                 </div>
 
-                <div class="form-row--3">
-                    <div class="form-group">
+                <div class="form-grid-3">
+                    <div class="form-grupo">
                         <label>Monto USD</label>
-                        <input type="number" name="monto_usd" class="form-control" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" name="monto_usd" step="0.01" min="0" placeholder="0.00">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Monto Bs</label>
-                        <input type="number" name="monto_ves" class="form-control" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" name="monto_ves" step="0.01" min="0" placeholder="0.00">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Tasa</label>
-                        <input type="number" name="tasa_cambio" class="form-control" step="0.0001" min="0" placeholder="Bs por USD">
+                        <input type="number" name="tasa_cambio" step="0.0001" min="0" placeholder="Bs por USD">
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Método <span class="req">*</span></label>
-                        <select name="metodo_pago" class="form-control" required>
+                        <select name="metodo_pago" required>
                             <option value="efectivo">Efectivo</option>
                             <option value="transferencia">Transferencia</option>
                             <option value="zelle">Zelle</option>
@@ -404,24 +402,24 @@
                             <option value="otro">Otro</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Referencia</label>
-                        <input type="text" name="referencia" class="form-control" maxlength="100">
+                        <input type="text" name="referencia" maxlength="100">
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Comprobante (JPG/PNG/PDF, máx 5 MB)</label>
-                    <input type="file" name="comprobante" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                    <input type="file" name="comprobante" accept=".jpg,.jpeg,.png,.pdf">
                 </div>
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Notas</label>
-                    <textarea name="notas" class="form-control" rows="2" maxlength="500"></textarea>
+                    <textarea name="notas" rows="2" maxlength="500"></textarea>
                 </div>
             </div>
-            <div class="modal__foot">
+            <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-gasto')">Cancelar</button>
-                <button type="submit" class="btn btn--danger"><i class="fas fa-save"></i> Guardar gasto</button>
+                <button type="submit" class="btn btn--peligro"><i class="fas fa-save"></i> Guardar gasto</button>
             </div>
         </form>
     </div>
@@ -429,11 +427,23 @@
 
 <script>
 function cerrarModal(id) {
-    document.getElementById(id).style.display = 'none';
+    document.getElementById(id).classList.remove('abierto');
 }
+// Cerrar al hacer clic en el fondo, fuera del cuadro
+document.querySelectorAll('.modal-overlay').forEach(function (ov) {
+    ov.addEventListener('click', function (e) {
+        if (e.target === ov) ov.classList.remove('abierto');
+    });
+});
+document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.modal-overlay.abierto').forEach(function (ov) {
+        ov.classList.remove('abierto');
+    });
+});
 document.querySelectorAll('[data-modal]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-        document.getElementById(btn.dataset.modal).style.display = 'flex';
+        document.getElementById(btn.dataset.modal).classList.add('abierto');
     });
 });
 
