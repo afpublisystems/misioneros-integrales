@@ -17,6 +17,9 @@
 /presentacion-plenaria.html
 /RUTA.jpeg
 
+# Videos de los candidatos para redes (datos personales de terceros, no van al repo)
+/reel/
+
 # Scripts temporales sensibles (no subir nunca)
 /src/reset-admin-tmp.php
 /src/reset-clave-tmp.php
