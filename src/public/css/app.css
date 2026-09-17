@@ -426,6 +426,9 @@ ul   { list-style: none; }
     min-height: calc(100vh - 73px);
 }
 
+/* Barra superior y overlay: solo existen en móvil */
+.admin-topbar, .admin-overlay, .admin-sidebar__cerrar { display: none; }
+
 /* Sidebar */
 .dash-sidebar {
     background: var(--verde-dark);
@@ -1082,10 +1085,50 @@ ul   { list-style: none; }
 @media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
     .admin-layout { grid-template-columns: 1fr; }
-    .admin-sidebar { display: none; }
     .admin-main { padding: 1.5rem 1rem; }
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .admin-cols { grid-template-columns: 1fr; }
+
+    .admin-topbar {
+        display: flex; align-items: center; gap: 0.6rem;
+        position: sticky; top: 0; z-index: 90;
+        background: #0f172a; color: var(--blanco);
+        padding: 0.7rem 0.9rem;
+    }
+    .admin-topbar__toggle {
+        background: none; border: none; cursor: pointer;
+        color: var(--blanco); font-size: 1.15rem;
+        padding: 0.35rem 0.5rem; line-height: 1;
+    }
+    .admin-topbar img { height: 26px; width: auto; filter: brightness(0) invert(1); }
+    .admin-topbar span { font-size: 0.9rem; font-weight: 700; }
+
+    .admin-sidebar {
+        position: fixed; top: 0; left: 0; bottom: 0;
+        width: 265px; max-width: 82vw; z-index: 100;
+        overflow-y: auto;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+    }
+    .admin-sidebar.abierto { transform: translateX(0); }
+    .admin-sidebar__logo { position: relative; padding-right: 3rem; }
+    .admin-sidebar__cerrar {
+        display: block; position: absolute; top: 50%; right: 0.75rem;
+        transform: translateY(-50%);
+        background: none; border: none; cursor: pointer;
+        color: rgba(255,255,255,0.6); font-size: 1.1rem;
+        padding: 0.35rem 0.5rem; line-height: 1;
+    }
+    .admin-nav__item { padding: 0.95rem 1.25rem; font-size: 0.9rem; }
+
+    .admin-overlay {
+        display: block; position: fixed; inset: 0; z-index: 95;
+        background: rgba(15,23,42,0.55);
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .admin-overlay.abierto { opacity: 1; pointer-events: auto; }
+
+    body.menu-abierto { overflow: hidden; }
 }
 
 /* Layout admin — ocupa pantalla completa sin main wrapper */

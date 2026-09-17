@@ -12,6 +12,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ── Menú del panel admin en móvil ───────────────────────
+    const adminToggle  = document.getElementById('admin-menu-toggle');
+    const adminSidebar = document.getElementById('admin-sidebar');
+    const adminOverlay = document.getElementById('admin-overlay');
+    const adminCerrar  = document.getElementById('admin-menu-cerrar');
+
+    if (adminToggle && adminSidebar && adminOverlay) {
+        const abrirMenu = (abierto) => {
+            adminSidebar.classList.toggle('abierto', abierto);
+            adminOverlay.classList.toggle('abierto', abierto);
+            document.body.classList.toggle('menu-abierto', abierto);
+            adminToggle.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+        };
+
+        adminToggle.addEventListener('click', () => {
+            abrirMenu(!adminSidebar.classList.contains('abierto'));
+        });
+        adminOverlay.addEventListener('click', () => abrirMenu(false));
+        if (adminCerrar) adminCerrar.addEventListener('click', () => abrirMenu(false));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') abrirMenu(false);
+        });
+    }
+
     // ── Cerrar alertas ──────────────────────────────────────
     document.querySelectorAll('.alerta [data-cerrar]').forEach(btn => {
         btn.addEventListener('click', () => {

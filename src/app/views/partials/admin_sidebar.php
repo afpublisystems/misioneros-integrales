@@ -1,11 +1,25 @@
-<aside class="admin-sidebar">
+<header class="admin-topbar">
+    <button type="button" class="admin-topbar__toggle" id="admin-menu-toggle"
+            aria-label="Abrir menú" aria-expanded="false" aria-controls="admin-sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+    <img src="/public/assets/logos/logo-mi-t.png" alt="MI">
+    <span>Admin</span>
+</header>
+<div class="admin-overlay" id="admin-overlay"></div>
+
+<aside class="admin-sidebar" id="admin-sidebar">
     <div class="admin-sidebar__logo">
         <img src="/public/assets/logos/logo-mi-t.png" alt="MI">
         <div>
             <strong>Admin</strong>
             <span><?= htmlspecialchars($_SESSION['usuario_nombre'] ?? '') ?></span>
         </div>
+        <button type="button" class="admin-sidebar__cerrar" id="admin-menu-cerrar" aria-label="Cerrar menú">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
+
 
     <nav class="admin-nav">
         <?php $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); ?>
