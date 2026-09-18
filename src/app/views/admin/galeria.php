@@ -2,6 +2,7 @@
 // Flash messages
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
+$es_admin = $_SESSION['usuario_rol'] === 'admin';
 ?>
 
 <div class="admin-layout">
@@ -15,6 +16,11 @@ unset($_SESSION['flash']);
         <h1><?= htmlspecialchars($titulo) ?></h1>
         <p>Administra las fotos y videos de cada sede del itinerario</p>
     </div>
+    <?php if ($es_admin): ?>
+    <button type="button" class="btn btn--outline" onclick="alternarCiudades()">
+        <i class="fas fa-city"></i> Editar ciudades
+    </button>
+    <?php endif; ?>
 </div>
 
 <?php if ($flash): ?>
@@ -24,18 +30,137 @@ unset($_SESSION['flash']);
 </div>
 <?php endif; ?>
 
+<?php if ($es_admin): ?>
+<!-- Ciudades del itinerario ─────────────────────────────────── -->
+<section class="admin-panel" id="panel-ciudades" style="display:none;margin-bottom:1.5rem">
+    <div class="admin-panel__header">
+        <h2><i class="fas fa-city"></i> Ciudades del itinerario</h2>
+        <button type="button" class="btn btn--sm btn--verde" onclick="abrirCiudad(null)">
+            <i class="fas fa-plus"></i> Agregar ciudad
+        </button>
+    </div>
+    <p class="ciudades-nota">
+        Las activas salen en la galería pública y en el registro de evangelismo, en este orden.
+        Una ciudad no se borra porque puede tener fotos y personas registradas: si ya no van, desactívala.
+    </p>
+    <div class="tabla-wrap">
+        <table class="tabla">
+            <thead>
+                <tr><th>Orden</th><th>Ciudad</th><th>Estado</th><th>Meses</th><th>Fechas</th><th></th><th></th></tr>
+            </thead>
+            <tbody>
+            <?php foreach ($sedes as $sede): ?>
+            <tr class="<?= $sede['activa'] ? '' : 'ciudad-inactiva' ?>">
+                <td><?= (int) $sede['orden'] ?></td>
+                <td><strong><?= htmlspecialchars($sede['nombre']) ?></strong></td>
+                <td><?= htmlspecialchars($sede['estado']) ?></td>
+                <td><?= htmlspecialchars($sede['mes']) ?></td>
+                <td style="white-space:nowrap">
+                    <?php if ($sede['fecha_inicio'] || $sede['fecha_fin']): ?>
+                    <?= $sede['fecha_inicio'] ? date('d/m/Y', strtotime($sede['fecha_inicio'])) : '…' ?>
+                    – <?= $sede['fecha_fin'] ? date('d/m/Y', strtotime($sede['fecha_fin'])) : '…' ?>
+                    <?php else: ?>—<?php endif; ?>
+                </td>
+                <td>
+                    <span class="badge <?= $sede['activa'] ? 'badge--aprobada' : 'badge--borrador' ?>">
+                        <?= $sede['activa'] ? 'Activa' : 'Inactiva' ?>
+                    </span>
+                </td>
+                <td>
+                    <button type="button" class="btn btn--sm btn--outline" title="Editar"
+                            data-ciudad="<?= htmlspecialchars(json_encode([
+                                'id'           => $sede['id'],
+                                'nombre'       => $sede['nombre'],
+                                'estado'       => $sede['estado'],
+                                'mes'          => $sede['mes'],
+                                'orden'        => $sede['orden'],
+                                'fecha_inicio' => $sede['fecha_inicio'],
+                                'fecha_fin'    => $sede['fecha_fin'],
+                                'activa'       => (int) $sede['activa'],
+                            ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Modal: ciudad ───────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-ciudad" style="display:none"
+     onclick="if (event.target === this) cerrarCiudad()">
+    <div class="modal" style="max-width:560px">
+        <div class="modal__header">
+            <h3><i class="fas fa-city"></i> <span id="ciudad-titulo">Agregar ciudad</span></h3>
+            <button type="button" class="modal__cerrar" onclick="cerrarCiudad()">&times;</button>
+        </div>
+        <form method="POST" action="/admin/galeria/sede" id="form-ciudad">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" value="">
+            <div class="modal__body">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
+                        <label>Ciudad <span class="req">*</span></label>
+                        <input type="text" name="nombre" maxlength="100" required placeholder="Ej: Los Teques">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Estado <span class="req">*</span></label>
+                        <input type="text" name="estado" maxlength="100" required placeholder="Ej: Miranda">
+                    </div>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-grupo">
+                        <label>Meses <span class="req">*</span></label>
+                        <input type="text" name="mes" maxlength="50" required placeholder="Ej: Septiembre">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Orden en el itinerario <span class="req">*</span></label>
+                        <input type="number" name="orden" min="1" max="99" required>
+                    </div>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-grupo">
+                        <label>Desde</label>
+                        <input type="date" name="fecha_inicio">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Hasta</label>
+                        <input type="date" name="fecha_fin">
+                    </div>
+                </div>
+                <p class="ciudades-nota" style="padding:0;margin:-.5rem 0 1rem">
+                    Con las fechas, el registro de evangelismo marca sola esta ciudad mientras el grupo esté ahí.
+                </p>
+                <label class="check-label">
+                    <input type="checkbox" name="activa" value="1" checked>
+                    <span><strong>Activa</strong>: sale en la galería pública y en evangelismo</span>
+                </label>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--outline" onclick="cerrarCiudad()">Cancelar</button>
+                <button type="submit" class="btn btn--verde"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Sedes ──────────────────────────────────────────────────── -->
 <div class="galeria-sedes-grid">
     <?php foreach ($sedes as $sede): ?>
     <?php $activa = $sede_sel && $sede_sel['id'] == $sede['id']; ?>
     <a href="/admin/galeria?sede=<?= $sede['id'] ?>"
-       class="galeria-sede-card <?= $activa ? 'galeria-sede-card--activa' : '' ?>">
+       class="galeria-sede-card <?= $activa ? 'galeria-sede-card--activa' : '' ?> <?= $sede['activa'] ? '' : 'galeria-sede-card--inactiva' ?>">
         <div class="galeria-sede-card__icon">
             <i class="fas fa-map-marker-alt"></i>
         </div>
         <div class="galeria-sede-card__info">
             <div class="galeria-sede-card__nombre"><?= htmlspecialchars($sede['nombre']) ?></div>
-            <div class="galeria-sede-card__estado"><?= htmlspecialchars($sede['estado']) ?> · <?= htmlspecialchars($sede['mes']) ?></div>
+            <div class="galeria-sede-card__estado">
+                <?= $sede['activa'] ? htmlspecialchars($sede['estado'] . ' · ' . $sede['mes']) : 'Inactiva · no sale en el sitio' ?>
+            </div>
         </div>
         <div class="galeria-sede-card__badge">
             <?= $sede['total_items'] ?> ítem<?= $sede['total_items'] != 1 ? 's' : '' ?>
@@ -250,6 +375,10 @@ unset($_SESSION['flash']);
 .galeria-sede-card__estado { font-size: .72rem; color: #64748b; }
 .galeria-sede-card__badge { margin-left: auto; font-size: .7rem; background: #f1f5f9; color: #475569; padding: .15rem .45rem; border-radius: 999px; white-space: nowrap; }
 .galeria-sede-card--activa .galeria-sede-card__badge { background: var(--verde); color: white; }
+.galeria-sede-card--inactiva { opacity: .55; border-style: dashed; }
+
+.ciudades-nota { font-size: .82rem; color: #64748b; padding: 1rem 1.25rem 0; line-height: 1.5; }
+.ciudad-inactiva td { color: #94a3b8; }
 
 .galeria-empty {
     text-align: center;
@@ -436,6 +565,32 @@ unset($_SESSION['flash']);
 </style>
 
 <script>
+function alternarCiudades() {
+    var panel = document.getElementById('panel-ciudades');
+    panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+function abrirCiudad(datos) {
+    var form = document.getElementById('form-ciudad');
+    form.reset();
+    form.elements.id.value = '';
+    document.getElementById('ciudad-titulo').textContent = datos ? 'Editar ciudad' : 'Agregar ciudad';
+    if (datos) {
+        Object.keys(datos).forEach(function (campo) {
+            var el = form.elements[campo];
+            if (!el) return;
+            if (el.type === 'checkbox') el.checked = datos[campo] == 1;
+            else el.value = datos[campo] === null ? '' : datos[campo];
+        });
+    }
+    document.getElementById('modal-ciudad').style.display = 'flex';
+}
+function cerrarCiudad() {
+    document.getElementById('modal-ciudad').style.display = 'none';
+}
+document.querySelectorAll('[data-ciudad]').forEach(function (b) {
+    b.addEventListener('click', function () { abrirCiudad(JSON.parse(b.dataset.ciudad)); });
+});
+
 function cambiarTipoMedia(tipo, btn) {
     document.getElementById('tipo-hidden').value = tipo;
     document.getElementById('zona-foto').style.display  = tipo === 'foto'  ? '' : 'none';

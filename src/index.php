@@ -132,6 +132,7 @@ $rutas = [
         '/candidato/postular'       => ['CandidatoController',  'enviarPostulacion'],
         '/admin/candidatos'         => ['AdminController',      'actualizarEstatus'],
         '/admin/galeria'            => ['AdminController',      'gestionarGaleria'],
+        '/admin/galeria/sede'       => ['AdminController',      'guardarSede'],
         '/admin/estadisticas'       => ['AdminController',      'actualizarEstadisticas'],
         '/admin/colaboradores'      => ['AdminController',      'gestionarColaborador'],
         '/admin/perfil'             => ['AdminController',      'actualizarPerfil'],

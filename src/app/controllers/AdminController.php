@@ -636,7 +636,7 @@ class AdminController extends Controller {
             FROM sedes s
             LEFT JOIN multimedia m ON m.sede_id = s.id
             GROUP BY s.id
-            ORDER BY s.orden
+            ORDER BY s.activa DESC, s.orden
         ")->fetchAll();
 
         $sede_sel = null;
@@ -758,6 +758,63 @@ class AdminController extends Controller {
         }
 
         $this->redirigir($redirect);
+    }
+
+    // ── POST /admin/galeria/sede — crear o editar una ciudad ──
+    // Las ciudades no se borran: tienen fotos y personas registradas
+    // en evangelismo. La que ya no va, se desactiva y sale del sitio.
+    public function guardarSede(): void {
+        $this->requireAuth('admin');
+
+        $volver = '/admin/galeria';
+        $id     = (int) ($_POST['id'] ?? 0);
+        $nombre = trim($_POST['nombre'] ?? '');
+        $estado = trim($_POST['estado'] ?? '');
+        $mes    = trim($_POST['mes'] ?? '');
+        $orden  = (int) ($_POST['orden'] ?? 0);
+        $inicio = $_POST['fecha_inicio'] ?? '';
+        $fin    = $_POST['fecha_fin'] ?? '';
+
+        $fecha_ok = fn($f) => $f === '' || (($d = DateTime::createFromFormat('Y-m-d', $f)) && $d->format('Y-m-d') === $f);
+
+        if ($nombre === '' || $estado === '' || $mes === '') {
+            $this->flash('error', 'Ciudad, estado y meses son obligatorios.');
+        } elseif ($orden < 1 || $orden > 99) {
+            $this->flash('error', 'El orden debe ser un número entre 1 y 99.');
+        } elseif (!$fecha_ok($inicio) || !$fecha_ok($fin)) {
+            $this->flash('error', 'Revisa las fechas.');
+        } elseif ($inicio !== '' && $fin !== '' && $inicio > $fin) {
+            $this->flash('error', 'La fecha de inicio no puede ser después de la de fin.');
+        } else {
+            $datos = [
+                ':nombre' => mb_substr($nombre, 0, 100),
+                ':estado' => mb_substr($estado, 0, 100),
+                ':mes'    => mb_substr($mes, 0, 50),
+                ':orden'  => $orden,
+                ':inicio' => $inicio ?: null,
+                ':fin'    => $fin ?: null,
+                ':activa' => empty($_POST['activa']) ? 0 : 1,
+            ];
+            $db = Database::getConnection();
+
+            if ($id) {
+                $datos[':id'] = $id;
+                $db->prepare("
+                    UPDATE sedes SET nombre = :nombre, estado = :estado, mes = :mes, orden = :orden,
+                           fecha_inicio = :inicio, fecha_fin = :fin, activa = :activa
+                    WHERE id = :id
+                ")->execute($datos);
+                $this->flash('exito', 'Ciudad actualizada.');
+            } else {
+                $db->prepare("
+                    INSERT INTO sedes (nombre, estado, mes, orden, fecha_inicio, fecha_fin, activa)
+                    VALUES (:nombre, :estado, :mes, :orden, :inicio, :fin, :activa)
+                ")->execute($datos);
+                $this->flash('exito', 'Ciudad agregada.');
+            }
+        }
+
+        $this->redirigir($volver);
     }
 
     // ── GET /admin/estadisticas ───────────────────────────────

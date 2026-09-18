@@ -558,6 +558,19 @@ del web root y fue un bug real en producción.
 
 ---
 
+## CIUDADES DEL ITINERARIO (tabla `sedes`)
+
+Se editan en Admin → Galería → "Editar ciudades" (solo admin): nombre, estado, meses,
+orden, fechas y si está activa. No se borran porque tienen fotos (`multimedia`) y
+personas de evangelismo; la que ya no va se desactiva. Las activas salen en la galería
+pública y en el registro de evangelismo.
+
+Ojo: el itinerario también está escrito a mano en vistas públicas (`programa.php`,
+`impacto.php`, el subtítulo de `galeria.php` y el resumen de `candidato/perfil.php`).
+Cambiar una ciudad en el panel no actualiza esos textos.
+
+---
+
 ## MÓDULO DE EVANGELISMO
 
 Registro de las personas alcanzadas en campo. Migración `database/migracion_007_evangelismo.sql`.
@@ -588,14 +601,12 @@ dura 12 horas y guarda el hash con el que entró: si el admin cambia o desactiva
 todos quedan afuera. Cinco intentos fallidos bloquean la IP 15 minutos; se reusa
 `login_intentos` con el prefijo `pin:` en la clave.
 
-**Sede.** Los formularios traen marcada la sede que el admin fijó en el panel
+**Sede.** Los formularios traen marcada la ciudad que el admin fijó en el panel
 ("Dónde está el equipo", clave `evangelismo_sede` en `configuracion`). Si no fijó
 ninguna, sale la del itinerario cuyo rango `fecha_inicio`–`fecha_fin` incluye hoy.
-Se pueden elegir las sedes activas y, en "Otros lugares", las inactivas que no repiten
-nombre. Ahí entra Los Teques (migración 008), donde el grupo se alojó y evangelizó en
-septiembre de 2026 antes de entrar a La Guaira: está inactiva para que no salga en la
-galería pública como sede del itinerario. En `/impacto` aparecen los tres totales en "En campo este ciclo" apenas hay un
-registro; los datos personales no salen del panel.
+Si dos rangos se pisan gana el más corto (una semana en Los Teques dentro de los meses
+de La Guaira marca Los Teques). Solo se pueden elegir ciudades activas. En `/impacto` aparecen los totales en
+"En campo este ciclo" apenas hay un registro; los datos personales no salen del panel.
 
 Código: `EvangelismoController`, `EvangelismoModel`, vistas `admin/evangelismo.php`,
 `publico/evangelismo.php` y el partial `partials/evangelismo_campos.php` con los campos

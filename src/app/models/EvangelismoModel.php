@@ -97,18 +97,11 @@ class EvangelismoModel extends Model {
         ")->fetchAll();
     }
 
-    /**
-     * Sedes que se pueden elegir: las del itinerario y, aparte, las
-     * inactivas que no repiten nombre (lugares como Los Teques, donde
-     * el grupo evangeliza sin que sea una sede del ciclo).
-     */
+    /** Ciudades activas del itinerario, las que se pueden elegir */
     public function sedes(): array {
-        return $this->db->query("
-            SELECT id, nombre, activa FROM sedes
-            WHERE activa = 1
-               OR nombre NOT IN (SELECT nombre FROM sedes WHERE activa = 1)
-            ORDER BY activa DESC, orden
-        ")->fetchAll();
+        return $this->db->query(
+            "SELECT id, nombre FROM sedes WHERE activa = 1 ORDER BY orden"
+        )->fetchAll();
     }
 
     /**
@@ -133,13 +126,15 @@ class EvangelismoModel extends Model {
     }
 
     /**
-     * Sede donde está el grupo en una fecha según el itinerario
+     * Sede donde está el grupo en una fecha según el itinerario.
+     * Si dos rangos se pisan gana el más corto: una semana en Los
+     * Teques dentro de los meses de La Guaira marca Los Teques.
      */
     public function sedeEnFecha(string $fecha): ?int {
         $stmt = $this->db->prepare("
             SELECT id FROM sedes
             WHERE activa = 1 AND :f BETWEEN fecha_inicio AND fecha_fin
-            ORDER BY orden LIMIT 1
+            ORDER BY DATEDIFF(fecha_fin, fecha_inicio), orden LIMIT 1
         ");
         $stmt->execute([':f' => $fecha]);
         $id = $stmt->fetchColumn();
