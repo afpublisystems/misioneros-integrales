@@ -1,5 +1,5 @@
-<header class="admin-topbar">
-    <button type="button" class="admin-topbar__toggle" id="admin-menu-toggle"
+<header class="admin-barra-movil">
+    <button type="button" class="admin-barra-movil__toggle" id="admin-menu-toggle"
             aria-label="Abrir menú" aria-expanded="false" aria-controls="admin-sidebar">
         <i class="fas fa-bars"></i>
     </button>

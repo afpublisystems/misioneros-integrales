@@ -4,13 +4,21 @@ $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 ?>
 
-<div class="admin-content-header">
-    <h1><i class="fas fa-images"></i> <?= htmlspecialchars($titulo) ?></h1>
-    <p class="admin-content-subtitle">Administra las fotos y videos de cada sede del itinerario</p>
+<div class="admin-layout">
+
+    <?php include __DIR__ . '/../partials/admin_sidebar.php'; ?>
+
+    <main class="admin-main">
+
+<div class="admin-header">
+    <div>
+        <h1><?= htmlspecialchars($titulo) ?></h1>
+        <p>Administra las fotos y videos de cada sede del itinerario</p>
+    </div>
 </div>
 
 <?php if ($flash): ?>
-<div class="flash flash--<?= $flash['tipo'] ?>">
+<div class="alerta alerta--<?= $flash['tipo'] ?>">
     <i class="fas <?= $flash['tipo'] === 'exito' ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
     <?= htmlspecialchars($flash['msg']) ?>
 </div>
@@ -210,6 +218,9 @@ unset($_SESSION['flash']);
     </div>
 </div><!-- /galeria-panel -->
 <?php endif; ?>
+
+    </main>
+</div>
 
 <style>
 /* ── Galería Admin ─────────────────────────────────────────── */

@@ -16,7 +16,7 @@ $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 ?>
 
-<div class="admin-wrap">
+<div class="admin-layout">
     <?php include __DIR__ . '/../partials/admin_sidebar.php'; ?>
 
     <main class="admin-main">
@@ -193,7 +193,6 @@ unset($_SESSION['flash']);
 
 <style>
 /* ── LAYOUT ───────────────────────────────────────── */
-.admin-wrap  { display: flex; min-height: 100vh; background: #f8fafc; }
 .admin-main  { flex: 1; padding: 2rem 2.5rem; overflow-y: auto; }
 .admin-topbar { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; }
 .admin-topbar__titulo { font-size:1.5rem; font-weight:800; color:#1a1a1a; display:flex; align-items:center; gap:.6rem; margin:0; }
