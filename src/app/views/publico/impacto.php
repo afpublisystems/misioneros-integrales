@@ -68,13 +68,14 @@
             Estadísticas del programa desde su fundación. Se actualizan al finalizar cada ciclo.
         </p>
 
-        <?php if ($campo['evangelizados'] > 0): ?>
+        <?php if ($campo['evangelizados'] + $campo['contactos'] > 0): ?>
         <h3 class="imp-campo__titulo">En campo este ciclo</h3>
         <div class="imp-stats-grid">
             <?php foreach ([
                 ['fa-bullhorn',  $campo['evangelizados'], 'Personas evangelizadas'],
                 ['fa-heart',     $campo['decisiones'],    'Decisiones de fe'],
                 ['fa-book-open', $campo['discipulados'],  'Personas en discipulado'],
+                ['fa-hands-praying', $campo['contactos'], 'Contactos espirituales'],
             ] as [$icono, $valor, $etiqueta]): ?>
             <div class="imp-stat-card">
                 <div class="imp-stat-card__icono"><i class="fas <?= $icono ?>"></i></div>

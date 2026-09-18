@@ -50,6 +50,13 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                     <span class="kpi-card__label">En discipulado</span>
                 </div>
             </div>
+            <div class="kpi-card kpi-card--total">
+                <div class="kpi-card__icono"><i class="fas fa-hands-praying"></i></div>
+                <div class="kpi-card__datos">
+                    <span class="kpi-card__num"><?= $totales['contactos'] ?></span>
+                    <span class="kpi-card__label">Contactos espirituales</span>
+                </div>
+            </div>
         </div>
 
         <div class="evg-cols">
@@ -102,7 +109,7 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                     <?php else: ?>
                     <div class="tabla-wrap">
                     <table class="tabla">
-                        <thead><tr><th>Sede</th><th>Evangelizados</th><th>Decisiones</th><th>Discipulado</th></tr></thead>
+                        <thead><tr><th>Sede</th><th>Evangelizados</th><th>Decisiones</th><th>Discipulado</th><th>Contactos</th></tr></thead>
                         <tbody>
                         <?php foreach ($por_sede as $s): ?>
                         <tr>
@@ -110,6 +117,7 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                             <td><?= (int) $s['evangelizados'] ?></td>
                             <td><?= (int) $s['decisiones'] ?></td>
                             <td><?= (int) $s['discipulados'] ?></td>
+                            <td><?= (int) $s['contactos'] ?></td>
                         </tr>
                         <?php endforeach; ?>
                         </tbody>
@@ -177,7 +185,13 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
         <!-- Filtros ─────────────────────────────────────────── -->
         <div class="filtros-tabs">
             <?php
-            $etapas = ['' => 'Todas', 'decision' => 'Decisión de fe', 'discipulado' => 'En discipulado'];
+            $etapas = [
+                ''             => 'Todos',
+                'evangelizada' => 'Evangelizados',
+                'decision'     => 'Decisión de fe',
+                'discipulado'  => 'En discipulado',
+                'contacto'     => 'Contactos espirituales',
+            ];
             foreach ($etapas as $val => $label):
                 $qs = http_build_query(array_filter(['etapa' => $val, 'sede_id' => $filtros['sede_id'], 'q' => $filtros['q']]));
             ?>
@@ -226,7 +240,7 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                     <?php foreach ($personas as $p): ?>
                         <tr>
                             <td>
-                                <strong><?= htmlspecialchars($p['nombres'] . ' ' . $p['apellidos']) ?></strong>
+                                <strong><?= htmlspecialchars(trim($p['nombres'] . ' ' . $p['apellidos'])) ?></strong>
                                 <?php if ($p['responsable']): ?>
                                 <br><small class="texto-muted">Por <?= htmlspecialchars($p['responsable']) ?></small>
                                 <?php endif; ?>
@@ -236,7 +250,13 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                             <td><?= htmlspecialchars($p['direccion'] ?? '—') ?></td>
                             <td><?= htmlspecialchars($p['sede_nombre'] ?? '—') ?></td>
                             <td>
-                                <?php if ($p['discipulado']): ?>
+                                <?php if ($p['tipo'] === 'contacto'): ?>
+                                <span class="badge badge--admin">Contacto espiritual</span>
+                                <br><small class="texto-muted"><?= htmlspecialchars(implode(', ', array_map(
+                                    fn($a) => EvangelismoModel::ACOMPANAMIENTOS[$a] ?? $a,
+                                    array_filter(explode(',', (string) $p['acompanamiento']))
+                                ))) ?></small>
+                                <?php elseif ($p['discipulado']): ?>
                                 <span class="badge badge--aprobada">Discipulado</span>
                                 <?php elseif ($p['decision_fe']): ?>
                                 <span class="badge badge--en_revision">Decisión de fe</span>
@@ -262,6 +282,8 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                                                 'direccion'      => $p['direccion'],
                                                 'sede_id'        => $p['sede_id'],
                                                 'fecha_contacto' => $p['fecha_contacto'],
+                                                'tipo'           => $p['tipo'],
+                                                'acompanamiento' => $p['acompanamiento'],
                                                 'decision_fe'    => (int) $p['decision_fe'],
                                                 'discipulado'    => (int) $p['discipulado'],
                                                 'responsable'    => $p['responsable'],
@@ -271,7 +293,7 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                                     </button>
                                     <?php if ($es_admin): ?>
                                     <form method="POST" action="/admin/evangelismo/eliminar"
-                                          onsubmit="return confirm('¿Eliminar a <?= htmlspecialchars(addslashes($p['nombres'] . ' ' . $p['apellidos']), ENT_QUOTES) ?>? No se puede deshacer.')">
+                                          onsubmit="return confirm('¿Eliminar a <?= htmlspecialchars(addslashes(trim($p['nombres'] . ' ' . $p['apellidos'])), ENT_QUOTES) ?>? No se puede deshacer.')">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="id" value="<?= $p['id'] ?>">
                                         <button type="submit" class="btn btn--sm btn--outline evg-rojo" title="Eliminar">
@@ -336,9 +358,14 @@ function abrirPersona(datos) {
             if (el.type === 'checkbox') el.checked = datos[campo] == 1;
             else el.value = datos[campo] === null ? '' : datos[campo];
         });
+        var hechos = (datos.acompanamiento || '').split(',');
+        form.querySelectorAll('[name="acompanamiento[]"]').forEach(function (c) {
+            c.checked = hechos.indexOf(c.value) !== -1;
+        });
     } else if (sedeActual) {
         form.elements.sede_id.value = sedeActual;
     }
+    evgTipo(form);
     document.getElementById('modal-persona').style.display = 'flex';
 }
 function cerrarPersona() {
@@ -359,7 +386,7 @@ function copiarLink() {
 </script>
 
 <style>
-.evg-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.evg-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
 .evg-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; align-items: start; }
 .evg-cols .admin-panel { margin: 0; }
 .evg-col { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -386,7 +413,7 @@ function copiarLink() {
     .evg-cols { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
-    .evg-kpis { grid-template-columns: 1fr; }
+    .evg-kpis { grid-template-columns: 1fr 1fr; }
     .busqueda-bar { flex-wrap: wrap; }
 }
 </style>

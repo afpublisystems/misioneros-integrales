@@ -1,8 +1,11 @@
 <?php
 /**
  * EvangelismoModel
- * Personas alcanzadas en campo. Cada una se registra una vez y
- * avanza por etapas: evangelizada → decisión de fe → discipulado.
+ * Personas alcanzadas en campo. Cada una se registra una vez, de
+ * uno de dos tipos:
+ *   evangelizada → decisión de fe → discipulado
+ *   contacto     → contacto espiritual: oración, consejo o aliento,
+ *                  sin predicación. No cuenta como evangelizada.
  *
  * También guarda en `configuracion` el PIN del acceso público y la
  * sede donde está el equipo, si el admin la fija a mano.
@@ -16,6 +19,12 @@ class EvangelismoModel extends Model {
 
     private const CLAVE_PIN  = 'evangelismo_pin';
     private const CLAVE_SEDE = 'evangelismo_sede';
+
+    public const ACOMPANAMIENTOS = [
+        'oracion' => 'Oración',
+        'consejo' => 'Consejo',
+        'aliento' => 'Palabra de aliento',
+    ];
 
     public function registrar(array $d): int {
         return $this->insertar($d);
@@ -32,13 +41,15 @@ class EvangelismoModel extends Model {
             $where[] = 'p.sede_id = :sede';
             $params[':sede'] = (int) $filtros['sede_id'];
         }
-        if (($filtros['etapa'] ?? '') === 'decision') {
-            $where[] = 'p.decision_fe = 1';
-        } elseif (($filtros['etapa'] ?? '') === 'discipulado') {
-            $where[] = 'p.discipulado = 1';
-        }
+        $where[] = match ($filtros['etapa'] ?? '') {
+            'evangelizada' => "p.tipo = 'evangelizada'",
+            'decision'     => 'p.decision_fe = 1',
+            'discipulado'  => 'p.discipulado = 1',
+            'contacto'     => "p.tipo = 'contacto'",
+            default        => '1 = 1',
+        };
         if (!empty($filtros['q'])) {
-            $where[] = "(CONCAT(p.nombres, ' ', p.apellidos) LIKE :q1 OR p.telefono LIKE :q2 OR p.direccion LIKE :q3)";
+            $where[] = "(CONCAT_WS(' ', p.nombres, p.apellidos) LIKE :q1 OR p.telefono LIKE :q2 OR p.direccion LIKE :q3)";
             $like = '%' . $filtros['q'] . '%';
             $params[':q1'] = $params[':q2'] = $params[':q3'] = $like;
         }
@@ -59,9 +70,10 @@ class EvangelismoModel extends Model {
      */
     public function totales(): array {
         $row = $this->db->query("
-            SELECT COUNT(*)                        AS evangelizados,
-                   COALESCE(SUM(decision_fe), 0)   AS decisiones,
-                   COALESCE(SUM(discipulado), 0)   AS discipulados
+            SELECT COALESCE(SUM(tipo = 'evangelizada'), 0) AS evangelizados,
+                   COALESCE(SUM(decision_fe), 0)           AS decisiones,
+                   COALESCE(SUM(discipulado), 0)           AS discipulados,
+                   COALESCE(SUM(tipo = 'contacto'), 0)     AS contactos
             FROM personas_alcanzadas
         ")->fetch();
 
@@ -74,9 +86,10 @@ class EvangelismoModel extends Model {
     public function totalesPorSede(): array {
         return $this->db->query("
             SELECT COALESCE(s.nombre, 'Sin sede')   AS sede,
-                   COUNT(*)                         AS evangelizados,
+                   SUM(p.tipo = 'evangelizada')     AS evangelizados,
                    SUM(p.decision_fe)               AS decisiones,
-                   SUM(p.discipulado)               AS discipulados
+                   SUM(p.discipulado)               AS discipulados,
+                   SUM(p.tipo = 'contacto')         AS contactos
             FROM personas_alcanzadas p
             LEFT JOIN sedes s ON s.id = p.sede_id
             GROUP BY s.id, s.nombre, s.orden

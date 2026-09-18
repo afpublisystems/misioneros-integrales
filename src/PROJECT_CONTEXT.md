@@ -562,11 +562,19 @@ del web root y fue un bug real en producción.
 
 Registro de las personas alcanzadas en campo. Migración `database/migracion_007_evangelismo.sql`.
 
-**Una persona, tres etapas.** Cada persona se registra una vez en `personas_alcanzadas`
-con `decision_fe` y `discipulado` como marcas. Evangelizados = todas las filas;
-decisiones y discipulados = suma de cada marca. Marcar discipulado marca también la
-decisión (en el formulario y en el controlador), porque nadie llega a discipulado
-sin haber decidido.
+**Una persona, un tipo.** Cada persona se registra una vez en `personas_alcanzadas`
+con `tipo`:
+
+- `evangelizada`: se le predicó el evangelio. Lleva las marcas `decision_fe` y
+  `discipulado`. Marcar discipulado marca también la decisión, porque nadie llega a
+  discipulado sin haber decidido.
+- `contacto`: contacto espiritual. Hubo oración, consejo o palabra de aliento
+  (`acompanamiento`, SET con al menos uno), pero no se llegó a predicar. No cuenta
+  como evangelizada, no lleva decisión ni discipulado y el apellido es opcional.
+  Si después se le predica, se edita y pasa a `evangelizada`.
+
+Totales: evangelizados y contactos se cuentan por `tipo`; decisiones y discipulados
+suman las marcas.
 
 **Dos formas de cargar:**
 

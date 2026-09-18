@@ -207,7 +207,7 @@ class EvangelismoController extends Controller {
         $datos['registrado_via'] = 'pin';
         $this->modelo->registrar($datos);
 
-        $this->flash('exito', 'Listo, quedó registrado ' . $datos['nombres'] . ' ' . $datos['apellidos'] . '.');
+        $this->flash('exito', 'Listo, quedó registrado ' . trim($datos['nombres'] . ' ' . $datos['apellidos']) . '.');
         $this->redirigir('/evangelismo');
     }
 
@@ -234,10 +234,23 @@ class EvangelismoController extends Controller {
      * Arma los datos del formulario o devuelve el mensaje de error
      */
     private function datosDesdePost(): array|string {
+        $tipo      = ($_POST['tipo'] ?? '') === 'contacto' ? 'contacto' : 'evangelizada';
         $nombres   = trim($_POST['nombres']   ?? '');
         $apellidos = trim($_POST['apellidos'] ?? '');
-        if ($nombres === '' || $apellidos === '') {
+        if ($nombres === '') {
+            return 'El nombre es obligatorio.';
+        }
+        // En un contacto espiritual a veces solo se sabe el nombre
+        if ($tipo === 'evangelizada' && $apellidos === '') {
             return 'Nombre y apellido son obligatorios.';
+        }
+
+        $acompanamiento = array_values(array_intersect(
+            array_keys(EvangelismoModel::ACOMPANAMIENTOS),
+            (array) ($_POST['acompanamiento'] ?? [])
+        ));
+        if ($tipo === 'contacto' && !$acompanamiento) {
+            return 'Marca si hubo oración, consejo o palabra de aliento.';
         }
 
         $edad = trim($_POST['edad'] ?? '');
@@ -258,18 +271,23 @@ class EvangelismoController extends Controller {
             $sede_id = 0;
         }
 
-        $discipulado = !empty($_POST['discipulado']);
+        // Decisión y discipulado solo aplican a quien escuchó el evangelio,
+        // y nadie llega a discipulado sin haber decidido antes
+        $es_evangelizada = $tipo === 'evangelizada';
+        $discipulado     = $es_evangelizada && !empty($_POST['discipulado']);
+        $decision        = $es_evangelizada && ($discipulado || !empty($_POST['decision_fe']));
 
         return [
             'nombres'        => mb_substr($nombres, 0, 100),
-            'apellidos'      => mb_substr($apellidos, 0, 100),
+            'apellidos'      => mb_substr($apellidos, 0, 100) ?: null,
             'edad'           => $edad === '' ? null : (int) $edad,
             'telefono'       => mb_substr(trim($_POST['telefono'] ?? ''), 0, 30) ?: null,
             'direccion'      => mb_substr(trim($_POST['direccion'] ?? ''), 0, 255) ?: null,
             'sede_id'        => $sede_id ?: null,
             'fecha_contacto' => $fecha,
-            // Nadie llega a discipulado sin haber decidido antes
-            'decision_fe'    => ($discipulado || !empty($_POST['decision_fe'])) ? 1 : 0,
+            'tipo'           => $tipo,
+            'acompanamiento' => $es_evangelizada ? null : implode(',', $acompanamiento),
+            'decision_fe'    => $decision ? 1 : 0,
             'discipulado'    => $discipulado ? 1 : 0,
             'responsable'    => mb_substr(trim($_POST['responsable'] ?? ''), 0, 150) ?: null,
             'notas'          => trim($_POST['notas'] ?? '') ?: null,
