@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <!-- CSS Principal -->
-    <link rel="stylesheet" href="/public/css/app.css">
+    <link rel="stylesheet" href="/public/css/app.css?v=<?= filemtime(BASE_PATH . '/public/css/app.css') ?>">
 
     <?= $estilos_extra ?? '' ?>
 </head>
@@ -32,7 +32,7 @@
     <?php require APP_PATH . '/views/partials/footer.php'; ?>
 
     <!-- JS Principal -->
-    <script src="/public/js/app.js"></script>
+    <script src="/public/js/app.js?v=<?= filemtime(BASE_PATH . '/public/js/app.js') ?>"></script>
     <?= $scripts_extra ?? '' ?>
 
 </body>
