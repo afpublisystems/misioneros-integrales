@@ -633,7 +633,11 @@ class CandidatoController extends Controller {
             $dir = BASE_PATH . '/uploads/comprobantes/';
             if (!is_dir($dir)) mkdir($dir, 0755, true);
             $nombre = 'asp' . $aspirante['id'] . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-            move_uploaded_file($_FILES['comprobante']['tmp_name'], $dir . $nombre);
+            if (!move_uploaded_file($_FILES['comprobante']['tmp_name'], $dir . $nombre)) {
+                $_SESSION['flash'] = ['tipo' => 'error', 'msg' => 'No se pudo guardar el comprobante. Intenta de nuevo.'];
+                $this->redirigir('/candidato/pagos');
+                return;
+            }
             $ruta = 'uploads/comprobantes/' . $nombre;
         }
 

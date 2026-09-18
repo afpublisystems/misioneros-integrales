@@ -299,6 +299,9 @@
                         </option>
                         <?php endforeach; ?>
                     </select>
+                    <?php if (empty($aprobados)): ?>
+                    <span class="fin-nota">No hay participantes con la postulación aprobada. Apruébalos en <a href="/admin/candidatos">Candidatos</a> y aparecen aquí con sus cuotas.</span>
+                    <?php endif; ?>
                 </div>
 
                 <div class="form-grupo" id="ing-aportante">
@@ -540,6 +543,9 @@ function alternarParticipante() {
     document.getElementById('ing-participante').style.display = esMatricula ? 'block' : 'none';
     document.getElementById('ing-aportante').style.display    = esMatricula ? 'none'  : 'block';
     document.querySelector('#ing-participante select').required = esMatricula;
+    var concepto = document.querySelector('#form-ingreso [name="concepto"]');
+    if (esMatricula && concepto.value === '') concepto.value = 'Abono a matrícula';
+    if (!esMatricula && concepto.value === 'Abono a matrícula') concepto.value = '';
 }
 origenSel.addEventListener('change', alternarParticipante);
 alternarParticipante();

@@ -98,8 +98,8 @@
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;
 }
 .footer__credits { font-size: 0.8rem; }
-.footer__container {
-    grid-template-columns: 1.8fr 1fr 1.5fr 1.2fr !important;
+@media(min-width:1025px) {
+    .footer__container { grid-template-columns: 1.8fr 1fr 1.5fr 1.2fr; }
 }
 @media(max-width:768px) {
     .footer__bottom-inner { flex-direction: column; text-align: center; }

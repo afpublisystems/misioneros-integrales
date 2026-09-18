@@ -204,45 +204,43 @@
 </div>
 
 <!-- Modal: Reportar pago ───────────────────────────────────── -->
-<div class="modal" id="modal-abono" style="display:none">
-    <div class="modal__overlay" onclick="cerrarModal('modal-abono')"></div>
-    <div class="modal__box" style="max-width:520px">
-        <div class="modal__head">
+<div class="modal-overlay" id="modal-abono" style="display:none" onclick="if (event.target === this) cerrarModal('modal-abono')">
+    <div class="modal" style="max-width:560px">
+        <div class="modal__header">
             <h3><i class="fas fa-upload"></i> Reportar pago</h3>
-            <button class="modal__cerrar" onclick="cerrarModal('modal-abono')">&times;</button>
+            <button type="button" class="modal__cerrar" onclick="cerrarModal('modal-abono')">&times;</button>
         </div>
         <form method="POST" action="/candidato/pagos" enctype="multipart/form-data">
             <?= csrf_field() ?>
-            <div class="modal__body">
-                <div class="form-row">
-                    <div class="form-group">
+            <div class="modal__body" style="max-height:70vh;overflow-y:auto">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Monto pagado (USD)</label>
-                        <input type="number" name="monto_declarado_usd" id="abono-monto-usd"
-                               class="form-control" step="0.01" min="0">
+                        <input type="number" name="monto_declarado_usd" id="abono-monto-usd" step="0.01" min="0">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Fecha del pago <span class="req">*</span></label>
-                        <input type="date" name="fecha_pago_declarado" class="form-control"
-                               value="<?= date('Y-m-d') ?>" required>
+                        <input type="date" name="fecha_pago_declarado" value="<?= date('Y-m-d') ?>" required>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Monto en Bs</label>
-                        <input type="number" name="monto_declarado_ves" class="form-control" step="0.01" min="0">
+                        <input type="number" name="monto_declarado_ves" step="0.01" min="0"
+                               oninput="if (this.value) document.getElementById('abono-monto-usd').value = ''">
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Tasa de cambio (Bs/$)</label>
-                        <input type="number" name="tasa_cambio" class="form-control" step="0.01" min="0" placeholder="Ej: 55.30">
+                        <input type="number" name="tasa_cambio" step="0.01" min="0" placeholder="Ej: 55.30">
                     </div>
                 </div>
-                <small class="texto-muted" style="display:block;margin-bottom:1rem">
+                <small class="texto-muted" style="display:block;margin:-.5rem 0 1.25rem">
                     Si pagaste en bolívares, llena el monto en Bs y la tasa: calculamos el equivalente en dólares.
                 </small>
-                <div class="form-row">
-                    <div class="form-group">
+                <div class="form-grid-2">
+                    <div class="form-grupo">
                         <label>Método de pago <span class="req">*</span></label>
-                        <select name="metodo_pago" class="form-control" required>
+                        <select name="metodo_pago" required>
                             <option value="">— Seleccionar —</option>
                             <option value="transferencia">Transferencia bancaria</option>
                             <option value="zelle">Zelle / PayPal</option>
@@ -250,22 +248,22 @@
                             <option value="efectivo">Efectivo</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-grupo">
                         <label>Banco origen</label>
-                        <input type="text" name="banco_origen" class="form-control" maxlength="100" placeholder="Ej: Banesco">
+                        <input type="text" name="banco_origen" maxlength="100" placeholder="Ej: Banesco">
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Número de referencia</label>
-                    <input type="text" name="referencia" class="form-control" maxlength="100"
+                    <input type="text" name="referencia" maxlength="100"
                            placeholder="Número de comprobante o transacción">
                 </div>
-                <div class="form-group">
+                <div class="form-grupo">
                     <label>Comprobante de pago (JPG/PNG/PDF, máx 5 MB)</label>
-                    <input type="file" name="comprobante" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                    <input type="file" name="comprobante" accept=".jpg,.jpeg,.png,.pdf">
                 </div>
             </div>
-            <div class="modal__foot">
+            <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-abono')">Cancelar</button>
                 <button type="submit" class="btn btn--primario"><i class="fas fa-paper-plane"></i> Enviar comprobante</button>
             </div>
@@ -275,7 +273,7 @@
 
 <script>
 function abrirAbono(sugerido) {
-    document.getElementById('abono-monto-usd').value = sugerido;
+    document.getElementById('abono-monto-usd').value = sugerido > 0 ? sugerido : '';
     document.getElementById('modal-abono').style.display = 'flex';
 }
 function cerrarModal(id) {
@@ -348,32 +346,9 @@ function cerrarModal(id) {
 .texto-muted { color:#9ca3af; font-size:.82rem; }
 .texto-rojo  { color:#f87171; font-size:.82rem; }
 .req { color:#ef4444; }
-.form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-.modal {
-    position:fixed; inset:0; z-index:1000;
-    display:flex; align-items:center; justify-content:center;
-}
-.modal__overlay { position:absolute; inset:0; background:rgba(0,0,0,.6); }
-.modal__box {
-    position:relative; z-index:1;
-    background:#0f2419; border:1px solid #1e3a2a;
-    border-radius:12px; width:90%; max-height:90vh; overflow-y:auto;
-}
-.modal__head {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:1.25rem 1.5rem; border-bottom:1px solid #1e3a2a;
-}
-.modal__head h3 { margin:0; font-size:1rem; color:#f0f6f1; }
-.modal__cerrar { background:none; border:none; color:#9ca3af; font-size:1.4rem; cursor:pointer; }
-.modal__body { padding:1.25rem 1.5rem; }
-.modal__foot {
-    padding:1rem 1.5rem; border-top:1px solid #1e3a2a;
-    display:flex; justify-content:flex-end; gap:.75rem;
-}
 @media(max-width:640px) {
     .pagos-resumen { grid-template-columns:1fr 1fr; }
     .cuota-card { grid-template-columns:40px 1fr auto; }
     .cuota-card__montos, .cuota-card__accion { grid-column:2/-1; }
-    .form-row { grid-template-columns:1fr; }
 }
 </style>
