@@ -33,6 +33,9 @@
         <a href="/admin/estadisticas" class="admin-nav__item <?= $uri === '/admin/estadisticas' ? 'activo' : '' ?>">
             <i class="fas fa-chart-bar"></i> Estadísticas
         </a>
+        <a href="/admin/evangelismo" class="admin-nav__item <?= $uri === '/admin/evangelismo' ? 'activo' : '' ?>">
+            <i class="fas fa-hand-holding-heart"></i> Evangelismo
+        </a>
         <?php if ($_SESSION['usuario_rol'] === 'admin'): ?>
         <a href="/admin/galeria" class="admin-nav__item <?= $uri === '/admin/galeria' ? 'activo' : '' ?>">
             <i class="fas fa-images"></i> Galería

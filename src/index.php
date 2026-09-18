@@ -91,6 +91,7 @@ $rutas = [
         '/galeria'              => ['PublicoController', 'galeria'],
         '/impacto'              => ['PublicoController', 'impacto'],
         '/contacto'             => ['PublicoController', 'contacto'],
+        '/evangelismo'          => ['EvangelismoController', 'publico'],
         // Auth
         '/login'                => ['AuthController',    'loginForm'],
         '/registro'             => ['AuthController',    'registroForm'],
@@ -116,6 +117,7 @@ $rutas = [
         '/admin/finanzas/matriculas' => ['AdminController', 'matriculas'],
         '/admin/finanzas/prestamos'  => ['AdminController', 'prestamos'],
         '/admin/finanzas/exportar'   => ['AdminController', 'exportarFinanzas'],
+        '/admin/evangelismo'         => ['EvangelismoController', 'index'],
         // Candidato — pagos
         '/candidato/pagos'      => ['CandidatoController', 'pagos'],
     ],
@@ -144,6 +146,12 @@ $rutas = [
         '/admin/finanzas/anular'    => ['AdminController', 'anularMovimiento'],
         '/admin/finanzas/reactivar' => ['AdminController', 'reactivarMovimiento'],
         '/admin/finanzas/fondo'     => ['AdminController',      'crearFondo'],
+        '/admin/evangelismo'          => ['EvangelismoController', 'guardar'],
+        '/admin/evangelismo/eliminar' => ['EvangelismoController', 'eliminar'],
+        '/admin/evangelismo/pin'      => ['EvangelismoController', 'pin'],
+        '/evangelismo'                => ['EvangelismoController', 'registrarPublico'],
+        '/evangelismo/pin'            => ['EvangelismoController', 'entrar'],
+        '/evangelismo/salir'          => ['EvangelismoController', 'salir'],
         // Candidato — pagos
         '/candidato/pagos'          => ['CandidatoController',  'subirAbono'],
         '/colaborar'                => ['PublicoController',    'registrarColaborador'],

@@ -67,6 +67,27 @@
             <i class="fas fa-info-circle"></i>
             Estadísticas del programa desde su fundación. Se actualizan al finalizar cada ciclo.
         </p>
+
+        <?php if ($campo['evangelizados'] > 0): ?>
+        <h3 class="imp-campo__titulo">En campo este ciclo</h3>
+        <div class="imp-stats-grid">
+            <?php foreach ([
+                ['fa-bullhorn',  $campo['evangelizados'], 'Personas evangelizadas'],
+                ['fa-heart',     $campo['decisiones'],    'Decisiones de fe'],
+                ['fa-book-open', $campo['discipulados'],  'Personas en discipulado'],
+            ] as [$icono, $valor, $etiqueta]): ?>
+            <div class="imp-stat-card">
+                <div class="imp-stat-card__icono"><i class="fas <?= $icono ?>"></i></div>
+                <div class="imp-stat-card__valor" data-target="<?= $valor ?>">0</div>
+                <div class="imp-stat-card__label"><?= $etiqueta ?></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <p class="imp-stats-nota">
+            <i class="fas fa-info-circle"></i>
+            Lo registra el equipo en cada sede y se actualiza solo.
+        </p>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -424,6 +445,10 @@ if (statsSection) {
 }
 .imp-stat-card__label {
     font-size: 0.8rem; color: rgba(255,255,255,0.8); line-height: 1.3;
+}
+.imp-campo__titulo {
+    text-align: center; color: var(--dorado); font-size: 1.2rem;
+    font-weight: 800; margin: 2.5rem 0 1.25rem;
 }
 .imp-stats-nota {
     text-align: center; color: rgba(255,255,255,0.5); font-size: 0.78rem;

@@ -558,6 +558,38 @@ del web root y fue un bug real en producción.
 
 ---
 
+## MÓDULO DE EVANGELISMO
+
+Registro de las personas alcanzadas en campo. Migración `database/migracion_007_evangelismo.sql`.
+
+**Una persona, tres etapas.** Cada persona se registra una vez en `personas_alcanzadas`
+con `decision_fe` y `discipulado` como marcas. Evangelizados = todas las filas;
+decisiones y discipulados = suma de cada marca. Marcar discipulado marca también la
+decisión (en el formulario y en el controlador), porque nadie llega a discipulado
+sin haber decidido.
+
+**Dos formas de cargar:**
+
+| Ruta | Quién | Qué puede hacer |
+|------|-------|-----------------|
+| `/admin/evangelismo` | admin y evaluador | Ver lista, filtrar, registrar y editar. Eliminar y manejar el PIN: solo admin |
+| `/evangelismo` | cualquiera con el PIN | Solo registrar. Nunca ve la lista (hay teléfonos y direcciones) |
+
+**El PIN.** Vive hasheado en `configuracion` (clave `evangelismo_pin`). La sesión con PIN
+dura 12 horas y guarda el hash con el que entró: si el admin cambia o desactiva el PIN,
+todos quedan afuera. Cinco intentos fallidos bloquean la IP 15 minutos; se reusa
+`login_intentos` con el prefijo `pin:` en la clave.
+
+**Sede.** Se preselecciona la sede cuyo rango `fecha_inicio`–`fecha_fin` incluye la fecha
+de hoy. En `/impacto` aparecen los tres totales en "En campo este ciclo" apenas hay un
+registro; los datos personales no salen del panel.
+
+Código: `EvangelismoController`, `EvangelismoModel`, vistas `admin/evangelismo.php`,
+`publico/evangelismo.php` y el partial `partials/evangelismo_campos.php` con los campos
+que comparten los dos formularios.
+
+---
+
 ## ESTADO DE FASES
 
 | Fase | Descripción | Estado |

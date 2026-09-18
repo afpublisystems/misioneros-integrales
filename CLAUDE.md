@@ -28,7 +28,7 @@ Gestiona registro de candidatos, subida de documentos y evaluación de postulant
 - Nombre local (Docker): `misioneros_integrales_db`
 - Nombre en producción (cPanel): `hosting63201us_misioneros`
 - Conexión: `Database::getConnection()` (Singleton PDO)
-- Migraciones en `database/`, se aplican a mano por phpMyAdmin. La última es la 006.
+- Migraciones en `database/`, se aplican a mano por phpMyAdmin. La última es la 007.
 
 ## Estructura (producción)
 ```
@@ -60,6 +60,8 @@ public_html/misionerosintegrales.com/
 | `/admin` | AdminController |
 | `/admin/finanzas` | AdminController — resumen, movimientos, matrículas, préstamos |
 | `/candidato/pagos` | CandidatoController |
+| `/admin/evangelismo` | EvangelismoController — personas alcanzadas, PIN |
+| `/evangelismo` | EvangelismoController — registro en campo con PIN |
 
 ## Contactos del proyecto
 - José Ramos: 0424-5886540

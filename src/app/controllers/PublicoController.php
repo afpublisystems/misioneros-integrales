@@ -50,9 +50,12 @@ class PublicoController extends Controller {
         $stmt = $db->query("SELECT * FROM impacto_estadisticas WHERE activo = 1 ORDER BY orden");
         $stats = $stmt->fetchAll();
 
+        require_once APP_PATH . '/models/EvangelismoModel.php';
+
         $this->render('publico/impacto', [
             'titulo' => 'Impacto',
             'stats'  => $stats,
+            'campo'  => (new EvangelismoModel())->totales(),
         ]);
     }
 
