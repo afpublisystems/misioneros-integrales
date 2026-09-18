@@ -38,14 +38,16 @@ class EvangelismoController extends Controller {
         ];
 
         $this->render('admin/evangelismo', [
-            'titulo'      => 'Evangelismo',
-            'filtros'     => $filtros,
-            'personas'    => $this->modelo->listar($filtros),
-            'totales'     => $this->modelo->totales(),
-            'por_sede'    => $this->modelo->totalesPorSede(),
-            'sedes'       => $this->modelo->sedes(),
-            'sede_actual' => $this->modelo->sedeEnFecha(date('Y-m-d')),
-            'pin_activo'  => $this->modelo->hashPin() !== null,
+            'titulo'          => 'Evangelismo',
+            'filtros'         => $filtros,
+            'personas'        => $this->modelo->listar($filtros),
+            'totales'         => $this->modelo->totales(),
+            'por_sede'        => $this->modelo->totalesPorSede(),
+            'sedes'           => $this->modelo->sedes(),
+            'sede_actual'     => $this->modelo->sedeActual(),
+            'sede_fija'       => $this->modelo->sedeFija(),
+            'sede_itinerario' => $this->modelo->sedeEnFecha(date('Y-m-d')),
+            'pin_activo'      => $this->modelo->hashPin() !== null,
         ], 'admin');
     }
 
@@ -112,6 +114,26 @@ class EvangelismoController extends Controller {
         $this->redirigir('/admin/evangelismo');
     }
 
+    // ── POST /admin/evangelismo/sede ──────────────────────────
+    // Cuando el equipo está en un lugar fuera del itinerario, el admin
+    // fija la sede para que los formularios la traigan marcada.
+    public function sede(): void {
+        $this->requireAuth('admin');
+
+        $sede_id = (int) ($_POST['sede_id'] ?? 0);
+        $validas = array_column($this->modelo->sedes(), 'nombre', 'id');
+
+        if ($sede_id && !isset($validas[$sede_id])) {
+            $this->flash('error', 'Esa sede no existe.');
+        } else {
+            $this->modelo->fijarSede($sede_id ?: null);
+            $this->flash('exito', $sede_id
+                ? 'Listo: los registros nuevos vienen marcados en ' . $validas[$sede_id] . '.'
+                : 'Listo: la sede vuelve a salir según el itinerario.');
+        }
+        $this->redirigir('/admin/evangelismo');
+    }
+
     // ══════════════════════════════════════════════════════════
     // ACCESO PÚBLICO CON PIN
     // ══════════════════════════════════════════════════════════
@@ -126,7 +148,7 @@ class EvangelismoController extends Controller {
             'dentro'      => $this->pinVigente($hash),
             'responsable' => $_SESSION['evangelismo']['responsable'] ?? '',
             'sedes'       => $this->modelo->sedes(),
-            'sede_actual' => $this->modelo->sedeEnFecha(date('Y-m-d')),
+            'sede_actual' => $this->modelo->sedeActual(),
         ]);
     }
 

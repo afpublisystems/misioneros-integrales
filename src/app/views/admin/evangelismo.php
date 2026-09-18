@@ -54,31 +54,70 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
 
         <div class="evg-cols">
 
-            <!-- Por sede ────────────────────────────────────── -->
-            <section class="admin-panel">
-                <div class="admin-panel__header">
-                    <h2><i class="fas fa-map-marker-alt"></i> Por sede</h2>
-                </div>
-                <?php if (empty($por_sede)): ?>
-                <p class="evg-vacio">Todavía no hay registros.</p>
-                <?php else: ?>
-                <div class="tabla-wrap">
-                <table class="tabla">
-                    <thead><tr><th>Sede</th><th>Evangelizados</th><th>Decisiones</th><th>Discipulado</th></tr></thead>
-                    <tbody>
-                    <?php foreach ($por_sede as $s): ?>
-                    <tr>
-                        <td><strong><?= htmlspecialchars($s['sede']) ?></strong></td>
-                        <td><?= (int) $s['evangelizados'] ?></td>
-                        <td><?= (int) $s['decisiones'] ?></td>
-                        <td><?= (int) $s['discipulados'] ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-                </div>
-                <?php endif; ?>
-            </section>
+            <div class="evg-col">
+
+                <!-- Dónde está el equipo ─────────────────────── -->
+                <section class="admin-panel">
+                    <div class="admin-panel__header">
+                        <h2><i class="fas fa-location-dot"></i> Dónde está el equipo</h2>
+                        <?php if ($sede_fija): ?>
+                        <span class="badge badge--en_revision">Fijada a mano</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="evg-pin">
+                        <?php
+                        $nombre_sede = array_column($sedes, 'nombre', 'id');
+                        $itinerario  = $sede_itinerario ? $nombre_sede[$sede_itinerario] : 'ninguna';
+                        ?>
+                        <p class="texto-muted">
+                            Los formularios traen marcada esta sede. Si el equipo está en un lugar
+                            distinto al del itinerario, fíjalo aquí y vuelve a "Según el itinerario" al terminar.
+                        </p>
+                        <?php if ($es_admin): ?>
+                        <form method="POST" action="/admin/evangelismo/sede" class="evg-sede">
+                            <?= csrf_field() ?>
+                            <select name="sede_id" class="evg-select">
+                                <option value="">Según el itinerario (hoy: <?= htmlspecialchars($itinerario) ?>)</option>
+                                <?php foreach ($sedes as $s): ?>
+                                <option value="<?= $s['id'] ?>" <?= (int) $s['id'] === (int) $sede_fija ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($s['nombre']) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <button type="submit" class="btn btn--sm btn--verde"><i class="fas fa-save"></i> Guardar</button>
+                        </form>
+                        <?php else: ?>
+                        <p><strong><?= htmlspecialchars($sede_actual ? $nombre_sede[$sede_actual] : 'Sin sede') ?></strong></p>
+                        <?php endif; ?>
+                    </div>
+                </section>
+
+                <!-- Por sede ────────────────────────────────────── -->
+                <section class="admin-panel">
+                    <div class="admin-panel__header">
+                        <h2><i class="fas fa-map-marker-alt"></i> Por sede</h2>
+                    </div>
+                    <?php if (empty($por_sede)): ?>
+                    <p class="evg-vacio">Todavía no hay registros.</p>
+                    <?php else: ?>
+                    <div class="tabla-wrap">
+                    <table class="tabla">
+                        <thead><tr><th>Sede</th><th>Evangelizados</th><th>Decisiones</th><th>Discipulado</th></tr></thead>
+                        <tbody>
+                        <?php foreach ($por_sede as $s): ?>
+                        <tr>
+                            <td><strong><?= htmlspecialchars($s['sede']) ?></strong></td>
+                            <td><?= (int) $s['evangelizados'] ?></td>
+                            <td><?= (int) $s['decisiones'] ?></td>
+                            <td><?= (int) $s['discipulados'] ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    </div>
+                    <?php endif; ?>
+                </section>
+            </div>
 
             <!-- Acceso con PIN ──────────────────────────────── -->
             <section class="admin-panel">
@@ -323,6 +362,9 @@ function copiarLink() {
 .evg-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
 .evg-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; align-items: start; }
 .evg-cols .admin-panel { margin: 0; }
+.evg-col { display: flex; flex-direction: column; gap: 1.5rem; }
+.evg-sede { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.evg-sede select { flex: 1; min-width: 0; }
 .evg-vacio { padding: 1.5rem; color: var(--gris); text-align: center; }
 .evg-pin { padding: 1.25rem; }
 .evg-pin .texto-muted { color: var(--gris); font-size: 0.82rem; margin-bottom: 0.75rem; }

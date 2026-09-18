@@ -580,8 +580,13 @@ dura 12 horas y guarda el hash con el que entró: si el admin cambia o desactiva
 todos quedan afuera. Cinco intentos fallidos bloquean la IP 15 minutos; se reusa
 `login_intentos` con el prefijo `pin:` en la clave.
 
-**Sede.** Se preselecciona la sede cuyo rango `fecha_inicio`–`fecha_fin` incluye la fecha
-de hoy. En `/impacto` aparecen los tres totales en "En campo este ciclo" apenas hay un
+**Sede.** Los formularios traen marcada la sede que el admin fijó en el panel
+("Dónde está el equipo", clave `evangelismo_sede` en `configuracion`). Si no fijó
+ninguna, sale la del itinerario cuyo rango `fecha_inicio`–`fecha_fin` incluye hoy.
+Se pueden elegir las sedes activas y, en "Otros lugares", las inactivas que no repiten
+nombre. Ahí entra Los Teques (migración 008), donde el grupo se alojó y evangelizó en
+septiembre de 2026 antes de entrar a La Guaira: está inactiva para que no salga en la
+galería pública como sede del itinerario. En `/impacto` aparecen los tres totales en "En campo este ciclo" apenas hay un
 registro; los datos personales no salen del panel.
 
 Código: `EvangelismoController`, `EvangelismoModel`, vistas `admin/evangelismo.php`,

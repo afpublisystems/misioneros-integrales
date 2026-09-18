@@ -31,10 +31,16 @@
         <label>Sede</label>
         <select name="sede_id">
             <option value="">Sin sede</option>
-            <?php foreach ($sedes as $s): ?>
-            <option value="<?= $s['id'] ?>" <?= (int) $s['id'] === (int) $sede_actual ? 'selected' : '' ?>>
-                <?= htmlspecialchars($s['nombre']) ?>
-            </option>
+            <?php foreach ([1 => 'Itinerario del ciclo', 0 => 'Otros lugares'] as $activa => $grupo): ?>
+            <?php $del_grupo = array_filter($sedes, fn($s) => (int) $s['activa'] === $activa); ?>
+            <?php if (!$del_grupo) continue; ?>
+            <optgroup label="<?= $grupo ?>">
+                <?php foreach ($del_grupo as $s): ?>
+                <option value="<?= $s['id'] ?>" <?= (int) $s['id'] === (int) $sede_actual ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($s['nombre']) ?>
+                </option>
+                <?php endforeach; ?>
+            </optgroup>
             <?php endforeach; ?>
         </select>
     </div>

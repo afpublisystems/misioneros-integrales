@@ -4,7 +4,8 @@
  * Personas alcanzadas en campo. Cada una se registra una vez y
  * avanza por etapas: evangelizada → decisión de fe → discipulado.
  *
- * También guarda el PIN del acceso público, en `configuracion`.
+ * También guarda en `configuracion` el PIN del acceso público y la
+ * sede donde está el equipo, si el admin la fija a mano.
  */
 
 require_once APP_PATH . '/models/Model.php';
@@ -13,7 +14,8 @@ class EvangelismoModel extends Model {
 
     protected string $tabla = 'personas_alcanzadas';
 
-    private const CLAVE_PIN = 'evangelismo_pin';
+    private const CLAVE_PIN  = 'evangelismo_pin';
+    private const CLAVE_SEDE = 'evangelismo_sede';
 
     public function registrar(array $d): int {
         return $this->insertar($d);
@@ -82,14 +84,43 @@ class EvangelismoModel extends Model {
         ")->fetchAll();
     }
 
+    /**
+     * Sedes que se pueden elegir: las del itinerario y, aparte, las
+     * inactivas que no repiten nombre (lugares como Los Teques, donde
+     * el grupo evangeliza sin que sea una sede del ciclo).
+     */
     public function sedes(): array {
-        return $this->db->query(
-            "SELECT id, nombre, fecha_inicio, fecha_fin FROM sedes WHERE activa = 1 ORDER BY orden"
-        )->fetchAll();
+        return $this->db->query("
+            SELECT id, nombre, activa FROM sedes
+            WHERE activa = 1
+               OR nombre NOT IN (SELECT nombre FROM sedes WHERE activa = 1)
+            ORDER BY activa DESC, orden
+        ")->fetchAll();
     }
 
     /**
-     * Sede donde está el grupo en una fecha, para preseleccionarla
+     * Sede que viene marcada en los formularios: la que fijó el admin
+     * o, si no fijó ninguna, la que toca hoy según el itinerario.
+     */
+    public function sedeActual(): ?int {
+        $fija = (int) $this->config(self::CLAVE_SEDE);
+        if ($fija && in_array($fija, array_column($this->sedes(), 'id'))) {
+            return $fija;
+        }
+        return $this->sedeEnFecha(date('Y-m-d'));
+    }
+
+    /** Sede fijada a mano por el admin, o null si sigue el itinerario */
+    public function sedeFija(): ?int {
+        return (int) $this->config(self::CLAVE_SEDE) ?: null;
+    }
+
+    public function fijarSede(?int $sede_id): void {
+        $this->guardarConfig(self::CLAVE_SEDE, $sede_id ? (string) $sede_id : null);
+    }
+
+    /**
+     * Sede donde está el grupo en una fecha según el itinerario
      */
     public function sedeEnFecha(string $fecha): ?int {
         $stmt = $this->db->prepare("
@@ -106,18 +137,25 @@ class EvangelismoModel extends Model {
 
     /** Hash del PIN vigente, o null si el acceso está desactivado */
     public function hashPin(): ?string {
-        $stmt = $this->db->prepare("SELECT valor FROM configuracion WHERE clave = :c");
-        $stmt->execute([':c' => self::CLAVE_PIN]);
-        return $stmt->fetchColumn() ?: null;
+        return $this->config(self::CLAVE_PIN);
     }
 
     public function guardarPin(?string $pin): void {
+        $this->guardarConfig(self::CLAVE_PIN, $pin === null ? null : password_hash($pin, PASSWORD_DEFAULT));
+    }
+
+    // ── Tabla configuracion ───────────────────────────────────
+
+    private function config(string $clave): ?string {
+        $stmt = $this->db->prepare("SELECT valor FROM configuracion WHERE clave = :c");
+        $stmt->execute([':c' => $clave]);
+        return $stmt->fetchColumn() ?: null;
+    }
+
+    private function guardarConfig(string $clave, ?string $valor): void {
         $this->db->prepare("
             INSERT INTO configuracion (clave, valor) VALUES (:c, :v)
             ON DUPLICATE KEY UPDATE valor = VALUES(valor)
-        ")->execute([
-            ':c' => self::CLAVE_PIN,
-            ':v' => $pin === null ? null : password_hash($pin, PASSWORD_DEFAULT),
-        ]);
+        ")->execute([':c' => $clave, ':v' => $valor]);
     }
 }
