@@ -673,66 +673,80 @@ class AdminController extends Controller {
         $db       = Database::getConnection();
 
         if ($accion === 'subir' && $sede_id) {
+            // Las fotos llegan de a una desde el navegador, ya comprimidas,
+            // y esperan JSON para mostrar cómo va cada una.
+            $ajax      = !empty($_POST['ajax']);
+            $responder = function (bool $ok, string $msg) use ($ajax, $redirect): void {
+                if ($ajax) {
+                    $this->json(['ok' => $ok, 'msg' => $msg], $ok ? 200 : 422);
+                }
+                $this->flash($ok ? 'exito' : 'error', $msg);
+                $this->redirigir($redirect);
+            };
+
             $tipo   = ($_POST['tipo'] ?? '') === 'video' ? 'video' : 'foto';
             $titulo = trim($_POST['titulo'] ?? '');
             $desc   = trim($_POST['descripcion'] ?? '') ?: null;
             $dest   = (int)($_POST['destacado'] ?? 0);
 
             if (!$titulo) {
-                $this->flash('error', 'El título es requerido.');
-                $this->redirigir($redirect);
-                return;
+                $responder(false, 'El título es requerido.');
             }
+
+            // [url, thumb] de cada ítem a guardar
+            $nuevos = [];
 
             if ($tipo === 'foto') {
                 $file = $_FILES['archivo'] ?? null;
                 if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
-                    $this->flash('error', 'Error al subir el archivo.');
-                    $this->redirigir($redirect);
-                    return;
+                    $responder(false, 'Error al subir el archivo.');
                 }
-                // Validar MIME real + extensión
-                $finfo   = new finfo(FILEINFO_MIME_TYPE);
-                $mime    = $finfo->file($file['tmp_name']);
-                $mimes_ok = ['image/jpeg','image/png','image/webp','image/gif'];
-                $ext     = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                if (!in_array($mime, $mimes_ok) || $file['size'] > 5 * 1024 * 1024) {
-                    $this->flash('error', 'Solo JPG, PNG, WEBP, GIF. Máx 5 MB.');
-                    $this->redirigir($redirect);
-                    return;
+                // La extensión sale del tipo real del archivo, no del nombre
+                $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
+                $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+                if (!isset($extensiones[$mime]) || $file['size'] > 5 * 1024 * 1024) {
+                    $responder(false, 'Solo JPG, PNG, WEBP, GIF. Máx 5 MB.');
                 }
-                // Nombre único a prueba de colisiones
-                $nombre = 'gal_' . $sede_id . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
-                $ruta   = BASE_PATH . '/public/uploads/galeria/' . $nombre;
-                if (!move_uploaded_file($file['tmp_name'], $ruta)) {
-                    $this->flash('error', 'No se pudo guardar el archivo.');
-                    $this->redirigir($redirect);
-                    return;
+
+                $dir = BASE_PATH . '/public/uploads/galeria/';
+                if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+                $nombre = 'gal_' . $sede_id . '_' . bin2hex(random_bytes(8)) . '.' . $extensiones[$mime];
+                if (!move_uploaded_file($file['tmp_name'], $dir . $nombre)) {
+                    $responder(false, 'No se pudo guardar el archivo.');
                 }
-                $url   = '/uploads/galeria/' . $nombre;
-                $thumb = $url;
+                $url      = '/public/uploads/galeria/' . $nombre;
+                $nuevos[] = [$url, $url];
 
             } else {
-                $url = trim($_POST['video_url'] ?? '');
-                if (!$url) {
-                    $this->flash('error', 'La URL del video es requerida.');
-                    $this->redirigir($redirect);
-                    return;
+                // Se pueden pegar varios enlaces, uno por línea
+                $urls = array_filter(array_map('trim', preg_split('/\R/', $_POST['video_url'] ?? '')));
+                if (!$urls) {
+                    $responder(false, 'La URL del video es requerida.');
                 }
-                // Auto-extraer thumbnail de YouTube
-                $thumb = null;
-                if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $url, $m)) {
-                    $thumb = "https://img.youtube.com/vi/{$m[1]}/mqdefault.jpg";
+                foreach ($urls as $url) {
+                    if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url)) {
+                        $responder(false, 'Este enlace no es válido: ' . mb_substr($url, 0, 80));
+                    }
+                    // Auto-extraer thumbnail de YouTube
+                    $thumb = null;
+                    if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/', $url, $m)) {
+                        $thumb = "https://img.youtube.com/vi/{$m[1]}/mqdefault.jpg";
+                    }
+                    $nuevos[] = [$url, $thumb];
                 }
             }
 
-            $db->prepare("
+            $insert = $db->prepare("
                 INSERT INTO multimedia (sede_id, titulo, descripcion, tipo, url, thumb_url, destacado, orden)
                 VALUES (?, ?, ?, ?, ?, ?, ?,
                     (SELECT COALESCE(MAX(mx.orden), 0) + 1 FROM multimedia mx WHERE mx.sede_id = ?))
-            ")->execute([$sede_id, $titulo, $desc, $tipo, $url, $thumb, $dest, $sede_id]);
+            ");
+            foreach ($nuevos as [$url, $thumb]) {
+                $insert->execute([$sede_id, $titulo, $desc, $tipo, $url, $thumb, $dest, $sede_id]);
+            }
 
-            $this->flash('exito', 'Ítem agregado correctamente.');
+            $responder(true, count($nuevos) === 1 ? 'Ítem agregado correctamente.' : count($nuevos) . ' ítems agregados.');
 
         } elseif ($accion === 'eliminar') {
             $id   = (int)($_POST['item_id'] ?? 0);
@@ -742,7 +756,8 @@ class AdminController extends Controller {
             if ($item) {
                 $db->prepare("DELETE FROM multimedia WHERE id = ?")->execute([$id]);
                 if ($item['tipo'] === 'foto') {
-                    $path = BASE_PATH . '/public' . $item['url'];
+                    // basename: sirve para las rutas viejas (/uploads/...) y las nuevas (/public/uploads/...)
+                    $path = BASE_PATH . '/public/uploads/galeria/' . basename($item['url']);
                     if (file_exists($path)) @unlink($path);
                 }
                 $this->flash('exito', 'Ítem eliminado.');

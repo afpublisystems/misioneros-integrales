@@ -194,7 +194,7 @@ $es_admin = $_SESSION['usuario_rol'] === 'admin';
             </button>
         </div>
 
-        <form method="POST" action="/admin/galeria" enctype="multipart/form-data" class="galeria-form">
+        <form method="POST" action="/admin/galeria" enctype="multipart/form-data" class="galeria-form" id="form-subir">
             <?= csrf_field() ?>
             <input type="hidden" name="accion"   value="subir">
             <input type="hidden" name="sede_id"  value="<?= $sede_sel['id'] ?>">
@@ -216,38 +216,39 @@ $es_admin = $_SESSION['usuario_rol'] === 'admin';
             <div class="form-grupo">
                 <label>Descripción (opcional)</label>
                 <input type="text" name="descripcion" placeholder="Breve descripción del contenido">
+                <small style="color:#64748b">Si subes varias fotos o videos juntos, todos llevan este título y esta descripción.</small>
             </div>
 
             <!-- Zona foto -->
             <div id="zona-foto">
                 <div class="form-grupo">
-                    <label>Archivo de imagen (JPG, PNG, WEBP, GIF — máx. 5 MB)</label>
+                    <label>Fotos (JPG, PNG, WEBP o GIF)</label>
                     <div class="galeria-dropzone" id="dropzone"
                          ondragover="event.preventDefault()" ondrop="soltarArchivo(event)">
                         <i class="fas fa-cloud-upload-alt"></i>
-                        <span id="dropzone-label">Arrastra una imagen aquí o haz click para seleccionar</span>
-                        <input type="file" name="archivo" id="archivo-input" accept="image/*"
-                               style="display:none" onchange="previsualizarFoto(this)">
+                        <span id="dropzone-label">Arrastra las fotos aquí o haz clic para elegirlas. Puedes elegir varias.</span>
+                        <input type="file" id="archivo-input" accept="image/*" multiple
+                               style="display:none" onchange="agregarFotos(this.files); this.value = ''">
                     </div>
-                    <div id="foto-preview" style="display:none; margin-top:.5rem; text-align:center">
-                        <img id="foto-prev-img" src="" alt="" style="max-height:140px; border-radius:6px; border:2px solid var(--verde)">
-                        <div style="font-size:.75rem; color:#64748b; margin-top:.25rem" id="foto-prev-nombre"></div>
-                    </div>
+                    <small style="color:#64748b">Las fotos pesadas se achican solas antes de subir, sin que se note en pantalla.</small>
+                    <div class="galeria-cola" id="cola-fotos"></div>
+                    <div class="galeria-cola__resumen" id="cola-resumen" hidden></div>
                 </div>
             </div>
 
             <!-- Zona video -->
             <div id="zona-video" style="display:none">
                 <div class="form-grupo">
-                    <label>URL del video (YouTube o Vimeo)</label>
-                    <input type="url" name="video_url" placeholder="https://www.youtube.com/watch?v=...">
-                    <small style="color:#64748b">El thumbnail se extrae automáticamente de YouTube</small>
+                    <label>Enlaces de los videos (YouTube o Vimeo)</label>
+                    <textarea name="video_url" rows="3" style="min-height:0"
+                              placeholder="https://www.youtube.com/watch?v=...&#10;Uno por línea si son varios"></textarea>
+                    <small style="color:#64748b">La miniatura se saca sola de YouTube.</small>
                 </div>
             </div>
 
             <div class="galeria-form__footer">
-                <button type="submit" class="btn btn--verde">
-                    <i class="fas fa-save"></i> Guardar ítem
+                <button type="submit" class="btn btn--verde" id="btn-subir">
+                    <i class="fas fa-save"></i> <span id="btn-subir-texto">Guardar</span>
                 </button>
             </div>
         </form>
@@ -420,6 +421,28 @@ $es_admin = $_SESSION['usuario_rol'] === 'admin';
 }
 .galeria-dropzone:hover { border-color: var(--verde); color: var(--verde); background: var(--verde-light); }
 .galeria-dropzone i { font-size: 1.75rem; display: block; margin-bottom: .5rem; }
+
+.galeria-cola { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .6rem; margin-top: .75rem; }
+.galeria-cola:empty { display: none; }
+.cola-item { position: relative; border: 2px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #fff; }
+.cola-item img { width: 100%; height: 90px; object-fit: cover; display: block; }
+.cola-item__info { padding: .35rem .45rem; font-size: .7rem; line-height: 1.35; color: #475569; }
+.cola-item__nombre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.cola-item__quitar {
+    position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+    border: none; border-radius: 50%; background: rgba(15,23,42,.7); color: #fff;
+    cursor: pointer; font-size: .75rem; line-height: 22px; padding: 0;
+}
+.cola-item--subiendo { border-color: var(--dorado); }
+.cola-item--lista { border-color: var(--verde); }
+.cola-item--lista .cola-item__estado { color: var(--verde-dark); font-weight: 600; }
+.cola-item--error { border-color: #ef4444; }
+.cola-item--error .cola-item__estado { color: #b91c1c; font-weight: 600; }
+.galeria-cola__resumen {
+    margin-top: .75rem; padding: .7rem .9rem; border-radius: 8px;
+    background: #fef2f2; color: #991b1b; font-size: .85rem;
+}
+.galeria-cola__resumen a { color: inherit; font-weight: 700; }
 .galeria-check-label {
     display: flex;
     align-items: center;
@@ -598,6 +621,7 @@ function cambiarTipoMedia(tipo, btn) {
 
     document.querySelectorAll('.galeria-tab').forEach(t => t.classList.remove('galeria-tab--activo'));
     btn.classList.add('galeria-tab--activo');
+    actualizarBoton();
 }
 
 // Click en dropzone abre selector de archivo
@@ -605,29 +629,144 @@ document.getElementById('dropzone')?.addEventListener('click', () => {
     document.getElementById('archivo-input').click();
 });
 
-function previsualizarFoto(input) {
-    if (!input.files.length) return;
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById('foto-prev-img').src    = e.target.result;
-        document.getElementById('foto-prev-nombre').textContent = file.name;
-        document.getElementById('foto-preview').style.display = '';
-        document.getElementById('dropzone-label').textContent  = '✓ Archivo seleccionado';
-    };
-    reader.readAsDataURL(file);
+// ── Varias fotos: se comprimen en el navegador y suben de a una ──
+// Así se ahorran datos, y si una falla las demás siguen.
+const MAX_LADO = 1920;
+const CALIDAD  = 0.82;
+const UN_MB    = 1024 * 1024;
+let cola = [];
+
+function pesoLegible(bytes) {
+    return bytes >= UN_MB ? (bytes / UN_MB).toFixed(1) + ' MB' : Math.round(bytes / 1024) + ' KB';
+}
+
+function agregarFotos(archivos) {
+    [...archivos].filter(f => f.type.startsWith('image/')).forEach(file => {
+        const nodo = document.createElement('div');
+        nodo.className = 'cola-item';
+        nodo.innerHTML = '<img alt=""><button type="button" class="cola-item__quitar" title="Quitar">&times;</button>'
+                       + '<div class="cola-item__info"><div class="cola-item__nombre"></div><div class="cola-item__estado"></div></div>';
+        nodo.querySelector('img').src = URL.createObjectURL(file);
+        nodo.querySelector('.cola-item__nombre').textContent = file.name;
+        nodo.querySelector('.cola-item__estado').textContent = pesoLegible(file.size);
+
+        const item = { file, nodo };
+        nodo.querySelector('.cola-item__quitar').onclick = () => {
+            cola = cola.filter(i => i !== item);
+            nodo.remove();
+            actualizarBoton();
+        };
+        cola.push(item);
+        document.getElementById('cola-fotos').appendChild(nodo);
+    });
+    document.getElementById('cola-resumen').hidden = true;
+    actualizarBoton();
 }
 
 function soltarArchivo(e) {
     e.preventDefault();
-    const dt    = e.dataTransfer;
-    const input = document.getElementById('archivo-input');
-    if (dt.files.length) {
-        // Simular asignación al input de tipo file
-        const list = new DataTransfer();
-        list.items.add(dt.files[0]);
-        input.files = list.files;
-        previsualizarFoto(input);
-    }
+    agregarFotos(e.dataTransfer.files);
 }
+
+function actualizarBoton() {
+    const esFoto = document.getElementById('tipo-hidden').value === 'foto';
+    document.getElementById('btn-subir-texto').textContent =
+        esFoto && cola.length > 1 ? 'Subir ' + cola.length + ' fotos' : 'Guardar';
+}
+
+// Achica la foto a MAX_LADO px por el lado más largo y la pasa a JPEG.
+// Si ya es liviana, si es un GIF (puede ser animado) o si el navegador
+// no la puede leer, sube la original.
+async function comprimir(file) {
+    if (file.type === 'image/gif') return file;
+    let img;
+    try {
+        img = await createImageBitmap(file);
+    } catch (e) {
+        return file;
+    }
+    const escala = Math.min(1, MAX_LADO / Math.max(img.width, img.height));
+    if (escala === 1 && file.size <= UN_MB) return file;
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = Math.round(img.width * escala);
+    canvas.height = Math.round(img.height * escala);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';                 // lo transparente de un PNG queda en blanco
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', CALIDAD));
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+}
+
+document.getElementById('form-subir')?.addEventListener('submit', async e => {
+    if (document.getElementById('tipo-hidden').value !== 'foto') return;   // los videos van por el envío normal
+    e.preventDefault();
+    if (!cola.length) {
+        alert('Elige al menos una foto.');
+        return;
+    }
+
+    const form    = e.target;
+    const boton   = document.getElementById('btn-subir');
+    const resumen = document.getElementById('cola-resumen');
+    const total   = cola.length;
+    let subidas   = 0;
+
+    boton.disabled = true;
+    resumen.hidden = true;
+
+    for (const [i, item] of [...cola].entries()) {
+        const estado = item.nodo.querySelector('.cola-item__estado');
+        item.nodo.querySelector('.cola-item__quitar').hidden = true;
+        item.nodo.className = 'cola-item cola-item--subiendo';
+        document.getElementById('btn-subir-texto').textContent = 'Subiendo ' + (i + 1) + ' de ' + total + '…';
+
+        estado.textContent = 'Comprimiendo…';
+        const archivo = await comprimir(item.file);
+        estado.textContent = archivo === item.file
+            ? 'Subiendo ' + pesoLegible(archivo.size) + '…'
+            : pesoLegible(item.file.size) + ' → ' + pesoLegible(archivo.size) + '…';
+
+        const datos = new FormData(form);
+        datos.append('archivo', archivo);
+        datos.append('ajax', '1');
+
+        let ok = false, msg = '';
+        try {
+            const resp = await fetch(form.action, { method: 'POST', body: datos });
+            const json = await resp.json().catch(() => null);
+            ok  = resp.ok && json && json.ok;
+            msg = json ? json.msg : 'El servidor no la aceptó (' + resp.status + ')';
+        } catch (err) {
+            msg = 'Sin conexión';
+        }
+
+        if (ok) {
+            subidas++;
+            item.nodo.className = 'cola-item cola-item--lista';
+            estado.textContent = 'Lista ✓';
+            cola = cola.filter(c => c !== item);
+        } else {
+            item.nodo.className = 'cola-item cola-item--error';
+            estado.textContent = msg;
+            item.nodo.querySelector('.cola-item__quitar').hidden = false;
+        }
+    }
+
+    if (subidas === total) {
+        location.reload();
+        return;
+    }
+    // Quedan en la cola solo las que fallaron, listas para reintentar
+    document.querySelectorAll('.cola-item--lista').forEach(n => n.remove());
+    resumen.innerHTML = 'Se subieron ' + subidas + ' de ' + total + '. Las marcadas en rojo no subieron: '
+                      + 'puedes quitarlas o darle a Subir otra vez. '
+                      + (subidas ? '<a href="">Ver las que sí subieron</a>' : '');
+    resumen.hidden = false;
+    boton.disabled = false;
+    actualizarBoton();
+});
 </script>

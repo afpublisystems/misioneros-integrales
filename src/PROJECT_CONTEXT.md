@@ -565,6 +565,12 @@ orden, fechas y si está activa. No se borran porque tienen fotos (`multimedia`)
 personas de evangelismo; la que ya no va se desactiva. Las activas salen en la galería
 pública y en el registro de evangelismo.
 
+**Fotos de la galería.** Se comprimen en el navegador antes de subir (lado mayor 1920 px,
+JPEG calidad 0.82; los GIF y las fotos livianas van como están) y suben de a una por AJAX
+(`ajax=1`, responde JSON) para que una que falle no tumbe las demás. Se guardan en
+`public/uploads/galeria/` con URL `/public/uploads/galeria/...`; la extensión sale del tipo
+real del archivo. Los videos son enlaces (YouTube/Vimeo), uno por línea si son varios.
+
 Ojo: el itinerario también está escrito a mano en vistas públicas (`programa.php`,
 `impacto.php`, el subtítulo de `galeria.php` y el resumen de `candidato/perfil.php`).
 Cambiar una ciudad en el panel no actualiza esos textos.
