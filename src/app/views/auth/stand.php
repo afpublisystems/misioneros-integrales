@@ -8,7 +8,7 @@
     <div class="stand-brand__call">
         <h1>Únete a la misión</h1>
         <p>Programa de Formación<br>de Misioneros Integrales<br>
-        <strong style="color:var(--dorado,#cea237)">Cohorte 2026 — CNBV / DIME</strong></p>
+        <strong style="color:var(--dorado,#cea237)">2da Cohorte 2027 — CNBV / DIME</strong></p>
     </div>
 
     <!-- Contador de cupos disponibles -->

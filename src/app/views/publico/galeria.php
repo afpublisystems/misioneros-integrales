@@ -48,7 +48,7 @@
             <div class="gal-vacia__icono"><i class="fas fa-images"></i></div>
             <h2>La galería se irá llenando</h2>
             <p>
-                El Ciclo 1 del programa inicia en <strong>Septiembre 2026</strong>.
+                La 1ra Cohorte arrancó en <strong>septiembre 2026</strong>.
                 Aquí publicaremos fotos y videos de cada sede a medida que avancemos por Venezuela.
             </p>
             <p style="font-size:0.9rem; color:#6b7280; margin-top:0.5rem;">
@@ -137,9 +137,9 @@
 ═══════════════════════════════════════════════ -->
 <section class="seccion seccion--verde">
     <div class="container" style="text-align:center;">
-        <h2 class="seccion__titulo">Postúlate para el Ciclo 1</h2>
+        <h2 class="seccion__titulo">Postúlate para la 2da Cohorte</h2>
         <p class="seccion__subtitulo" style="max-width:500px; margin:0 auto 2rem;">
-            Septiembre 2026 · 5 ciudades en Venezuela. Un ciclo de 8 meses itinerantes.
+            Inicia en septiembre 2027. Tres ciclos, cada uno de septiembre a mayo.
         </p>
         <a href="/registro" class="btn-cta-naranja">
             <i class="fas fa-user-plus"></i> Postularme ahora

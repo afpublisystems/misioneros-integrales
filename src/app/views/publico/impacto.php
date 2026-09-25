@@ -349,10 +349,10 @@
 ═══════════════════════════════════════════════ -->
 <section class="seccion seccion--verde">
     <div class="container" style="text-align:center;">
-        <span class="seccion-label" style="color:var(--dorado)">Promoción 2026</span>
-        <h2 class="seccion__titulo">Postúlate para el Ciclo 1</h2>
+        <span class="seccion-label" style="color:var(--dorado)">2da Cohorte · 2027</span>
+        <h2 class="seccion__titulo">Postúlate para la 2da Cohorte</h2>
         <p class="seccion__subtitulo" style="max-width:500px; margin:0 auto 2rem;">
-            El programa inicia en septiembre 2026. Cada año se abre una nueva promoción.
+            Inicia en septiembre 2027. Cada año se abre una nueva cohorte.
         </p>
         <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
             <a href="/registro" class="btn-cta-naranja">

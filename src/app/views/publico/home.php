@@ -71,7 +71,7 @@
     <div class="container countdown-band__inner">
         <div class="countdown-band__texto">
             <i class="fas fa-calendar-alt"></i>
-            <span>Convocatoria <strong>Ciclo 1</strong> — Inicio <strong>septiembre 2026</strong> · Postulaciones abiertas</span>
+            <span>Convocatoria <strong>2da Cohorte</strong> — Inicio <strong>septiembre 2027</strong> · Postulaciones abiertas</span>
         </div>
         <a href="/registro" class="btn btn--naranja btn--sm">
             <i class="fas fa-user-plus"></i> Postularme
