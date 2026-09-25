@@ -41,6 +41,7 @@ class PublicoController extends Controller {
             'titulo'     => 'Galería',
             'sedes'      => $sedes,
             'multimedia' => $multimedia,
+            'actividades' => self::ACTIVIDADES_GALERIA,
         ]);
     }
 

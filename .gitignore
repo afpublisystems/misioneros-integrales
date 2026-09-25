@@ -33,3 +33,6 @@
 
 # Paquete de deploy generado local (no versionar)
 /deploy-produccion-*.zip
+
+# Clave del admin para la subida automática de fotos
+/tools/subir-galeria/config.ini

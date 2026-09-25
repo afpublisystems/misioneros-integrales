@@ -33,6 +33,22 @@
             </button>
             <?php endforeach; ?>
         </div>
+        <?php
+        // Solo las actividades que ya tienen algo publicado
+        $con_items = array_unique(array_filter(array_column($multimedia, 'actividad')));
+        ?>
+        <?php if ($con_items): ?>
+        <div class="gal-filtros gal-filtros--actividad">
+            <button class="gal-filtro gal-filtro--act activo" data-actividad="todas">Todas las actividades</button>
+            <?php foreach ($actividades as $clave => [$etiqueta, $icono]): ?>
+            <?php if (in_array($clave, $con_items, true)): ?>
+            <button class="gal-filtro gal-filtro--act" data-actividad="<?= $clave ?>">
+                <i class="fas <?= $icono ?>"></i> <?= htmlspecialchars($etiqueta) ?>
+            </button>
+            <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -64,6 +80,7 @@
             <?php foreach ($multimedia as $item): ?>
             <div class="gal-item <?= !$item['activo'] ? 'gal-item--inactiva' : '' ?>"
                  data-sede="<?= $item['sede_id'] ?>"
+                 data-actividad="<?= htmlspecialchars($item['actividad'] ?? '') ?>"
                  data-tipo="<?= $item['tipo'] ?>">
                 <?php if ($item['tipo'] === 'video'): ?>
                     <!-- Video embed -->
@@ -89,6 +106,9 @@
                     <div class="gal-item__sede">
                         <i class="fas fa-map-marker-alt"></i>
                         <?= htmlspecialchars($item['sede_nombre'] ?? '') ?>
+                        <?php if (isset($actividades[$item['actividad'] ?? ''])): ?>
+                        · <?= htmlspecialchars($actividades[$item['actividad']][0]) ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -173,18 +193,19 @@
 </div>
 
 <script>
-// Filtros por sede
+// Filtros por sede y por actividad; se combinan
+const filtro = { sede: 'todas', actividad: 'todas' };
 document.querySelectorAll('.gal-filtro').forEach(btn => {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.gal-filtro').forEach(b => b.classList.remove('activo'));
+        const campo = 'actividad' in this.dataset ? 'actividad' : 'sede';
+        document.querySelectorAll(campo === 'actividad' ? '.gal-filtro--act' : '.gal-filtro:not(.gal-filtro--act)')
+            .forEach(b => b.classList.remove('activo'));
         this.classList.add('activo');
-        const sede = this.dataset.sede;
+        filtro[campo] = this.dataset[campo];
         document.querySelectorAll('.gal-item').forEach(item => {
-            if (sede === 'todas' || item.dataset.sede === sede) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
+            const ok = (filtro.sede === 'todas' || item.dataset.sede === filtro.sede)
+                && (filtro.actividad === 'todas' || item.dataset.actividad === filtro.actividad);
+            item.style.display = ok ? '' : 'none';
         });
     });
 });
@@ -258,6 +279,8 @@ document.addEventListener('keydown', e => {
 }
 .gal-filtro:hover { border-color: var(--verde); color: var(--verde); }
 .gal-filtro.activo { background: var(--verde); border-color: var(--verde); color: white; }
+.gal-filtros--actividad { margin-top: 0.75rem; }
+.gal-filtro--act.activo { background: var(--dorado); border-color: var(--dorado); color: #1a2530; }
 
 /* ── Grid galería ─────────────────────────────────────── */
 .gal-grid {

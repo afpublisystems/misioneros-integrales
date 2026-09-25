@@ -6,6 +6,18 @@
 
 class Controller {
 
+    // Actividades de la galería: clave en multimedia.actividad => [etiqueta, ícono].
+    // El script de subida automática usa las etiquetas como nombres de carpeta.
+    public const ACTIVIDADES_GALERIA = [
+        'devocional'    => ['Devocional', 'fa-book-bible'],
+        'aula'          => ['Aula', 'fa-chalkboard-user'],
+        'evangelismo'   => ['Evangelismo', 'fa-person-walking'],
+        'oficios'       => ['Oficios', 'fa-bread-slice'],
+        'bienestar'     => ['Bienestar Misionero', 'fa-person-running'],
+        'mantenimiento' => ['Mantenimiento', 'fa-broom'],
+        'eventos'       => ['Eventos', 'fa-calendar-check'],
+    ];
+
     /**
      * Renderiza una vista dentro del layout principal
      */

@@ -28,7 +28,7 @@ Gestiona registro de candidatos, subida de documentos y evaluación de postulant
 - Nombre local (Docker): `misioneros_integrales_db`
 - Nombre en producción (cPanel): `hosting63201us_misioneros`
 - Conexión: `Database::getConnection()` (Singleton PDO)
-- Migraciones en `database/`, se aplican a mano por phpMyAdmin. La última es la 008.
+- Migraciones en `database/`, se aplican a mano por phpMyAdmin. La última es la 009.
 
 ## Estructura (producción)
 ```

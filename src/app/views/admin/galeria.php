@@ -214,6 +214,16 @@ $es_admin = $_SESSION['usuario_rol'] === 'admin';
             </div>
 
             <div class="form-grupo">
+                <label>Actividad</label>
+                <select name="actividad">
+                    <option value="">Sin actividad</option>
+                    <?php foreach ($actividades as $clave => [$etiqueta]): ?>
+                    <option value="<?= $clave ?>"><?= htmlspecialchars($etiqueta) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="form-grupo">
                 <label>Descripción (opcional)</label>
                 <input type="text" name="descripcion" placeholder="Breve descripción del contenido">
                 <small style="color:#64748b">Si subes varias fotos o videos juntos, todos llevan este título y esta descripción.</small>
@@ -298,6 +308,18 @@ $es_admin = $_SESSION['usuario_rol'] === 'admin';
                     <?php if ($item['descripcion']): ?>
                     <div class="galeria-item__desc"><?= htmlspecialchars($item['descripcion']) ?></div>
                     <?php endif; ?>
+                    <form method="POST" action="/admin/galeria" class="galeria-item__actividad">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="accion"   value="cambiar_actividad">
+                        <input type="hidden" name="sede_id"  value="<?= $sede_sel['id'] ?>">
+                        <input type="hidden" name="item_id"  value="<?= $item['id'] ?>">
+                        <select name="actividad" onchange="this.form.submit()" title="Actividad">
+                            <option value="">Sin actividad</option>
+                            <?php foreach ($actividades as $clave => [$etiqueta]): ?>
+                            <option value="<?= $clave ?>" <?= $item['actividad'] === $clave ? 'selected' : '' ?>><?= htmlspecialchars($etiqueta) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
                 </div>
 
                 <!-- Acciones -->
@@ -407,6 +429,7 @@ $es_admin = $_SESSION['usuario_rol'] === 'admin';
 
 /* ── Form subir ── */
 .galeria-form { padding: 0 1.25rem 1.25rem; }
+.galeria-item__actividad select { width: 100%; margin-top: .4rem; padding: .25rem .4rem; font-size: .78rem; border: 1px solid #e2e8f0; border-radius: .4rem; background: #fff; }
 .galeria-form__row { display: flex; gap: 1rem; }
 .galeria-form__footer { display: flex; justify-content: flex-end; margin-top: 1rem; }
 

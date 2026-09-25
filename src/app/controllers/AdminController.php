@@ -657,6 +657,7 @@ class AdminController extends Controller {
 
         $this->render('admin/galeria', [
             'titulo'   => 'Galería Multimedia',
+            'actividades' => self::ACTIVIDADES_GALERIA,
             'sedes'    => $sedes,
             'sede_sel' => $sede_sel,
             'items'    => $items,
@@ -688,6 +689,8 @@ class AdminController extends Controller {
             $titulo = trim($_POST['titulo'] ?? '');
             $desc   = trim($_POST['descripcion'] ?? '') ?: null;
             $dest   = (int)($_POST['destacado'] ?? 0);
+            $act    = $_POST['actividad'] ?? '';
+            $act    = isset(self::ACTIVIDADES_GALERIA[$act]) ? $act : null;
 
             if (!$titulo) {
                 $responder(false, 'El título es requerido.');
@@ -738,12 +741,12 @@ class AdminController extends Controller {
             }
 
             $insert = $db->prepare("
-                INSERT INTO multimedia (sede_id, titulo, descripcion, tipo, url, thumb_url, destacado, orden)
-                VALUES (?, ?, ?, ?, ?, ?, ?,
+                INSERT INTO multimedia (sede_id, titulo, descripcion, tipo, actividad, url, thumb_url, destacado, orden)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?,
                     (SELECT COALESCE(MAX(mx.orden), 0) + 1 FROM multimedia mx WHERE mx.sede_id = ?))
             ");
             foreach ($nuevos as [$url, $thumb]) {
-                $insert->execute([$sede_id, $titulo, $desc, $tipo, $url, $thumb, $dest, $sede_id]);
+                $insert->execute([$sede_id, $titulo, $desc, $tipo, $act, $url, $thumb, $dest, $sede_id]);
             }
 
             $responder(true, count($nuevos) === 1 ? 'Ítem agregado correctamente.' : count($nuevos) . ' ítems agregados.');
@@ -766,6 +769,12 @@ class AdminController extends Controller {
         } elseif ($accion === 'toggle_destacado') {
             $id = (int)($_POST['item_id'] ?? 0);
             $db->prepare("UPDATE multimedia SET destacado = NOT destacado WHERE id = ? AND sede_id = ?")->execute([$id, $sede_id]);
+
+        } elseif ($accion === 'cambiar_actividad') {
+            $id  = (int)($_POST['item_id'] ?? 0);
+            $act = $_POST['actividad'] ?? '';
+            $act = isset(self::ACTIVIDADES_GALERIA[$act]) ? $act : null;
+            $db->prepare("UPDATE multimedia SET actividad = ? WHERE id = ? AND sede_id = ?")->execute([$act, $id, $sede_id]);
 
         } elseif ($accion === 'toggle_activo') {
             $id = (int)($_POST['item_id'] ?? 0);
