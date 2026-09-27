@@ -170,7 +170,7 @@ C:\xampp\htdocs\misioneros-integrales\
 | `flujo_proceso` | Estados 5 etapas por aspirante (editables desde admin) | ✅ |
 | `documentos` | Archivos subidos | ✅ |
 | `test_vocacional` | Respuestas encuesta 60 preguntas (JSON) | ✅ |
-| `multimedia` | Galería por sede | ✅ tabla creada, vista admin pendiente |
+| `multimedia` | Galería por sede, con actividad por foto | ✅ Vista admin hecha, migraciones 008 y 009 |
 | `mensajes_contacto` | Mensajes del formulario público de contacto | ✅ Migración 003 aplicada |
 | `impacto_estadisticas` | Contadores públicos editables | ✅ Con datos |
 | `login_intentos` | Control de intentos fallidos de acceso | ✅ Migración 002 |
@@ -643,8 +643,15 @@ que comparten los dos formularios.
 
 ## PENDIENTES INMEDIATOS
 
-1. **Cambiar contraseña** del usuario admin id=1 (actualmente `password`) — email: jfer22@gmail.com — usar `src/encrypt.php`
-2. **Eliminar** `src/encrypt.php` antes de subir a producción (riesgo de seguridad) — `src/test_db.php` ya eliminado
+1. **Confirmar que se cambió la contraseña** del admin id=1 (email jfer22@gmail.com) en producción; venía con `password`.
+   `src/encrypt.php` ya no existe: el hash se genera con `php -r "echo password_hash('NUEVA', PASSWORD_DEFAULT);"`
+   y se pega en `usuarios.password` desde phpMyAdmin.
+2. **Confirmar en phpMyAdmin de producción** que están aplicadas las migraciones 007 (evangelismo),
+   008 (rutas de galería) y 009 (actividad por foto). Sin ellas, esos módulos fallan.
+
+Resueltos (sep 2026): `src/encrypt.php` y `src/test_db.php` eliminados; `display_errors` ya no está
+en `layouts/admin.php`, lo controla `index.php` según el host (activo solo en localhost); la vista
+admin de la galería (`/admin/galeria`) está hecha.
 
 ---
 
@@ -658,7 +665,7 @@ que comparten los dos formularios.
 6. Archivos individuales cuando son 1-2, ZIP solo si son muchos
 7. Layout `admin.php` para vistas admin — tercer param en `render(..., ..., 'admin')`
 8. `require APP_PATH . '/views/...'` — no usar `__DIR__` en vistas
-9. `display_errors` activado en `layouts/admin.php` — quitar en producción
+9. `display_errors` se controla solo en `index.php` (activo en localhost, apagado en producción) — no activarlo en vistas ni layouts
 10. INSERT ... ON DUPLICATE KEY UPDATE para upsert de `flujo_proceso` (UNIQUE por aspirante+etapa)
 11. Usar `$this->flash('tipo', 'msg')` en lugar de `$_SESSION['flash'] = [...]` directo
 12. Usar `$this->safeRedirect($url, $fallback)` para todo redirect con input del usuario
