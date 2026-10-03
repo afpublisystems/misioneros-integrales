@@ -49,6 +49,10 @@
             <i class="fas fa-dollar-sign"></i> Finanzas
         </a>
 
+        <a href="/admin/caja" class="admin-nav__item <?= $uri === '/admin/caja' ? 'activo' : '' ?>">
+            <i class="fas fa-cash-register"></i> Caja rápida
+        </a>
+
         <a href="/admin/perfil" class="admin-nav__item <?= str_starts_with($uri, '/admin/perfil') ? 'activo' : '' ?>">
             <i class="fas fa-user-cog"></i> Mi Perfil
         </a>

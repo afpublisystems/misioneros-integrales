@@ -1,0 +1,13 @@
+{
+  "name": "Caja · Misioneros Integrales",
+  "short_name": "Caja MI",
+  "start_url": "/admin/caja",
+  "scope": "/admin/caja",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#167a5e",
+  "icons": [
+    { "src": "/public/assets/icons/caja-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/public/assets/icons/caja-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

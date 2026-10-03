@@ -38,6 +38,9 @@ spl_autoload_register(function (string $clase) {
 // Cargar configuración de BD
 require_once APP_PATH . '/config/db.php';
 
+// Sin esto, de noche las fechas por defecto saldrían con el día siguiente (UTC)
+date_default_timezone_set('America/Caracas');
+
 // Iniciar sesión con flags de seguridad
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
@@ -113,6 +116,7 @@ $rutas = [
         '/admin/colaboradores'  => ['AdminController',   'colaboradores'],
         '/admin/perfil'         => ['AdminController',   'perfil'],
         '/admin/finanzas'           => ['AdminController', 'finanzas'],
+        '/admin/caja'               => ['AdminController', 'caja'],
         '/admin/finanzas/movimientos'=> ['AdminController', 'movimientos'],
         '/admin/finanzas/matriculas' => ['AdminController', 'matriculas'],
         '/admin/finanzas/prestamos'  => ['AdminController', 'prestamos'],
@@ -138,6 +142,7 @@ $rutas = [
         '/admin/perfil'             => ['AdminController',      'actualizarPerfil'],
         '/admin/finanzas/ingreso'   => ['AdminController',      'registrarIngreso'],
         '/admin/finanzas/gasto'     => ['AdminController',      'registrarGasto'],
+        '/admin/caja'               => ['AdminController',      'registrarCaja'],
         '/admin/finanzas/confirmar' => ['AdminController',      'confirmarIngreso'],
         '/admin/finanzas/beca'      => ['AdminController',      'actualizarBeca'],
         '/admin/finanzas/prestamo'  => ['AdminController',      'registrarPrestamo'],

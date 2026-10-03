@@ -253,7 +253,7 @@ class AuthController extends Controller {
 
     // ── Helpers privados ──────────────────────────────────────
     private function redirigirSegunRol(): void {
-        $rol = $_SESSION['usuario_rol'] ?? 'candidato';        if ($rol === 'admin' || $rol === 'evaluador') {            $this->redirigir('/admin');        } else {            $this->redirigir('/candidato/dashboard');        }
+        $rol = $_SESSION['usuario_rol'] ?? 'candidato';        if ($rol === 'admin' || $rol === 'evaluador') {            $destino = $_SESSION['tras_login'] ?? '/admin';            unset($_SESSION['tras_login']);            $this->redirigir($destino);        } else {            $this->redirigir('/candidato/dashboard');        }
     }
 
     private function validarRegistro(array $d): array {

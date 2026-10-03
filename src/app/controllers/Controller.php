@@ -11,8 +11,11 @@ class Controller {
     public const ACTIVIDADES_GALERIA = [
         'devocional'    => ['Devocional', 'fa-book-bible'],
         'aula'          => ['Aula', 'fa-chalkboard-user'],
+        'estudio'       => ['Estudios', 'fa-book-open-reader'],
         'evangelismo'   => ['Evangelismo', 'fa-person-walking'],
+        'practicas'     => ['Prácticas Misioneras', 'fa-hands-holding-child'],
         'oficios'       => ['Oficios', 'fa-bread-slice'],
+        'comer'         => ['Comer Juntos', 'fa-utensils'],
         'bienestar'     => ['Bienestar Misionero', 'fa-person-running'],
         'mantenimiento' => ['Mantenimiento', 'fa-broom'],
         'eventos'       => ['Eventos', 'fa-calendar-check'],

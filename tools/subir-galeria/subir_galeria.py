@@ -11,10 +11,14 @@ Cómo se ordenan las fotos:
           foto2.jpg
       Devocional/
       Bienestar Misionero/
+      Practicas Misioneras/
+        La Guaira/              <- aquí la subcarpeta es la ciudad, no el título
+          foto3.jpg
       ...
 
 Cada foto se comprime (1920 px máximo, sin datos de GPS) y se sube a la
-ciudad que diga config.ini. Las que ya subió quedan anotadas en
+ciudad que diga config.ini, salvo las prácticas, que van a la ciudad de su
+subcarpeta (tiene que llamarse igual que en el panel). Las que ya subió quedan anotadas en
 web/.subidas.json y no se vuelven a subir, aunque las muevas de carpeta.
 
 Uso:
@@ -41,8 +45,13 @@ EXTENSIONES = ('.jpg', '.jpeg', '.png', '.webp')
 ACTIVIDADES = {
     'devocional': 'devocional',
     'aula': 'aula',
+    'estudios': 'estudio',
+    'estudio': 'estudio',
     'evangelismo': 'evangelismo',
+    'practicas misioneras': 'practicas',
+    'practicas': 'practicas',
     'oficios': 'oficios',
+    'comer juntos': 'comer',
     'bienestar misionero': 'bienestar',
     'bienestar': 'bienestar',
     'mantenimiento': 'mantenimiento',
@@ -73,7 +82,10 @@ def comprimir(ruta):
 
 
 def buscar_fotos(raiz):
-    """Devuelve (ruta, actividad, título) de cada foto dentro de las carpetas de actividad."""
+    """Devuelve (ruta, actividad, título, ciudad) de cada foto dentro de las carpetas de actividad.
+
+    ciudad es None salvo en las prácticas, donde la primera subcarpeta es la ciudad.
+    """
     fotos, ignoradas = [], []
     for carpeta in sorted(os.listdir(raiz)):
         ruta_act = os.path.join(raiz, carpeta)
@@ -84,11 +96,16 @@ def buscar_fotos(raiz):
             ignoradas.append(carpeta)
             continue
         for dirpath, _, archivos in os.walk(ruta_act):
-            relativa = os.path.relpath(dirpath, ruta_act)
-            titulo = carpeta if relativa == '.' else relativa.split(os.sep)[0]
+            partes = [] if dirpath == ruta_act else os.path.relpath(dirpath, ruta_act).split(os.sep)
+            ciudad = None
+            if actividad == 'practicas':
+                if not partes:
+                    continue
+                ciudad, partes = partes[0], partes[1:]
+            titulo = partes[0] if partes else (ciudad or carpeta)
             for nombre in sorted(archivos):
                 if nombre.lower().endswith(EXTENSIONES):
-                    fotos.append((os.path.join(dirpath, nombre), actividad, titulo))
+                    fotos.append((os.path.join(dirpath, nombre), actividad, titulo, ciudad))
     return fotos, ignoradas
 
 
@@ -97,6 +114,12 @@ def token_de(html):
     if not m:
         sys.exit('No encontré el token del formulario. ¿Cambió el sitio?')
     return m.group(1)
+
+
+def ciudades_del_panel(html):
+    """Nombre normalizado de cada ciudad del panel => su id."""
+    pares = re.findall(r'href="/admin/galeria\?sede=(\d+)".*?galeria-sede-card__nombre">([^<]+)<', html, re.S)
+    return {normalizar(nombre): sede for sede, nombre in pares}
 
 
 def iniciar_sesion(s, sitio, email, clave):
@@ -135,28 +158,37 @@ def main():
         print(f'  ! La carpeta "{carpeta}" no es una actividad conocida; la salto.')
 
     nuevas = []
-    for ruta, actividad, titulo in fotos:
+    for ruta, actividad, titulo, ciudad in fotos:
         h = huella(ruta)
         if h not in registro:
-            nuevas.append((ruta, actividad, titulo, h))
+            nuevas.append((ruta, actividad, titulo, ciudad, h))
 
     if not nuevas:
         print('No hay fotos nuevas.')
         return
 
     print(f'{len(nuevas)} foto(s) nueva(s):')
-    for ruta, actividad, titulo, _ in nuevas:
-        print(f'  - {os.path.relpath(ruta, raiz)}  ->  {actividad} / "{titulo}"')
+    for ruta, actividad, titulo, ciudad, _ in nuevas:
+        donde = f' en {ciudad}' if ciudad else ''
+        print(f'  - {os.path.relpath(ruta, raiz)}  ->  {actividad} / "{titulo}"{donde}')
     if args.probar:
         return
 
     s = requests.Session()
     iniciar_sesion(s, sitio, c['email'], c['clave'])
-    token = token_de(s.get(f'{sitio}/admin/galeria', params={'sede': sede_id}, timeout=30).text)
+    panel = s.get(f'{sitio}/admin/galeria', params={'sede': sede_id}, timeout=30).text
+    token = token_de(panel)
+    ciudades = ciudades_del_panel(panel)
 
     subidas = 0
-    for ruta, actividad, titulo, h in nuevas:
+    for ruta, actividad, titulo, ciudad, h in nuevas:
         nombre = os.path.relpath(ruta, raiz)
+        destino = sede_id
+        if ciudad:
+            destino = ciudades.get(normalizar(ciudad))
+            if not destino:
+                print(f'  x {nombre}: no hay ninguna ciudad "{ciudad}" en el panel')
+                continue
         try:
             datos = comprimir(ruta)
         except Exception as e:
@@ -164,7 +196,7 @@ def main():
             continue
         r = s.post(f'{sitio}/admin/galeria', timeout=120, data={
             '_token': token, 'accion': 'subir', 'ajax': '1', 'tipo': 'foto',
-            'sede_id': sede_id, 'titulo': titulo, 'actividad': actividad,
+            'sede_id': destino, 'titulo': titulo, 'actividad': actividad,
         }, files={'archivo': (os.path.splitext(os.path.basename(ruta))[0] + '.jpg', datos, 'image/jpeg')})
         try:
             resp = r.json()

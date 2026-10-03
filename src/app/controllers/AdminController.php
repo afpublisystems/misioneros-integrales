@@ -1108,6 +1108,88 @@ class AdminController extends Controller {
         $this->redirigir($volver);
     }
 
+    // ── GET /admin/caja ───────────────────────────────────────
+    // Carga rápida desde el teléfono. Guarda en las mismas tablas que
+    // Finanzas; lo que necesita más datos (matrículas, préstamos y sus
+    // devoluciones) se sigue cargando allá.
+    public function caja(): void {
+        if (empty($_SESSION['usuario_id'])) {
+            $_SESSION['tras_login'] = '/admin/caja';
+        }
+        $this->requireAdminOEvaluador();
+
+        $fin    = new FinanzasModel();
+        $lunes  = date('Y-m-d', strtotime('monday this week'));
+        $semana = $fin->movimientosDesde($lunes);
+
+        $entro = $salio = 0.0;
+        foreach ($semana as $m) {
+            if (!$m['cuenta']) continue;
+            if ($m['tipo'] === 'ingreso') {
+                $entro += $m['monto_usd'];
+            } else {
+                $salio += $m['monto_usd'];
+            }
+        }
+
+        $this->render('admin/caja', [
+            'titulo'      => 'Caja',
+            'es_app'      => true,
+            'kpis'        => $fin->kpis(),
+            'semana'      => $semana,
+            'entro'       => $entro,
+            'salio'       => $salio,
+            'cuentas'     => $fin->cuentas(),
+            'fondos'      => $fin->fondos(),
+            'categorias'  => array_diff_key(GastoModel::CATEGORIAS, ['devolucion_prestamo' => 1]),
+            'origenes'    => array_diff_key(IngresoModel::ORIGENES, ['matricula' => 1, 'prestamo' => 1]),
+            'ultima_tasa' => $fin->ultimaTasa(),
+            'tipo'        => ($_GET['tipo'] ?? '') === 'ingreso' ? 'ingreso' : 'gasto',
+        ], 'admin');
+    }
+
+    // ── POST /admin/caja ──────────────────────────────────────
+    public function registrarCaja(): void {
+        $this->requireAdminOEvaluador();
+
+        $es_ingreso = ($_POST['tipo'] ?? '') === 'ingreso';
+        $volver     = '/admin/caja' . ($es_ingreso ? '?tipo=ingreso' : '');
+
+        // Desde el teléfono el concepto es opcional: si no lo escriben,
+        // queda el nombre del rubro o del origen.
+        if (trim($_POST['concepto'] ?? '') === '') {
+            $_POST['concepto'] = $es_ingreso
+                ? (IngresoModel::ORIGENES[$_POST['origen'] ?? ''] ?? '')
+                : (GastoModel::CATEGORIAS[$_POST['categoria'] ?? ''] ?? '');
+        }
+
+        if ($es_ingreso) {
+            if (in_array($_POST['origen'] ?? '', ['matricula', 'prestamo'], true)) {
+                $this->flash('error', 'Las matrículas y los préstamos se cargan en Finanzas.');
+                $this->redirigir($volver);
+            }
+            $datos = $this->datosIngresoDesdePost($volver);
+            if ($datos === null) return;
+
+            $datos['estatus']        = 'confirmado';
+            $datos['registrado_via'] = 'admin';
+            $datos['registrado_por'] = (int) $_SESSION['usuario_id'];
+            (new IngresoModel())->registrar($datos);
+        } else {
+            if (($_POST['categoria'] ?? '') === 'devolucion_prestamo') {
+                $this->flash('error', 'Las devoluciones de préstamos se cargan en Finanzas.');
+                $this->redirigir($volver);
+            }
+            $datos = $this->datosGastoDesdePost($volver);
+            if ($datos === null) return;
+
+            (new GastoModel())->registrar($datos, (int) $_SESSION['usuario_id']);
+        }
+
+        $this->flash('exito', ($es_ingreso ? 'Ingreso' : 'Gasto') . ' de ' . usd($datos['monto_usd']) . ' guardado.');
+        $this->redirigir($volver);
+    }
+
     // ── POST /admin/finanzas/confirmar ────────────────────────
     public function confirmarIngreso(): void {
         $this->requireAdminOEvaluador();

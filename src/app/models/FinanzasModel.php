@@ -131,4 +131,41 @@ class FinanzasModel extends Model {
         $stmt->execute();
         return array_reverse($stmt->fetchAll());
     }
+
+    /**
+     * Ingresos y gastos desde una fecha, mezclados y del más nuevo al más
+     * viejo. Incluye anulados y pendientes: la pantalla de caja los muestra
+     * marcados para que se vea qué se cargó, pero no los suma.
+     */
+    public function movimientosDesde(string $desde): array {
+        $stmt = $this->db->prepare("
+            SELECT 'ingreso' AS tipo, id, fecha, concepto, origen AS rubro,
+                   monto_usd, monto_ves, estatus,
+                   (estatus = 'confirmado') AS cuenta, created_at
+            FROM ingresos WHERE fecha >= :d1
+            UNION ALL
+            SELECT 'gasto', id, fecha_gasto, concepto, categoria,
+                   monto_usd, monto_ves, estatus,
+                   (estatus = 'activo'), created_at
+            FROM gastos WHERE fecha_gasto >= :d2
+            ORDER BY fecha DESC, created_at DESC
+        ");
+        $stmt->execute([':d1' => $desde, ':d2' => $desde]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * La última tasa con la que se cargó algo en bolívares, para no
+     * tener que escribirla en cada movimiento del mismo día.
+     */
+    public function ultimaTasa(): ?float {
+        $tasa = $this->db->query("
+            SELECT tasa_cambio FROM (
+                SELECT tasa_cambio, created_at FROM ingresos WHERE tasa_cambio > 0
+                UNION ALL
+                SELECT tasa_cambio, created_at FROM gastos WHERE tasa_cambio > 0
+            ) t ORDER BY created_at DESC LIMIT 1
+        ")->fetchColumn();
+        return $tasa !== false ? (float) $tasa : null;
+    }
 }
