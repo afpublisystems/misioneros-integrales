@@ -1425,6 +1425,251 @@ class AdminController extends Controller {
         $this->redirigir($volver);
     }
 
+    // ══════════════════════════════════════════════════════════
+    // TRASLADOS A TESORERÍA
+    // ══════════════════════════════════════════════════════════
+
+    // ── GET /admin/finanzas/traslados ─────────────────────────
+    public function traslados(): void {
+        $this->requireAdminOEvaluador();
+
+        $traslados = new TrasladoModel();
+
+        $filtros = [
+            'desde'          => $_GET['desde']     ?? '',
+            'hasta'          => $_GET['hasta']     ?? '',
+            'cuenta_id'      => $_GET['cuenta_id'] ?? '',
+            'solo_bolivares' => isset($_GET['solo_bolivares']),
+        ];
+
+        $this->render('admin/finanzas_traslados', [
+            'titulo'       => 'Traslados de fondos',
+            'filtros'      => $filtros,
+            'solicitudes'  => $traslados->listar(),
+            'sin_reportar' => $traslados->ingresosSinReportar($filtros),
+            'totales'      => $traslados->totales(),
+            'cuentas'      => (new FinanzasModel())->cuentas(),
+            'estatus'      => TrasladoModel::ESTATUS,
+        ], 'admin');
+    }
+
+    // ── POST /admin/finanzas/traslado ─────────────────────────
+    public function crearTraslado(): void {
+        $this->requireAdminOEvaluador();
+
+        $volver   = '/admin/finanzas/traslados';
+        $concepto = trim($_POST['concepto'] ?? '');
+        $ingresos = $_POST['ingresos'] ?? [];
+
+        if ($concepto === '' || !is_array($ingresos) || empty($ingresos)) {
+            $this->flash('error', 'Ponle un concepto y marca al menos un pago.');
+            $this->redirigir($volver);
+            return;
+        }
+
+        $id = (new TrasladoModel())->crear([
+            'fecha'    => $_POST['fecha'] ?: date('Y-m-d'),
+            'concepto' => $concepto,
+            'destino'  => trim($_POST['destino'] ?? ''),
+            'notas'    => trim($_POST['notas'] ?? ''),
+        ], $ingresos, (int) $_SESSION['usuario_id']);
+
+        if (!$id) {
+            $this->flash('error', 'No se pudo armar la solicitud.');
+            $this->redirigir($volver);
+            return;
+        }
+
+        $this->flash('exito', 'Solicitud armada. Revísala e imprímela para tesorería.');
+        $this->redirigir('/admin/finanzas/traslado?id=' . $id);
+    }
+
+    // ── POST /admin/finanzas/traslado/estatus ─────────────────
+    public function cambiarEstatusTraslado(): void {
+        $this->requireAdminOEvaluador();
+
+        $id      = (int) ($_POST['id'] ?? 0);
+        $estatus = $_POST['estatus'] ?? '';
+
+        if (!$id || !(new TrasladoModel())->cambiarEstatus($id, $estatus)) {
+            $this->flash('error', 'No se pudo cambiar el estado de la solicitud.');
+        } else {
+            $this->flash('exito', $estatus === 'anulada'
+                ? 'Solicitud anulada. Sus pagos vuelven a quedar sin reportar.'
+                : 'Solicitud marcada como ' . TrasladoModel::ESTATUS[$estatus] . '.');
+        }
+
+        $this->redirigir('/admin/finanzas/traslados');
+    }
+
+    // ── GET /admin/finanzas/traslado ──────────────────────────
+    // El listado que se le manda a tesorería, listo para imprimir
+    // o guardar en PDF desde el navegador.
+    public function verTraslado(): void {
+        $this->requireAdminOEvaluador();
+
+        $traslados = new TrasladoModel();
+        $solicitud = $traslados->conTotales((int) ($_GET['id'] ?? 0));
+
+        if (!$solicitud) {
+            $this->flash('error', 'Esa solicitud no existe.');
+            $this->redirigir('/admin/finanzas/traslados');
+            return;
+        }
+
+        $this->render('admin/traslado_imprimir', [
+            'titulo'    => 'Solicitud ' . $solicitud['codigo'],
+            'solicitud' => $solicitud,
+            'pagos'     => $traslados->pagosDe((int) $solicitud['id']),
+        ], 'impresion');
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // SEMINARIO (STBV)
+    // ══════════════════════════════════════════════════════════
+
+    // ── GET /admin/finanzas/seminario ─────────────────────────
+    public function seminario(): void {
+        $this->requireAdminOEvaluador();
+
+        $sem     = new SeminarioModel();
+        $resumen = $sem->resumenPorEstudiante();
+
+        $cargos = [];
+        foreach ($resumen as $r) {
+            $cargos[$r['aspirante_id']] = $sem->cargosPorAspirante((int) $r['aspirante_id']);
+        }
+
+        $fin = new FinanzasModel();
+
+        $this->render('admin/finanzas_seminario', [
+            'titulo'      => 'Seminario (STBV)',
+            'resumen'     => $resumen,
+            'cargos'      => $cargos,
+            'pendientes'  => $sem->pendientes(),
+            'totales'     => $sem->totales(),
+            'conceptos'   => SeminarioModel::CONCEPTOS,
+            'cuentas'     => $fin->cuentas(),
+            'fondos'      => $fin->fondos(),
+            'ultima_tasa' => $fin->ultimaTasa(),
+        ], 'admin');
+    }
+
+    // ── POST /admin/finanzas/seminario/generar ────────────────
+    public function generarCargosSeminario(): void {
+        $this->requireAdminOEvaluador();
+
+        $generados = (new SeminarioModel())->generarParaAprobados();
+
+        $this->flash(
+            $generados ? 'exito' : 'error',
+            $generados
+                ? "Cargos generados para $generados participante" . ($generados === 1 ? '' : 's') . '.'
+                : 'Todos los participantes aprobados ya tenían sus cargos.'
+        );
+        $this->redirigir('/admin/finanzas/seminario');
+    }
+
+    // ── POST /admin/finanzas/seminario/pago ───────────────────
+    // Un pago al Seminario es un gasto del programa; los cargos que
+    // cubre quedan amarrados a ese gasto.
+    public function registrarPagoSeminario(): void {
+        $this->requireAdminOEvaluador();
+
+        $volver = '/admin/finanzas/seminario';
+        $cargos = $_POST['cargos'] ?? [];
+
+        if (!is_array($cargos) || empty($cargos)) {
+            $this->flash('error', 'Marca los cargos que cubre el pago.');
+            $this->redirigir($volver);
+            return;
+        }
+
+        $sem   = new SeminarioModel();
+        $total = $sem->totalDeCargos($cargos);
+
+        if ($total <= 0) {
+            $this->flash('error', 'Esos cargos ya estaban pagados.');
+            $this->redirigir($volver);
+            return;
+        }
+
+        // El monto del gasto es la suma de lo que se está saldando,
+        // salvo que lo escriban a mano (pago en Bs, por ejemplo).
+        if ((float) ($_POST['monto_usd'] ?? 0) <= 0 && (float) ($_POST['monto_ves'] ?? 0) <= 0) {
+            $_POST['monto_usd'] = $total;
+        }
+        if (trim($_POST['concepto'] ?? '') === '') {
+            $_POST['concepto'] = 'Pago al Seminario — ' . count($cargos) . ' cargo' . (count($cargos) === 1 ? '' : 's');
+        }
+        if (trim($_POST['beneficiario'] ?? '') === '') {
+            $_POST['beneficiario'] = 'Seminario Teológico Bautista de Venezuela';
+        }
+
+        $datos = $this->datosGastoDesdePost($volver);
+        if ($datos === null) return;
+
+        $gasto_id = (new GastoModel())->registrar($datos, (int) $_SESSION['usuario_id']);
+        $marcados = $sem->marcarPagados($cargos, $gasto_id, $datos['fecha_gasto']);
+
+        $this->flash('exito', "Pago de " . usd($datos['monto_usd']) . " registrado: $marcados cargos saldados.");
+        $this->redirigir($volver);
+    }
+
+    // ── POST /admin/finanzas/seminario/cargo ──────────────────
+    public function guardarCargoSeminario(): void {
+        $this->requireAdminOEvaluador();
+
+        $volver = '/admin/finanzas/seminario';
+        $sem    = new SeminarioModel();
+        $accion = $_POST['accion'] ?? 'agregar';
+        $id     = (int) ($_POST['id'] ?? 0);
+
+        if ($accion === 'eliminar') {
+            $ok = $id && $sem->eliminarCargo($id);
+            $this->flash($ok ? 'exito' : 'error',
+                $ok ? 'Cargo eliminado.' : 'Un cargo ya pagado no se puede eliminar.');
+            $this->redirigir($volver);
+            return;
+        }
+
+        $descripcion = trim($_POST['descripcion'] ?? '');
+        $monto       = (float) ($_POST['monto_usd'] ?? 0);
+
+        if ($descripcion === '' || $monto < 0) {
+            $this->flash('error', 'Revisa la descripción y el monto del cargo.');
+            $this->redirigir($volver);
+            return;
+        }
+
+        $datos = [
+            'aspirante_id' => (int) ($_POST['aspirante_id'] ?? 0),
+            'trimestre'    => max(1, (int) ($_POST['trimestre'] ?? 1)),
+            'concepto'     => array_key_exists($_POST['concepto'] ?? '', SeminarioModel::CONCEPTOS)
+                              ? $_POST['concepto'] : 'otro',
+            'descripcion'  => $descripcion,
+            'monto_usd'    => $monto,
+            'estatus'      => ($_POST['estatus'] ?? '') === 'exonerado' ? 'exonerado' : 'pendiente',
+            'notas'        => trim($_POST['notas'] ?? ''),
+        ];
+
+        if ($accion === 'editar') {
+            $ok = $id && $sem->editarCargo($id, $datos);
+            $this->flash($ok ? 'exito' : 'error',
+                $ok ? 'Cargo actualizado.' : 'Un cargo ya pagado no se puede cambiar.');
+        } else {
+            if (!$datos['aspirante_id']) {
+                $this->flash('error', 'Indica de qué participante es el cargo.');
+                $this->redirigir($volver);
+                return;
+            }
+            $sem->agregarCargo($datos);
+            $this->flash('exito', 'Cargo agregado.');
+        }
+
+        $this->redirigir($volver);
+    }
+
     // ── Armado y validación de los formularios ────────────────
     // Se comparten entre registrar y editar para que las reglas
     // no se dupliquen y no se desincronicen con el tiempo.
@@ -1664,6 +1909,38 @@ class AdminController extends Controller {
                     $r['monto_usd'], $r['monto_ves'], $r['tasa_cambio'],
                     $r['metodo_pago'], $r['referencia'], $r['registrado_por'], $r['notas'],
                 ], ';');
+            }
+        } elseif ($tipo === 'traslado') {
+            $traslados = new TrasladoModel();
+            $solicitud = $traslados->conTotales((int) ($_GET['id'] ?? 0));
+            if (!$solicitud) { http_response_code(404); exit; }
+
+            header("Content-Disposition: attachment; filename={$solicitud['codigo']}.csv");
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($out, ['Fecha','Participante','Cédula','Concepto','Banco origen','Referencia','Método','Monto Bs','Tasa','Monto USD'], ';');
+            foreach ($traslados->pagosDe((int) $solicitud['id']) as $r) {
+                fputcsv($out, [
+                    $r['fecha'], $r['de_quien'], $r['cedula'], $r['concepto'],
+                    $r['banco_origen'], $r['referencia'], $r['metodo_pago'],
+                    $r['monto_ves'], $r['tasa_cambio'], $r['monto_usd'],
+                ], ';');
+            }
+            fputcsv($out, ['', '', '', '', '', '', 'TOTAL', $solicitud['total_ves'], '', $solicitud['total_usd']], ';');
+        } elseif ($tipo === 'seminario') {
+            header("Content-Disposition: attachment; filename=seminario_{$fecha}.csv");
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($out, ['Participante','Cédula','Trimestre','Concepto','Descripción','Monto USD','Estatus','Fecha de pago'], ';');
+            $sem = new SeminarioModel();
+            foreach ($sem->resumenPorEstudiante() as $r) {
+                foreach ($sem->cargosPorAspirante((int) $r['aspirante_id']) as $c) {
+                    fputcsv($out, [
+                        $r['nombre'], $r['cedula'], $c['trimestre'],
+                        SeminarioModel::CONCEPTOS[$c['concepto']] ?? $c['concepto'],
+                        $c['descripcion'], $c['monto_usd'], $c['estatus'], $c['fecha_pago'],
+                    ], ';');
+                }
             }
         } elseif ($tipo === 'matriculas') {
             header("Content-Disposition: attachment; filename=matriculas_{$fecha}.csv");

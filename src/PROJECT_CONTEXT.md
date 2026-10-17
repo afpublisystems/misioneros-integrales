@@ -297,6 +297,11 @@ POST:
   /admin/finanzas/reactivar         → AdminController::reactivarMovimiento
   /admin/finanzas/beca              → AdminController::actualizarBeca
   /admin/finanzas/matriculas/pago   → AdminController::registrarPagoMatricula
+  /admin/finanzas/traslado           → AdminController::crearTraslado
+  /admin/finanzas/traslado/estatus   → AdminController::cambiarEstatusTraslado
+  /admin/finanzas/seminario/generar  → AdminController::generarCargosSeminario
+  /admin/finanzas/seminario/pago     → AdminController::registrarPagoSeminario
+  /admin/finanzas/seminario/cargo    → AdminController::guardarCargoSeminario
   /admin/finanzas/fondo             → AdminController::crearFondo
 ```
 
@@ -472,7 +477,7 @@ Libro de ingresos y egresos del programa. Sustituye al diseño de la migración 
 que solo contemplaba cuotas y gastos con categorías genéricas y nunca llegó a
 crearse en la base de datos.
 
-### Las seis tablas y para qué sirve cada una
+### Las ocho tablas y para qué sirve cada una
 
 | Tabla | Responde a |
 |-------|-----------|
@@ -482,12 +487,26 @@ crearse en la base de datos.
 | `fondos` | ¿Para qué estaba destinada? Permite decir "de lo que entró para franelas, cuánto queda" |
 | `cuentas` | ¿Dónde está físicamente? Zelle, pago móvil, efectivo USD, efectivo Bs |
 | `cuotas_estudiantes` | ¿Cuánto debe cada participante y cuánto lleva? |
+| `solicitudes_traslado` | ¿Qué pagos se le mandaron a tesorería y en qué van? |
+| `seminario_cargos` | ¿Cuánto hay que pagarle al STBV por cada participante? |
 
 ### Reglas que sostienen los números
 
 **Todo se consolida en dólares.** Un movimiento en bolívares se guarda con `monto_ves`
 y `tasa_cambio`, y el sistema calcula el `monto_usd`. Antes los gastos cargados en Bs
 no aparecían en ningún total.
+
+**El dinero en bolívares pasa por tesorería.** Las matrículas en Bs caen en la cuenta
+de la CNBV. Para disponer de ellas se arma una solicitud de traslado con los pagos
+(fecha, monto Bs, banco y referencia) y se le manda a la tesorería de la Convención.
+Cada ingreso guarda en qué solicitud se fue (`ingresos.solicitud_id`), así que no se
+puede reportar dos veces. Anular la solicitud libera sus pagos para la siguiente.
+
+**Lo del Seminario sale de la matrícula.** Por cada participante hay que pagarle al
+STBV inscripción (25), carnet (10), ternanet (20) y las mensualidades de 25 — 130
+el primer trimestre y 75 el segundo. Eso vive en `seminario_cargos`; el pago real es
+un `gasto` con rubro `seminario_*` y los cargos que cubre quedan apuntando a él.
+Si el gasto se anula, los cargos vuelven a pendiente.
 
 **Un préstamo es dos registros.** Al registrarlo se crea también un `ingreso` con
 `origen = 'prestamo'` apuntando a él, porque la plata sí entró a caja. Ese ingreso

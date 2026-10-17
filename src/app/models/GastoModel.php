@@ -115,6 +115,10 @@ class GastoModel extends Model {
         if (!empty($gasto['prestamo_id'])) {
             (new PrestamoModel())->actualizarEstatus((int) $gasto['prestamo_id']);
         }
+
+        // Si cubría cargos del Seminario, vuelven a quedar pendientes
+        (new SeminarioModel())->liberarPorGasto($id);
+
         return true;
     }
 

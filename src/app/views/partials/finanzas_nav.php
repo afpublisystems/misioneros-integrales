@@ -11,6 +11,8 @@ $secciones = [
     '/admin/finanzas/movimientos' => ['fa-right-left',           'Ingresos y gastos'],
     '/admin/finanzas/matriculas'  => ['fa-graduation-cap',       'Matrículas y becas'],
     '/admin/finanzas/prestamos'   => ['fa-hand-holding-dollar',  'Préstamos'],
+    '/admin/finanzas/traslados'   => ['fa-money-bill-transfer',  'Traslados'],
+    '/admin/finanzas/seminario'   => ['fa-school',               'Seminario'],
 ];
 ?>
 <nav class="fin-tabs">
