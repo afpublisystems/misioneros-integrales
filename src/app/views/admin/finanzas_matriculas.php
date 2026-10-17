@@ -133,10 +133,16 @@
                         <?= $r['proximo_vencimiento'] ? date('d/m/Y', strtotime($r['proximo_vencimiento'])) : '—' ?>
                     </td>
                     <td style="white-space:nowrap">
-                        <button class="btn btn--xs btn--outline" onclick="verCuotas(<?= $r['aspirante_id'] ?>)">
+                        <?php if ($a_pagar > 0): ?>
+                        <button class="btn btn--xs btn--verde" title="Registrar abono"
+                                onclick="abrirAbono(<?= $r['aspirante_id'] ?>, '<?= htmlspecialchars(addslashes($r['nombre']), ENT_QUOTES) ?>', <?= $saldo ?>)">
+                            <i class="fas fa-dollar-sign"></i>
+                        </button>
+                        <?php endif; ?>
+                        <button class="btn btn--xs btn--outline" title="Ver cuotas" onclick="verCuotas(<?= $r['aspirante_id'] ?>)">
                             <i class="fas fa-list"></i>
                         </button>
-                        <button class="btn btn--xs btn--outline"
+                        <button class="btn btn--xs btn--outline" title="Editar beca"
                                 onclick="editarBeca(<?= $r['aspirante_id'] ?>, <?= $beca ?>, <?= (float)$r['costo_base_usd'] ?>, '<?= htmlspecialchars(addslashes($r['nombre']), ENT_QUOTES) ?>')">
                             <i class="fas fa-percent"></i>
                         </button>
@@ -184,6 +190,108 @@
         </section>
 
     </main>
+</div>
+
+<!-- Modal: Registrar abono ────────────────────────── -->
+<div class="modal-overlay" id="modal-abono">
+    <div class="modal modal--ancho">
+        <div class="modal__header">
+            <h3><i class="fas fa-dollar-sign"></i> Abono de <span id="abono-nombre"></span></h3>
+            <button class="modal__cerrar" onclick="cerrarModal('modal-abono')">&times;</button>
+        </div>
+        <form method="POST" action="/admin/finanzas/matriculas/pago" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <input type="hidden" name="aspirante_id" id="abono-id">
+            <div class="modal__body modal__body--scroll">
+
+                <div class="fin-dato">
+                    <span class="fin-dato__label">Saldo pendiente</span>
+                    <span class="fin-dato__valor" id="abono-saldo"></span>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-grupo">
+                        <label>Fecha <span class="req">*</span></label>
+                        <input type="date" name="fecha" value="<?= date('Y-m-d') ?>" required>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Entró a</label>
+                        <select name="cuenta_id">
+                            <option value="">Sin especificar</option>
+                            <?php foreach ($cuentas as $c): ?>
+                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid-3">
+                    <div class="form-grupo">
+                        <label>Monto USD</label>
+                        <input type="number" name="monto_usd" id="abono-usd" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Monto Bs</label>
+                        <input type="number" name="monto_ves" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Tasa</label>
+                        <input type="number" name="tasa_cambio" step="0.0001" min="0"
+                               placeholder="<?= $ultima_tasa ? number_format($ultima_tasa, 2, '.', '') : 'Bs por USD' ?>">
+                    </div>
+                </div>
+                <span class="fin-nota">
+                    Si pagó en bolívares, llena monto en Bs y la tasa: el sistema calcula el equivalente en dólares.
+                </span>
+                <button type="button" class="btn btn--xs btn--outline" style="margin-top:.5rem" onclick="ponerSaldo()">
+                    Poner el saldo completo
+                </button>
+
+                <div class="form-grid-3" style="margin-top:1rem">
+                    <div class="form-grupo">
+                        <label>Método <span class="req">*</span></label>
+                        <select name="metodo_pago" required>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="transferencia">Transferencia</option>
+                            <option value="zelle">Zelle</option>
+                            <option value="pago_movil">Pago Móvil</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Banco</label>
+                        <input type="text" name="banco_origen" maxlength="100">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Referencia</label>
+                        <input type="text" name="referencia" maxlength="100">
+                    </div>
+                </div>
+
+                <div class="form-grupo">
+                    <label>Concepto</label>
+                    <input type="text" name="concepto" maxlength="200" placeholder="Abono a matrícula">
+                </div>
+                <div class="form-grupo">
+                    <label>Comprobante (JPG/PNG/PDF, máx 5 MB)</label>
+                    <input type="file" name="comprobante" accept=".jpg,.jpeg,.png,.pdf">
+                </div>
+                <div class="form-grupo">
+                    <label>Notas</label>
+                    <textarea name="notas" rows="2" maxlength="500"></textarea>
+                </div>
+
+                <p class="fin-nota">
+                    El abono queda confirmado de una vez y se reparte sobre las cuotas pendientes, en orden.
+                    También aparece en Ingresos y gastos.
+                </p>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--outline" onclick="cerrarModal('modal-abono')">Cancelar</button>
+                <button type="submit" class="btn btn--verde"><i class="fas fa-save"></i> Guardar abono</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Modal: Editar beca ─────────────────────────────────────── -->
@@ -249,6 +357,18 @@ document.addEventListener('keydown', function (e) {
 function verCuotas(id) {
     var fila = document.getElementById('cuotas-' + id);
     fila.style.display = fila.style.display === 'none' ? 'table-row' : 'none';
+}
+var saldoAbono = 0;
+function abrirAbono(id, nombre, saldo) {
+    saldoAbono = saldo;
+    document.getElementById('abono-id').value = id;
+    document.getElementById('abono-nombre').textContent = nombre;
+    document.getElementById('abono-saldo').textContent  = '$' + saldo.toFixed(2);
+    document.getElementById('abono-usd').value = '';
+    document.getElementById('modal-abono').classList.add('abierto');
+}
+function ponerSaldo() {
+    document.getElementById('abono-usd').value = saldoAbono.toFixed(2);
 }
 function editarBeca(id, beca, costo, nombre) {
     document.getElementById('beca-id').value      = id;

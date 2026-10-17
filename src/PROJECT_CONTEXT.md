@@ -296,6 +296,7 @@ POST:
   /admin/finanzas/anular            → AdminController::anularMovimiento
   /admin/finanzas/reactivar         → AdminController::reactivarMovimiento
   /admin/finanzas/beca              → AdminController::actualizarBeca
+  /admin/finanzas/matriculas/pago   → AdminController::registrarPagoMatricula
   /admin/finanzas/fondo             → AdminController::crearFondo
 ```
 

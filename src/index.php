@@ -145,6 +145,7 @@ $rutas = [
         '/admin/caja'               => ['AdminController',      'registrarCaja'],
         '/admin/finanzas/confirmar' => ['AdminController',      'confirmarIngreso'],
         '/admin/finanzas/beca'      => ['AdminController',      'actualizarBeca'],
+        '/admin/finanzas/matriculas/pago' => ['AdminController', 'registrarPagoMatricula'],
         '/admin/finanzas/prestamo'  => ['AdminController',      'registrarPrestamo'],
         '/admin/finanzas/ingreso/editar'   => ['AdminController', 'editarIngreso'],
         '/admin/finanzas/gasto/editar'     => ['AdminController', 'editarGasto'],

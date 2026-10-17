@@ -1227,7 +1227,8 @@ class AdminController extends Controller {
     public function matriculas(): void {
         $this->requireAdminOEvaluador();
 
-        $pagos = new PagoModel();
+        $fin     = new FinanzasModel();
+        $pagos   = new PagoModel();
         $resumen = $pagos->resumenPorEstudiante();
 
         // Cuotas de cada participante, para el detalle desplegable
@@ -1237,11 +1238,38 @@ class AdminController extends Controller {
         }
 
         $this->render('admin/finanzas_matriculas', [
-            'titulo'    => 'Matrículas y becas',
-            'resumen'   => $resumen,
-            'cuotas'    => $cuotas,
-            'totales'   => $pagos->totalesMatricula(),
+            'titulo'      => 'Matrículas y becas',
+            'resumen'     => $resumen,
+            'cuotas'      => $cuotas,
+            'totales'     => $pagos->totalesMatricula(),
+            'cuentas'     => $fin->cuentas(),
+            'ultima_tasa' => $fin->ultimaTasa(),
         ], 'admin');
+    }
+
+    // ── POST /admin/finanzas/matriculas/pago ──────────────────
+    // Abono de matrícula cargado por el admin. Entra confirmado y
+    // el reparto sobre las cuotas lo hace IngresoModel::registrar().
+    public function registrarPagoMatricula(): void {
+        $this->requireAdminOEvaluador();
+
+        $volver = '/admin/finanzas/matriculas';
+
+        $_POST['origen'] = 'matricula';
+        if (trim($_POST['concepto'] ?? '') === '') {
+            $_POST['concepto'] = 'Abono a matrícula';
+        }
+
+        $datos = $this->datosIngresoDesdePost($volver);
+        if ($datos === null) return;
+
+        $datos['estatus']        = 'confirmado';
+        $datos['registrado_via'] = 'admin';
+        $datos['registrado_por'] = (int) $_SESSION['usuario_id'];
+
+        (new IngresoModel())->registrar($datos);
+        $this->flash('exito', 'Abono de ' . usd($datos['monto_usd']) . ' registrado.');
+        $this->redirigir($volver);
     }
 
     // ── POST /admin/finanzas/beca ─────────────────────────────
