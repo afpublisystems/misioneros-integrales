@@ -1518,9 +1518,12 @@ class AdminController extends Controller {
         }
 
         $this->render('admin/traslado_imprimir', [
-            'titulo'    => 'Solicitud ' . $solicitud['codigo'],
-            'solicitud' => $solicitud,
-            'pagos'     => $traslados->pagosDe((int) $solicitud['id']),
+            'titulo'      => 'Solicitud ' . $solicitud['codigo'],
+            'solicitud'   => $solicitud,
+            'pagos'       => $traslados->pagosDe((int) $solicitud['id']),
+            // Tesorería solo verifica las transacciones: esta versión
+            // sale sin los nombres de los participantes.
+            'sin_nombres' => isset($_GET['sin_nombres']),
         ], 'impresion');
     }
 
@@ -1915,18 +1918,34 @@ class AdminController extends Controller {
             $solicitud = $traslados->conTotales((int) ($_GET['id'] ?? 0));
             if (!$solicitud) { http_response_code(404); exit; }
 
-            header("Content-Disposition: attachment; filename={$solicitud['codigo']}.csv");
+            $sin_nombres = isset($_GET['sin_nombres']);
+            $sufijo      = $sin_nombres ? '-sin-nombres' : '';
+
+            header("Content-Disposition: attachment; filename={$solicitud['codigo']}{$sufijo}.csv");
             $out = fopen('php://output', 'w');
             fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            fputcsv($out, ['Fecha','Participante','Cédula','Concepto','Banco origen','Referencia','Método','Monto Bs','Tasa','Monto USD'], ';');
-            foreach ($traslados->pagosDe((int) $solicitud['id']) as $r) {
-                fputcsv($out, [
-                    $r['fecha'], $r['de_quien'], $r['cedula'], $r['concepto'],
-                    $r['banco_origen'], $r['referencia'], $r['metodo_pago'],
-                    $r['monto_ves'], $r['tasa_cambio'], $r['monto_usd'],
-                ], ';');
+
+            if ($sin_nombres) {
+                fputcsv($out, ['Fecha','Monto Bs','Tasa','Monto USD','Banco emisor','Tipo de pago','Referencia','Observación'], ';');
+                foreach ($traslados->pagosDe((int) $solicitud['id']) as $r) {
+                    fputcsv($out, [
+                        $r['fecha'], $r['monto_ves'], $r['tasa_cambio'], $r['monto_usd'],
+                        $r['banco_origen'], IngresoModel::METODOS[$r['metodo_pago']] ?? $r['metodo_pago'],
+                        $r['referencia'], $r['notas'] ?: $r['concepto'],
+                    ], ';');
+                }
+                fputcsv($out, ['TOTAL', $solicitud['total_ves'], '', $solicitud['total_usd'], '', '', '', ''], ';');
+            } else {
+                fputcsv($out, ['Fecha','Participante','Cédula','Concepto','Banco origen','Referencia','Método','Monto Bs','Tasa','Monto USD'], ';');
+                foreach ($traslados->pagosDe((int) $solicitud['id']) as $r) {
+                    fputcsv($out, [
+                        $r['fecha'], $r['de_quien'], $r['cedula'], $r['concepto'],
+                        $r['banco_origen'], $r['referencia'], $r['metodo_pago'],
+                        $r['monto_ves'], $r['tasa_cambio'], $r['monto_usd'],
+                    ], ';');
+                }
+                fputcsv($out, ['', '', '', '', '', '', 'TOTAL', $solicitud['total_ves'], '', $solicitud['total_usd']], ';');
             }
-            fputcsv($out, ['', '', '', '', '', '', 'TOTAL', $solicitud['total_ves'], '', $solicitud['total_usd']], ';');
         } elseif ($tipo === 'seminario') {
             header("Content-Disposition: attachment; filename=seminario_{$fecha}.csv");
             $out = fopen('php://output', 'w');

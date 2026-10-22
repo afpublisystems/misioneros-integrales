@@ -24,6 +24,15 @@ class IngresoModel extends Model {
         'otro'        => 'Otro',
     ];
 
+    /** Cómo entró la plata, como se lee en los reportes */
+    public const METODOS = [
+        'transferencia' => 'Transferencia',
+        'zelle'         => 'Zelle',
+        'pago_movil'    => 'Pago Móvil',
+        'efectivo'      => 'Efectivo',
+        'otro'          => 'Otro',
+    ];
+
     /**
      * Registra un ingreso. Si es matrícula confirmada, reparte
      * el dinero sobre las cuotas del participante.
