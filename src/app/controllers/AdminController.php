@@ -1517,13 +1517,17 @@ class AdminController extends Controller {
             return;
         }
 
+        // Tesorería solo verifica las transacciones: esa versión sale sin
+        // nombres y con los pagos de una misma referencia en una línea.
+        $sin_nombres = isset($_GET['sin_nombres']);
+
         $this->render('admin/traslado_imprimir', [
             'titulo'      => 'Solicitud ' . $solicitud['codigo'],
             'solicitud'   => $solicitud,
-            'pagos'       => $traslados->pagosDe((int) $solicitud['id']),
-            // Tesorería solo verifica las transacciones: esta versión
-            // sale sin los nombres de los participantes.
-            'sin_nombres' => isset($_GET['sin_nombres']),
+            'pagos'       => $sin_nombres
+                             ? $traslados->pagosAgrupados((int) $solicitud['id'])
+                             : $traslados->pagosDe((int) $solicitud['id']),
+            'sin_nombres' => $sin_nombres,
         ], 'impresion');
     }
 
@@ -1927,11 +1931,14 @@ class AdminController extends Controller {
 
             if ($sin_nombres) {
                 fputcsv($out, ['Fecha','Monto Bs','Tasa','Monto USD','Banco emisor','Tipo de pago','Referencia','Observación'], ';');
-                foreach ($traslados->pagosDe((int) $solicitud['id']) as $r) {
+                foreach ($traslados->pagosAgrupados((int) $solicitud['id']) as $r) {
                     fputcsv($out, [
-                        $r['fecha'], $r['monto_ves'], $r['tasa_cambio'], $r['monto_usd'],
+                        $r['fecha'],
+                        number_format($r['monto_ves'], 2, '.', ''),
+                        $r['tasa_cambio'],
+                        number_format($r['monto_usd'], 2, '.', ''),
                         $r['banco_origen'], IngresoModel::METODOS[$r['metodo_pago']] ?? $r['metodo_pago'],
-                        $r['referencia'], $r['notas'] ?: $r['concepto'],
+                        $r['referencia'], $r['observacion'],
                     ], ';');
                 }
                 fputcsv($out, ['TOTAL', $solicitud['total_ves'], '', $solicitud['total_usd'], '', '', '', ''], ';');

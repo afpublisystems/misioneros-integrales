@@ -168,6 +168,71 @@ class TrasladoModel extends Model {
     }
 
     /**
+     * Los mismos pagos, pero como los ve el banco.
+     *
+     * Cuando una iglesia manda en una sola transferencia la matrícula
+     * de dos participantes, adentro se registran dos ingresos con la
+     * misma referencia. Tesorería verifica la transacción, no las
+     * matrículas, así que esos dos salen en una sola línea sumada.
+     *
+     * Sin referencia no hay cómo saber si dos pagos son la misma
+     * transacción, así que esos se quedan sueltos. Los anulados no
+     * entran: ya no cuentan en el total de la solicitud.
+     */
+    public function pagosAgrupados(int $id): array {
+        $grupos = [];
+
+        foreach ($this->pagosDe($id) as $p) {
+            if ($p['estatus'] === 'anulado') continue;
+
+            $clave = $p['referencia']
+                ? implode('|', [$p['fecha'], $p['banco_origen'], $p['referencia'], $p['metodo_pago']])
+                : 'suelto-' . $p['id'];
+
+            if (!isset($grupos[$clave])) {
+                $grupos[$clave] = [
+                    'fecha'        => $p['fecha'],
+                    'banco_origen' => $p['banco_origen'],
+                    'referencia'   => $p['referencia'],
+                    'metodo_pago'  => $p['metodo_pago'],
+                    'tasa_cambio'  => $p['tasa_cambio'],
+                    'monto_usd'    => 0.0,
+                    'monto_ves'    => 0.0,
+                    'pagos'        => 0,
+                    'notas'        => [],
+                ];
+            }
+
+            $grupos[$clave]['monto_usd'] += (float) $p['monto_usd'];
+            $grupos[$clave]['monto_ves'] += (float) $p['monto_ves'];
+            $grupos[$clave]['pagos']++;
+
+            // Si vinieron con tasas distintas, ninguna representa al grupo
+            if ((string) $grupos[$clave]['tasa_cambio'] !== (string) $p['tasa_cambio']) {
+                $grupos[$clave]['tasa_cambio'] = null;
+            }
+
+            $nota = trim((string) ($p['notas'] ?: $p['concepto']));
+            if ($nota !== '' && !in_array($nota, $grupos[$clave]['notas'], true)) {
+                $grupos[$clave]['notas'][] = $nota;
+            }
+        }
+
+        foreach ($grupos as &$g) {
+            $g['observacion'] = implode(' · ', $g['notas']);
+            if ($g['pagos'] > 1) {
+                $resumen = $g['pagos'] . ' matrículas en una sola transacción';
+                $g['observacion'] = $g['observacion'] === ''
+                    ? $resumen
+                    : $g['observacion'] . ' — ' . $resumen;
+            }
+            unset($g['notas']);
+        }
+
+        return array_values($grupos);
+    }
+
+    /**
      * Mueve la solicitud de estado. Anularla devuelve sus pagos a la
      * bolsa de lo no reportado.
      */

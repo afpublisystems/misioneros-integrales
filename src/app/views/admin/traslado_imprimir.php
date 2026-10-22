@@ -81,7 +81,7 @@ $th            = 'padding:.5rem;border:1px solid #e2e8f0';
         </thead>
         <tbody>
         <?php foreach ($pagos as $i => $p): ?>
-            <tr<?= $p['estatus'] === 'anulado' ? ' style="opacity:.5;text-decoration:line-through"' : '' ?>>
+            <tr<?= ($p['estatus'] ?? '') === 'anulado' ? ' style="opacity:.5;text-decoration:line-through"' : '' ?>>
                 <td style="<?= $td ?>"><?= $i + 1 ?></td>
                 <td style="<?= $td ?>;white-space:nowrap"><?= date('d/m/Y', strtotime($p['fecha'])) ?></td>
                 <?php if (!$sin_nombres): ?>
@@ -103,7 +103,7 @@ $th            = 'padding:.5rem;border:1px solid #e2e8f0';
                 </td>
                 <td style="<?= $td ?>"><?= htmlspecialchars($p['referencia'] ?: '—') ?></td>
                 <?php if ($sin_nombres): ?>
-                <td style="<?= $td ?>"><?= htmlspecialchars($p['notas'] ?: $p['concepto']) ?></td>
+                <td style="<?= $td ?>"><?= htmlspecialchars($p['observacion'] ?: '—') ?></td>
                 <?php endif; ?>
             </tr>
         <?php endforeach; ?>
