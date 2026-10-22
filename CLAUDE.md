@@ -88,3 +88,7 @@ public_html/misionerosintegrales.com/
   `.modal-overlay`), no inventar clases nuevas
 - Comprobantes en `uploads/comprobantes/` — usar `BASE_PATH . '/uploads/...'`,
   nunca `BASE_PATH . '/../uploads/...'`
+- Un pago solo entra en una solicitud de traslado (`ingresos.solicitud_id`); la hoja
+  para tesorería va sin nombres y agrupa por fecha + banco + referencia + método
+- Los cargos del Seminario se saldan creando un gasto, nunca editando el cargo a mano;
+  anular ese gasto los devuelve a pendiente

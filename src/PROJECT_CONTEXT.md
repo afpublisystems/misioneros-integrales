@@ -160,7 +160,7 @@ C:\xampp\htdocs\misioneros-integrales\
 
 ---
 
-## BASE DE DATOS — 17 tablas
+## BASE DE DATOS — 21 tablas
 
 | Tabla | Propósito | Estado |
 |-------|-----------|--------|
@@ -180,6 +180,11 @@ C:\xampp\htdocs\misioneros-integrales\
 | `ingresos` | Todo el dinero que entra (matrículas, CNBV, donaciones, préstamos) | ✅ Migración 005 |
 | `gastos` | Egresos del programa | ✅ Migración 005 + 006 |
 | `prestamos` | Dinero recibido que hay que devolver | ✅ Migración 005 + 006 |
+| `solicitudes_traslado` | Envíos a tesorería CNBV para que verifiquen y trasladen | ✅ Migración 010 |
+| `seminario_cargos` | Lo que hay que pagarle al STBV por cada participante | ✅ Migración 010 |
+| `colaboradores` | Quienes apoyan el programa (sección de la home) | ✅ |
+| `personas_alcanzadas` | Registro de evangelismo en campo | ✅ Migración 007 |
+| `configuracion` | Parámetros sueltos del sitio | ✅ |
 
 ### Schema flujo_proceso (importante)
 ```sql
@@ -527,6 +532,95 @@ al confirmar, rechazar, editar o anular un ingreso de matrícula.
 en cero con estatus `exonerada`. Cambiar la beca rehace las cuotas y reparte de nuevo
 lo ya pagado.
 
+### Abonos de matrícula desde el panel
+
+En **Finanzas → Matrículas y becas**, cada participante que todavía deba tiene un botón
+para cargarle un abono sin pasar por Ingresos y gastos. El modal muestra su saldo, acepta
+el monto en USD o en bolívares con la tasa, y guarda banco, referencia y comprobante.
+
+Lo que entra por ahí es un `ingreso` normal con `origen = 'matricula'`, estatus
+`confirmado` y `registrado_via = 'admin'`, así que se reparte solo sobre las cuotas y
+aparece en Ingresos y gastos como cualquier otro. A los exonerados (beca 100%) no les
+sale el botón: no tienen nada que pagar.
+
+Si el fondo va vacío, `IngresoModel::registrar()` le pone el fondo *Matrículas*.
+
+### Traslados a tesorería
+
+Las matrículas en bolívares no llegan a una cuenta del programa: caen en la cuenta de la
+Convención. Para disponer de esa plata hay que mandarle a la tesorería de la CNBV el
+listado de pagos para que los verifique contra sus estados de cuenta y después los
+transfiera.
+
+El circuito, en **Finanzas → Traslados**:
+
+1. Arriba salen los pagos confirmados que todavía no se han reportado, con filtros por
+   fecha, cuenta y «solo los que entraron en bolívares».
+2. Se marcan los que van en el envío y se arma la solicitud: queda con código
+   correlativo (`ST-2026-001`), fecha, concepto, destino y notas.
+3. La solicitud se imprime o se baja en CSV y se le manda a tesorería.
+4. Según responda tesorería, se mueve el estado: `enviada` → `verificada` →
+   `trasladada`. `anulada` la deja registrada pero devuelve sus pagos a la lista.
+
+**Un pago solo puede estar en una solicitud.** Lo garantiza `ingresos.solicitud_id`, que
+el UPDATE solo escribe si está en NULL y el ingreso está confirmado: si alguien lo
+reportó mientras se llenaba el formulario, ese pago no entra y los demás sí.
+
+**Los totales no se guardan, se calculan.** La solicitud no copia montos: suma los
+ingresos confirmados que apuntan a ella. Si uno se anula después de enviado, el total
+deja de contarlo solo.
+
+#### Las dos versiones de la hoja
+
+| Versión | Para qué | Qué lleva |
+|---------|----------|-----------|
+| Con nombres | Control interno | Participante y cédula al lado de cada pago |
+| Sin nombres | Tesorería | Solo los datos de la transacción: fecha, monto Bs, tasa, USD, banco emisor, tipo de pago, referencia y observación |
+
+Se cambia con el botón de la propia hoja (`?sin_nombres=1`) y el CSV respeta la versión
+que se esté viendo.
+
+**La versión de tesorería agrupa por transacción.** Cuando una iglesia manda en una sola
+transferencia la matrícula de dos participantes, adentro se cargan dos ingresos con la
+misma referencia — es lo correcto para el control de cada quien, pero el banco tiene un
+solo movimiento. `TrasladoModel::pagosAgrupados()` junta los pagos que comparten fecha,
+banco, referencia y método, suma los montos y pone en la observación cuántas matrículas
+trae. Detalles que importan:
+
+- Sin referencia no se agrupa nada: no hay cómo saber si son la misma transacción.
+- Si las partes vinieron con tasas distintas, la tasa del grupo sale vacía; los montos
+  igual se suman bien.
+- Los anulados no entran en la versión agrupada, porque tampoco están en el total.
+
+### Cuenta del Seminario (STBV)
+
+Del costo del ciclo, una parte es del Seminario Teológico Bautista de Venezuela. Según su
+nota del 31/08/2026, por cada misionero: inscripción 25, carnet institucional 10, sistema
+ternanet 20 y mensualidades de 25 — USD 130 el primer trimestre y 75 el segundo.
+
+Esa plata **sale de la matrícula que ya paga el participante**: no es una deuda nueva
+para él. `seminario_cargos` responde cuánto le toca al STBV por cada uno y qué se le ha
+pagado.
+
+En **Finanzas → Seminario**:
+
+- «Generar cargos» carga la plantilla (`SeminarioModel::PLANTILLA`) a los aprobados que
+  todavía no la tengan. Repetirlo no duplica: salta a los que ya tienen cargos.
+- Cada cargo se puede editar, eliminar o marcar exonerado mientras esté pendiente, y se
+  pueden agregar cargos sueltos. Los meses del segundo trimestre (enero, febrero y marzo)
+  son el supuesto del calendario actual; si el STBV lo mueve, se cambian desde ahí.
+- El pago se registra marcando los cargos que cubre: eso crea un `gasto` con rubro
+  `seminario_inscripcion` o `seminario_mensualidad`, beneficiario el STBV, y deja los
+  cargos apuntando a ese gasto (`seminario_cargos.gasto_id`).
+- Si el monto se deja vacío, el gasto se guarda por la suma de los cargos marcados.
+
+**Anular el gasto devuelve los cargos a pendiente.** Lo hace `GastoModel::anular()`
+llamando a `SeminarioModel::liberarPorGasto()`. Un cargo pagado no se edita ni se
+elimina: para corregirlo hay que anular el gasto primero.
+
+Después de transferirle al Seminario hay que reportar el pago a
+`directorstbv2026@gmail.com` — el modal lo recuerda en las notas.
+
 ### Anular, no borrar
 
 Un movimiento cargado por error no se elimina: se marca anulado. Se queda en la tabla,
@@ -559,12 +653,20 @@ ahí el anulado tiene que verse.
 | `PrestamoModel` | Préstamos, saldo vivo y sincronización con el ingreso espejo |
 | `PagoModel` | Cuotas, becas y reparto de lo cobrado. Constantes `TOTAL_CUOTAS` (7) y `PRIMER_VENCIMIENTO` (2026-09-15) |
 | `FinanzasModel` | Catálogos de fondos y cuentas, KPIs y consolidados |
+| `TrasladoModel` | Solicitudes de traslado: qué pagos se reportaron, en qué estado van y cómo se agrupan por transacción |
+| `SeminarioModel` | Cargos del STBV por participante, plantilla del ciclo y conciliación con el gasto que los paga |
 
 ### Vistas
 
 `admin/finanzas.php` (resumen), `finanzas_movimientos.php` (ingresos y gastos),
-`finanzas_matriculas.php` (becas y cuotas), `finanzas_prestamos.php`, más el partial
-`partials/finanzas_nav.php` con las pestañas y los estilos que `app.css` no cubre.
+`finanzas_matriculas.php` (becas, cuotas y carga de abonos), `finanzas_prestamos.php`,
+`finanzas_traslados.php` (solicitudes a tesorería) y `finanzas_seminario.php` (cargos del
+STBV), más el partial `partials/finanzas_nav.php` con las pestañas y los estilos que
+`app.css` no cubre.
+
+`admin/traslado_imprimir.php` es la única vista que no usa el layout `admin`: va con
+`layouts/impresion.php`, una hoja suelta sin sidebar pensada para imprimir o guardar en
+PDF desde el navegador.
 
 Del lado del participante, `candidato/pagos.php` muestra su estado de cuenta y le
 permite reportar pagos contra su matrícula, no contra una cuota específica.
@@ -795,6 +897,40 @@ admin de la galería (`/admin/galeria`) está hecha.
 ---
 
 ## REGISTRO DE CAMBIOS EN PRODUCCIÓN
+
+### v9 — 22/10/2026 — Abonos desde el panel, traslados a tesorería y cuenta del Seminario
+
+**Contexto:** tres huecos del día a día. Los abonos de matrícula había que cargarlos por
+Ingresos y gastos aunque se estuviera viendo el estado de cuenta del participante. El
+dinero en bolívares cae en la cuenta de la CNBV y para sacarlo hay que mandarle a
+tesorería un listado que verifiquen, cosa que se llevaba por fuera. Y la parte del costo
+que es del Seminario (nota del STBV del 31/08/2026) no estaba en ningún lado.
+
+| Archivo | Cambio |
+|---------|--------|
+| `database/migracion_010_traslados_seminario.sql` | **Nueva** — tablas `solicitudes_traslado` y `seminario_cargos`, y columna `ingresos.solicitud_id` |
+| `models/TrasladoModel.php` | **Nuevo** — solicitudes, pagos sin reportar, cambios de estado, totales y agrupación por transacción |
+| `models/SeminarioModel.php` | **Nuevo** — plantilla del ciclo, cargos por participante, conciliación con el gasto que los paga |
+| `models/IngresoModel.php` | Constante `METODOS` con los nombres legibles del método de pago |
+| `models/GastoModel.php` | Al anular un gasto se liberan los cargos del Seminario que cubría |
+| `controllers/AdminController.php` | `registrarPagoMatricula()`, las cuatro acciones de traslados, las cuatro del Seminario y los CSV de ambos |
+| `views/admin/finanzas_matriculas.php` | Botón y modal para cargarle un abono al participante, con su saldo a la vista |
+| `views/admin/finanzas_traslados.php` | **Nueva** — pagos sin reportar, armado de solicitudes y seguimiento de estados |
+| `views/admin/finanzas_seminario.php` | **Nueva** — cargos por participante y registro del pago al STBV |
+| `views/admin/traslado_imprimir.php` | **Nueva** — la hoja para tesorería, con y sin nombres |
+| `views/layouts/impresion.php` | **Nuevo** — layout de hoja suelta para imprimir o guardar en PDF |
+| `views/partials/finanzas_nav.php` | Pestañas «Traslados» y «Seminario» |
+| `index.php` | Rutas de abonos, traslados y Seminario |
+
+**Decisiones que vale la pena recordar:**
+
+| Decisión | Por qué |
+|----------|---------|
+| El pago al Seminario sale de la matrícula, no es deuda aparte del participante | Lo que el participante paga ya incluye su parte del STBV; al programa le toca llevar cuánto le debe al Seminario por cada uno |
+| Un ingreso guarda en qué solicitud se reportó | Evita pedir dos veces el mismo pago; anular la solicitud lo libera |
+| La hoja de tesorería va sin nombres y agrupa por referencia | Ellos verifican transacciones contra su estado de cuenta: una transferencia que trae dos matrículas es un solo movimiento |
+| Los totales de la solicitud se calculan, no se copian | Si un pago se anula después de enviado, el total se corrige solo |
+| El segundo trimestre del STBV quedó con enero, febrero y marzo | Supuesto del calendario actual; los cargos se editan desde el panel si el Seminario lo mueve |
 
 ### v8 — 09/09/2026 — Módulo de finanzas y limpieza de la home
 
