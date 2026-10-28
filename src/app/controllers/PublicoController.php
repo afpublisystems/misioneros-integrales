@@ -100,7 +100,7 @@ class PublicoController extends Controller {
             ];
 
             if ($ciudad !== '') $ciudades[mb_strtolower($ciudad)] = true;
-            if ($iglesia !== '') $iglesias[mb_strtolower($iglesia)] = true;
+            if ($iglesia !== '') $iglesias[$this->claveIglesia($iglesia)] = true;
         }
 
         $this->render('publico/cohorte', [
@@ -109,6 +109,26 @@ class PublicoController extends Controller {
             'ciudades'      => count($ciudades),
             'iglesias'      => count($iglesias),
         ]);
+    }
+
+    /**
+     * Para contar iglesias, no para mostrarlas. Dos de la misma iglesia la
+     * escriben distinto («I.B. Casa de Dios» y «Casa de Dios») y sin esto
+     * el contador las toma como dos.
+     *
+     * Se queda con lo único que las distingue: el nombre propio, sin
+     * tildes, sin puntuación y sin las palabras que llevan todas.
+     */
+    private function claveIglesia(string $nombre): string {
+        $clave = mb_strtolower($nombre);
+        $clave = strtr($clave, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n']);
+        $clave = preg_replace('/[^a-z0-9\s]/u', ' ', $clave);
+        // «primera» y «segunda» sí distinguen: Primera IB de Valencia no es la IB de Valencia.
+        // La «i» y la «b» sueltas son lo que queda de un «I.B.» al quitarle los puntos.
+        $clave = preg_replace('/\b(iglesia|bautista|ib|i|b|de|del|la|el|los|las|y)\b/u', ' ', $clave);
+        $clave = trim(preg_replace('/\s+/u', ' ', $clave));
+
+        return $clave !== '' ? $clave : mb_strtolower($nombre);
     }
 
     /**
