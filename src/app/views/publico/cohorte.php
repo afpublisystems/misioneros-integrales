@@ -15,8 +15,8 @@
         <span class="coh-hero__etiqueta">1era Cohorte · Ciclo 1 · 2026 – 2027</span>
         <h1 class="coh-hero__titulo">Los que están<br><em>en la ruta</em></h1>
         <p class="coh-hero__sub">
-            <?= count($participantes) ?> misioneros de distintas iglesias bautistas, formándose
-            mientras acompañan a las iglesias de cinco ciudades del país.
+            <?= count($participantes) ?> misioneros de distintas iglesias bautistas. Este primer año
+            sirven en cinco estados: La Guaira, Lara, Portuguesa, Yaracuy y Carabobo.
         </p>
     </div>
 </section>
