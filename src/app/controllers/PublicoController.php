@@ -88,18 +88,19 @@ class PublicoController extends Controller {
 
             $nombre = explode(' ', trim($f['nombres']))[0];
             $apellido = explode(' ', trim($f['apellidos']))[0];
+            $iglesia = $this->nombreIglesia($f['iglesia']);
 
             $participantes[] = [
                 'nombres'      => $f['nombres'],
                 'apellidos'    => $f['apellidos'],
                 'nombre_corto' => trim($nombre . ' ' . $apellido),
                 'ciudad'       => $lugar,
-                'iglesia'      => trim($f['iglesia']),
+                'iglesia'      => $iglesia,
                 'foto_publica' => $f['foto_publica'],
             ];
 
-            if ($ciudad !== '')            $ciudades[mb_strtolower($ciudad)] = true;
-            if (trim($f['iglesia']) !== '') $iglesias[mb_strtolower(trim($f['iglesia']))] = true;
+            if ($ciudad !== '') $ciudades[mb_strtolower($ciudad)] = true;
+            if ($iglesia !== '') $iglesias[mb_strtolower($iglesia)] = true;
         }
 
         $this->render('publico/cohorte', [
@@ -108,6 +109,35 @@ class PublicoController extends Controller {
             'ciudades'      => count($ciudades),
             'iglesias'      => count($iglesias),
         ]);
+    }
+
+    /**
+     * Cada quien escribe el nombre de su iglesia a su manera: «I.B. Casa de
+     * Dios», «Bautista Central», «Luz y Vida». En la página se leen todas
+     * igual, sin tocar lo que puso en su ficha.
+     *
+     * Las que ya traen su nombre completo —«Primera Iglesia Bautista…»—
+     * se respetan tal cual.
+     */
+    private function nombreIglesia(?string $crudo): string {
+        $nombre = trim(preg_replace('/\s+/u', ' ', (string) $crudo));
+        if ($nombre === '') return '';
+
+        // Abreviaturas del principio: I.B., IB, Igl. Bautista
+        $nombre = preg_replace('/^(I\.?\s?B\.?|Igl?\.?)\s+/iu', 'Iglesia Bautista ', $nombre, 1);
+        $nombre = preg_replace('/^Iglesia Bautista Bautista\s+/iu', 'Iglesia Bautista ', $nombre, 1);
+
+        // Hay quien la escribe toda en minúsculas; el resto del nombre se respeta
+        $nombre = preg_replace('/^iglesia\s+bautista\b/iu', 'Iglesia Bautista', $nombre, 1);
+
+        $minusculas = mb_strtolower($nombre);
+        $tiene_iglesia  = str_contains($minusculas, 'iglesia');
+        $tiene_bautista = str_contains($minusculas, 'bautista');
+
+        if ($tiene_iglesia && $tiene_bautista) return $nombre;   // ya está completa
+        if ($tiene_bautista) return 'Iglesia ' . $nombre;        // «Bautista Central»
+        if ($tiene_iglesia)  return $nombre;                     // no asumimos la denominación
+        return 'Iglesia Bautista ' . $nombre;                    // «Luz y Vida»
     }
 
     public function contacto(): void {
