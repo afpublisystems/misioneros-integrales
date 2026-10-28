@@ -19,6 +19,7 @@ $ruta_actual = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
             <li><a href="/"           class="<?= $ruta_actual === '/'           ? 'activo' : '' ?>">Inicio</a></li>
             <li><a href="/programa"   class="<?= $ruta_actual === '/programa'   ? 'activo' : '' ?>">El Programa</a></li>
             <li><a href="/requisitos" class="<?= $ruta_actual === '/requisitos' ? 'activo' : '' ?>">Requisitos</a></li>
+            <li><a href="/cohorte-1"  class="<?= $ruta_actual === '/cohorte-1'  ? 'activo' : '' ?>">1era Cohorte</a></li>
             <li><a href="/galeria"    class="<?= $ruta_actual === '/galeria'    ? 'activo' : '' ?>">Galería</a></li>
             <li><a href="/impacto"    class="<?= $ruta_actual === '/impacto'    ? 'activo' : '' ?>">Impacto</a></li>
             <li><a href="/contacto"   class="<?= $ruta_actual === '/contacto'   ? 'activo' : '' ?>">Contacto</a></li>

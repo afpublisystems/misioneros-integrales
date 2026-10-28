@@ -53,12 +53,12 @@
         <div class="dash-header">
             <div>
                 <h1>Mi Postulación</h1>
+                <?php $es_cohorte1 = ((int) ($aspirante['cohorte'] ?? 2)) === 1; ?>
                 <p>
-                    Ciclo 1 — Septiembre 2026 · Programa de Formación Misioneros Integrales
-                    &nbsp;·&nbsp;
-                    <span style="color:var(--naranja); font-weight:700;">
-                        <i class="fas fa-calendar-alt"></i> Plazo: 30 jun. 2026
-                    </span>
+                    <?= $es_cohorte1
+                        ? '1era Cohorte — Ciclo 1, septiembre 2026'
+                        : '2da Cohorte — inicia en septiembre 2027' ?>
+                    · Programa de Formación Misioneros Integrales
                 </p>
             </div>
             <?php if (empty($aspirante)): ?>

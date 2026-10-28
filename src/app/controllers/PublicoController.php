@@ -60,6 +60,56 @@ class PublicoController extends Controller {
         ]);
     }
 
+    // ── GET /cohorte-1 ────────────────────────────────
+    // Los 14 del ciclo en curso, con el retrato que se les tomó para
+    // el programa (aspirantes.foto_publica).
+    public function cohorte(): void {
+        $db = Database::getConnection();
+
+        $filas = $db->query("
+            SELECT nombres, apellidos, ciudad_origen, estado_origen, iglesia, foto_publica
+            FROM aspirantes
+            WHERE cohorte = 1 AND estatus = 'aprobada'
+            ORDER BY nombres ASC, apellidos ASC
+        ")->fetchAll();
+
+        $participantes = [];
+        $ciudades = [];
+        $iglesias = [];
+
+        foreach ($filas as $f) {
+            $ciudad = trim($f['ciudad_origen']);
+            $estado = trim($f['estado_origen']);
+            // Ciudad y estado iguales (La Guaira, por ejemplo) se leen feo repetidos
+            $lugar = $ciudad;
+            if ($estado !== '' && mb_strtolower($estado) !== mb_strtolower($ciudad)) {
+                $lugar = $ciudad !== '' ? $ciudad . ', ' . $estado : $estado;
+            }
+
+            $nombre = explode(' ', trim($f['nombres']))[0];
+            $apellido = explode(' ', trim($f['apellidos']))[0];
+
+            $participantes[] = [
+                'nombres'      => $f['nombres'],
+                'apellidos'    => $f['apellidos'],
+                'nombre_corto' => trim($nombre . ' ' . $apellido),
+                'ciudad'       => $lugar,
+                'iglesia'      => trim($f['iglesia']),
+                'foto_publica' => $f['foto_publica'],
+            ];
+
+            if ($ciudad !== '')            $ciudades[mb_strtolower($ciudad)] = true;
+            if (trim($f['iglesia']) !== '') $iglesias[mb_strtolower(trim($f['iglesia']))] = true;
+        }
+
+        $this->render('publico/cohorte', [
+            'titulo'        => '1era Cohorte',
+            'participantes' => $participantes,
+            'ciudades'      => count($ciudades),
+            'iglesias'      => count($iglesias),
+        ]);
+    }
+
     public function contacto(): void {
         $enviado = false;
         if (!empty($_SESSION['contacto_enviado'])) {

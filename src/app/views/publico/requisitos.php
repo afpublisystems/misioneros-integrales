@@ -14,7 +14,7 @@
     <div class="req-hero__content">
         <span class="req-hero__etiqueta">CNBV · DIME · Venezuela</span>
         <h1 class="req-hero__titulo">Requisitos de<br><em>Postulación</em></h1>
-        <p class="req-hero__sub">Promoción 2026 · Ciclo 1 — Conoce todo lo que necesitas para postularte</p>
+        <p class="req-hero__sub">2da Cohorte · Inicio septiembre 2027 — Conoce todo lo que necesitas para postularte</p>
         <a href="/registro" class="btn-cta-naranja">
             <i class="fas fa-user-plus"></i> Iniciar postulación
         </a>
@@ -81,7 +81,7 @@
                 <div class="req-card__num">04</div>
                 <div class="req-card__icono"><i class="fas fa-map-marked-alt"></i></div>
                 <h3>Disponibilidad de Movilidad</h3>
-                <p>Disposición de <strong>trasladarse a las 5 sedes</strong> del itinerario durante los 8 meses del Ciclo 1 (Septiembre 2026 – Mayo 2027).</p>
+                <p>Disposición de <strong>trasladarse a las sedes</strong> del itinerario durante los 8 meses del ciclo, de septiembre a mayo.</p>
             </div>
 
             <div class="req-card">
@@ -232,7 +232,7 @@
 
             <details class="faq-item">
                 <summary>¿Cuándo se anuncian los resultados?</summary>
-                <p>Los candidatos seleccionados serán notificados antes del 30 de junio de 2026. Recibirás una notificación por correo electrónico desde el panel de tu postulación.</p>
+                <p>Los candidatos seleccionados se notifican al cerrar la convocatoria, por correo y desde el panel de tu postulación.</p>
             </details>
 
         </div>
@@ -296,15 +296,15 @@
                 <div class="proceso-paso__icono"><i class="fas fa-check-circle"></i></div>
                 <h3>Confirmación</h3>
                 <p>Recibirás una notificación con la decisión final. Los admitidos recibirán instrucciones de inicio.</p>
-                <span class="proceso-paso__tiempo"><i class="fas fa-clock"></i> Septiembre 2026</span>
+                <span class="proceso-paso__tiempo"><i class="fas fa-clock"></i> Antes de iniciar el ciclo</span>
             </div>
 
         </div>
 
         <div style="text-align:center; margin-top:2rem; padding:1.25rem; background:var(--blanco); border-radius:var(--radio-lg); border:1px solid #e5e7eb;">
             <i class="fas fa-calendar-alt" style="color:var(--dorado); margin-right:0.5rem;"></i>
-            <strong>Fecha límite de postulación:</strong>
-            <span style="color:var(--verde); font-weight:700; margin-left:0.4rem;">30 de junio de 2026</span>
+            <strong>Convocatoria abierta</strong>
+            <span style="color:var(--verde); font-weight:700; margin-left:0.4rem;">2da Cohorte · inicia en septiembre 2027</span>
             &nbsp;·&nbsp;
             <a href="/registro" style="color:var(--naranja); font-weight:700;">Postularme ahora →</a>
         </div>

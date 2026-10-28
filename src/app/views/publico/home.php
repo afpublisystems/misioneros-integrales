@@ -153,6 +153,35 @@
 <!-- ═══════════════════════════════════════════════════════
      EJES FORMATIVOS — Rediseño con tabs visuales
      ═══════════════════════════════════════════════════════ -->
+<!-- ═════════════════════════════════════════════════════
+     LOS QUE YA ESTÁN EN LA RUTA
+     ═════════════════════════════════════════════════════ -->
+<section class="cohorte-band">
+    <div class="container cohorte-band__inner">
+        <div class="cohorte-band__texto">
+            <span class="tag-label"><i class="fas fa-users"></i> 1era Cohorte</span>
+            <h2>Los primeros 14 ya están en la ruta</h2>
+            <p>Vienen de distintas iglesias y ciudades del país, y pasan ocho meses sirviendo juntos.</p>
+        </div>
+        <a href="/cohorte-1" class="btn btn--verde">
+            <i class="fas fa-arrow-right"></i> Conoce la cohorte
+        </a>
+    </div>
+</section>
+
+<style>
+.cohorte-band { background: var(--crema); padding: 3rem 0; }
+.cohorte-band__inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 2rem; flex-wrap: wrap;
+}
+.cohorte-band__texto h2 { margin: .6rem 0 .4rem; font-size: 1.6rem; color: var(--azul); }
+.cohorte-band__texto p  { margin: 0; color: var(--gris); max-width: 520px; }
+@media (max-width: 640px) {
+    .cohorte-band__inner { flex-direction: column; align-items: flex-start; }
+}
+</style>
+
 <section class="seccion ejes-seccion">
     <div class="container">
         <div class="seccion-header">

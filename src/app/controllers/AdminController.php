@@ -100,6 +100,7 @@ class AdminController extends Controller {
         }
 
         $filtro_estatus = $_GET['estatus'] ?? '';
+        $filtro_cohorte = $_GET['cohorte'] ?? '';
         $busqueda       = trim($_GET['q'] ?? '');
         $db             = Database::getConnection();
 
@@ -109,6 +110,10 @@ class AdminController extends Controller {
         if ($filtro_estatus) {
             $sql .= " AND a.estatus = :estatus";
             $params[':estatus'] = $filtro_estatus;
+        }
+        if ($filtro_cohorte !== '') {
+            $sql .= " AND a.cohorte = :cohorte";
+            $params[':cohorte'] = (int) $filtro_cohorte;
         }
         if ($busqueda) {
             $sql .= " AND (a.nombres LIKE :q1 OR a.apellidos LIKE :q2 OR a.cedula LIKE :q3 OR a.iglesia LIKE :q4)";
@@ -128,13 +133,14 @@ class AdminController extends Controller {
             'titulo'          => 'Gestión de Candidatos',
             'lista'           => $lista,
             'filtro_estatus'  => $filtro_estatus,
+            'filtro_cohorte'  => $filtro_cohorte,
             'busqueda'        => $busqueda,
             'totales'         => [
-                'todos'       => $this->contarPorEstatus(''),
-                'enviada'     => $this->contarPorEstatus('enviada'),
-                'en_revision' => $this->contarPorEstatus('en_revision'),
-                'aprobada'    => $this->contarPorEstatus('aprobada'),
-                'rechazada'   => $this->contarPorEstatus('rechazada'),
+                'todos'       => $this->contarPorEstatus('', $filtro_cohorte),
+                'enviada'     => $this->contarPorEstatus('enviada', $filtro_cohorte),
+                'en_revision' => $this->contarPorEstatus('en_revision', $filtro_cohorte),
+                'aprobada'    => $this->contarPorEstatus('aprobada', $filtro_cohorte),
+                'rechazada'   => $this->contarPorEstatus('rechazada', $filtro_cohorte),
             ],
         ], 'admin');
     }
@@ -2054,13 +2060,24 @@ class AdminController extends Controller {
         return 'uploads/comprobantes/' . $nombre;
     }
 
-    private function contarPorEstatus(string $estatus): int {
-        $db   = Database::getConnection();
-        $sql  = $estatus
-            ? "SELECT COUNT(*) FROM aspirantes WHERE estatus = :e"
-            : "SELECT COUNT(*) FROM aspirantes";
-        $stmt = $db->prepare($sql);
-        $estatus ? $stmt->execute([':e' => $estatus]) : $stmt->execute();
+    private function contarPorEstatus(string $estatus, string $cohorte = ''): int {
+        $where  = [];
+        $params = [];
+
+        if ($estatus !== '') {
+            $where[] = 'estatus = :e';
+            $params[':e'] = $estatus;
+        }
+        if ($cohorte !== '') {
+            $where[] = 'cohorte = :c';
+            $params[':c'] = (int) $cohorte;
+        }
+
+        $sql  = 'SELECT COUNT(*) FROM aspirantes';
+        $sql .= $where ? ' WHERE ' . implode(' AND ', $where) : '';
+
+        $stmt = Database::getConnection()->prepare($sql);
+        $stmt->execute($params);
         return (int) $stmt->fetchColumn();
     }
 }

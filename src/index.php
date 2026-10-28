@@ -93,6 +93,7 @@ $rutas = [
         '/pensum'               => ['PublicoController', 'pensum'],
         '/galeria'              => ['PublicoController', 'galeria'],
         '/impacto'              => ['PublicoController', 'impacto'],
+        '/cohorte-1'            => ['PublicoController', 'cohorte'],
         '/contacto'             => ['PublicoController', 'contacto'],
         '/evangelismo'          => ['EvangelismoController', 'publico'],
         // Auth

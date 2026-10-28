@@ -15,6 +15,7 @@
             <ul>
                 <li><a href="/programa">El Programa</a></li>
                 <li><a href="/requisitos">Requisitos</a></li>
+                <li><a href="/cohorte-1">1era Cohorte</a></li>
                 <li><a href="/galeria">Galería</a></li>
                 <li><a href="/impacto">Impacto</a></li>
                 <li><a href="/contacto">Contacto</a></li>

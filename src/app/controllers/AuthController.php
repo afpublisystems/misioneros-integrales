@@ -188,11 +188,13 @@ class AuthController extends Controller {
 
     // ── Helper cupos ──────────────────────────────────────────
     private function consultarCupos(): array {
-        $total = 40; // cupos primera cohorte
+        // La convocatoria abierta es la 2da cohorte: los 14 que ya están
+        // cursando son cohorte 1 y no ocupan cupo de esta.
+        $total = 40;
         try {
             $db       = Database::getConnection();
             $inscritos = (int) $db->query(
-                "SELECT COUNT(*) FROM aspirantes WHERE estatus NOT IN ('rechazado')"
+                "SELECT COUNT(*) FROM aspirantes WHERE cohorte = 2 AND estatus <> 'rechazada'"
             )->fetchColumn();
         } catch (\PDOException $e) {
             $inscritos = 0;

@@ -324,8 +324,8 @@
                         <i class="fas fa-route movilidad-banner__icono"></i>
                         <div>
                             <h3>Requisito fundamental del programa</h3>
-                            <p>El programa recorre <strong>5 ciudades</strong> en 8 meses
-                            (Septiembre 2026 – Mayo 2027). El candidato debe poder trasladarse
+                            <p>El programa recorre <strong>5 ciudades</strong> en los 8 meses
+                            del ciclo, de septiembre a mayo. El candidato debe poder trasladarse
                             mensualmente sin impedimentos.</p>
                         </div>
                     </div>
@@ -360,7 +360,7 @@
                         </div>
                         <p class="pregunta-clave__texto">
                             ¿Tienes algún compromiso ineludible que te impida trasladarte mensualmente
-                            entre septiembre 2026 y mayo 2027?
+                            durante los ocho meses del ciclo, de septiembre a mayo?
                         </p>
                         <div class="pregunta-clave__opciones">
                             <label class="radio-label radio-label--verde">

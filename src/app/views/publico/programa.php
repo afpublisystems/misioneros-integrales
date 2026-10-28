@@ -176,23 +176,23 @@
             </div>
             <div class="prog-semana__visual">
                 <div class="ciclo-info-card">
-                    <div class="ciclo-badge">Ciclo 1 · Inscripción Abierta</div>
+                    <div class="ciclo-badge">Ciclo 1 · En curso</div>
                     <h3>Septiembre 2026 — Mayo 2027</h3>
                     <p>5 ciudades · 8 meses</p>
                     <div class="ciclo-meta">
                         <i class="fas fa-users"></i>
-                        <span>Cupos disponibles: <strong>40</strong></span>
+                        <span>Cupos por cohorte: <strong>40</strong></span>
                     </div>
                     <div class="ciclo-certif">
                         <i class="fas fa-calendar-check"></i>
-                        <span>Inscripciones: <strong>Abiertas</strong></span>
+                        <span>Inscripciones: <strong>abiertas para la 2da cohorte</strong></span>
                     </div>
                     <div class="ciclo-certif">
                         <i class="fas fa-certificate"></i>
                         <span>Certificado CNBV al completar el ciclo</span>
                     </div>
                     <a href="/registro" class="btn-cta-verde-outline">
-                        <i class="fas fa-arrow-right"></i> Postularme al Ciclo 1
+                        <i class="fas fa-arrow-right"></i> Postularme a la 2da Cohorte
                     </a>
                 </div>
             </div>

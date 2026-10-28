@@ -41,7 +41,7 @@
             ];
             foreach ($filtros as $val => $f):
             ?>
-            <a href="/admin/candidatos?estatus=<?= $val ?><?= $busqueda ? '&q='.urlencode($busqueda) : '' ?>"
+            <a href="/admin/candidatos?estatus=<?= $val ?><?= $filtro_cohorte !== '' ? '&cohorte='.urlencode($filtro_cohorte) : '' ?><?= $busqueda ? '&q='.urlencode($busqueda) : '' ?>"
                class="filtro-tab <?= $filtro_estatus === $val ? 'activo' : '' ?>">
                 <?= $f['label'] ?>
                 <span class="filtro-tab__num"><?= $f['num'] ?></span>
@@ -59,6 +59,11 @@
             <?php if ($filtro_estatus): ?>
             <input type="hidden" name="estatus" value="<?= $filtro_estatus ?>">
             <?php endif; ?>
+            <select name="cohorte" onchange="this.form.submit()" class="filtro-cohorte">
+                <option value=""  <?= $filtro_cohorte === ''  ? 'selected' : '' ?>>Todas las cohortes</option>
+                <option value="1" <?= $filtro_cohorte === '1' ? 'selected' : '' ?>>1era cohorte (en curso)</option>
+                <option value="2" <?= $filtro_cohorte === '2' ? 'selected' : '' ?>>2da cohorte (2027)</option>
+            </select>
             <button type="submit" class="btn btn--verde">Buscar</button>
             <?php if ($busqueda): ?>
             <a href="/admin/candidatos?estatus=<?= $filtro_estatus ?>" class="btn btn--outline">
@@ -103,7 +108,10 @@
                                     </div>
                                     <div>
                                         <strong><?= htmlspecialchars(($a['nombres'] ?? '') . ' ' . ($a['apellidos'] ?? '')) ?></strong>
-                                        <small><?= htmlspecialchars($a['email'] ?? '') ?></small>
+                                        <small>
+                                            <?= htmlspecialchars($a['email'] ?? '') ?>
+                                            · <?= ((int) ($a['cohorte'] ?? 2)) === 1 ? '1era cohorte' : '2da cohorte' ?>
+                                        </small>
                                     </div>
                                 </div>
                             </td>
@@ -230,3 +238,10 @@ document.getElementById('modal-estatus')?.addEventListener('click', function(e) 
     if (e.target === this) cerrarModal('modal-estatus');
 });
 </script>
+
+<style>
+.filtro-cohorte {
+    padding: .6rem .8rem; border: 1px solid #d1d5db; border-radius: 8px;
+    font-family: inherit; font-size: .85rem; color: var(--gris-dark); background: #fff;
+}
+</style>
