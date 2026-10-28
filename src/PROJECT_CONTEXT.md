@@ -218,7 +218,8 @@ CREATE TABLE IF NOT EXISTS test_vocacional (
 ### Schema aspirantes (columnas clave — diferente a nombre obvio)
 ```
 anos_bautizado, nivel_academico, titulo_bachiller (TINYINT),
-compromiso_movilidad (TINYINT), detalle_impedimento
+compromiso_movilidad (TINYINT), detalle_impedimento,
+cohorte (TINYINT, DEFAULT 2), foto_publica (VARCHAR)   ← migración 011
 ```
 > ⚠️ NO existen: `anos_en_iglesia`, `nivel_educativo`, `ocupacion`, `disponibilidad_movilidad`
 
@@ -897,6 +898,30 @@ admin de la galería (`/admin/galeria`) está hecha.
 ---
 
 ## REGISTRO DE CAMBIOS EN PRODUCCIÓN
+
+### v10 — 28/10/2026 — Página de la 1era cohorte y convocatoria de la 2da
+
+**Contexto:** el sitio seguía invitando a postularse al ciclo que ya arrancó, con fechas de
+2026 en requisitos, programa y el panel del candidato. Y no había dónde ver quiénes son los
+14 que están cursando.
+
+| Archivo | Cambio |
+|---------|--------|
+| `database/migracion_011_cohortes.sql` | **Nueva** — `aspirantes.cohorte` (1 = en curso, 2 = convocatoria abierta, DEFAULT 2) y `aspirantes.foto_publica`; deja en cohorte 1 lo que ya existía y le asigna su retrato a los 14 |
+| `views/publico/cohorte.php` | **Nueva** — rejilla de participantes con retrato, nombre, ciudad e iglesia |
+| `public/assets/cohorte1/*.jpg` | **Nuevas** — los 14 retratos, 800x1000, mismo encuadre y peso parejo (~85 KB) |
+| `controllers/PublicoController.php` | `cohorte()`: arma la lista desde `aspirantes`, junta ciudad y estado y cuenta ciudades e iglesias |
+| `controllers/AuthController.php` | Los cupos cuentan solo la cohorte 2. El filtro anterior comparaba contra `'rechazado'`, valor que no existe en el enum, así que nunca descontaba nada |
+| `controllers/AdminController.php` | Filtro por cohorte en el listado de candidatos, con los contadores de cada pestaña respetándolo |
+| `views/admin/candidatos.php` | Selector de cohorte y la cohorte a la vista en cada fila |
+| `views/publico/home.php` | Banda que lleva a la página de la cohorte |
+| `views/publico/requisitos.php`, `programa.php` | Fechas de 2026 fuera: la convocatoria es la 2da cohorte |
+| `views/candidato/dashboard*.php`, `perfil.php` | El panel le habla a la cohorte del postulante, no a la de 2026 |
+| `views/partials/navbar.php`, `footer.php` | Enlace «1era Cohorte» |
+
+**Pendiente:** las fechas firmes de la convocatoria (cierre de postulaciones y notificación).
+Mientras no estén, esos textos hablan en relativo: «al cerrar la convocatoria», «antes de
+iniciar el ciclo».
 
 ### v9 — 22/10/2026 — Abonos desde el panel, traslados a tesorería y cuenta del Seminario
 
