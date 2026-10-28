@@ -159,7 +159,7 @@
     <div class="container" style="text-align:center;">
         <h2 class="seccion__titulo">Postúlate para la 2da Cohorte</h2>
         <p class="seccion__subtitulo" style="max-width:500px; margin:0 auto 2rem;">
-            Inicia en septiembre 2027. Tres ciclos, cada uno de septiembre a mayo.
+            De septiembre 2027 a mayo 2028. Tres ciclos, cada uno de septiembre a mayo.
         </p>
         <a href="/registro" class="btn-cta-naranja">
             <i class="fas fa-user-plus"></i> Postularme ahora

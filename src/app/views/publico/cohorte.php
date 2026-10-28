@@ -84,7 +84,7 @@
         <span class="seccion-label" style="color:var(--dorado)">2da Cohorte · 2027</span>
         <h2 class="seccion__titulo">El próximo grupo puede incluirte</h2>
         <p class="seccion__subtitulo" style="max-width:520px;margin:0 auto 2rem">
-            Las postulaciones para la cohorte que inicia en septiembre 2027 ya están abiertas.
+            Las postulaciones para el ciclo de septiembre 2027 a mayo 2028 ya están abiertas.
         </p>
         <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
             <a href="/registro" class="btn-cta-naranja">

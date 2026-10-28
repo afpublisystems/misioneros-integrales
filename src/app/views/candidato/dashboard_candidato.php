@@ -56,7 +56,7 @@
                 <p>
                     <?= ((int) ($aspirante['cohorte'] ?? 2)) === 1
                         ? '1era Cohorte — Ciclo 1, septiembre 2026'
-                        : '2da Cohorte — inicia en septiembre 2027' ?>
+                        : '2da Cohorte — septiembre 2027 a mayo 2028' ?>
                     · Programa de Formación Misioneros Integrales
                 </p>
             </div>

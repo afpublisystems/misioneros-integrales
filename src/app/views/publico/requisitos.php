@@ -14,7 +14,7 @@
     <div class="req-hero__content">
         <span class="req-hero__etiqueta">CNBV · DIME · Venezuela</span>
         <h1 class="req-hero__titulo">Requisitos de<br><em>Postulación</em></h1>
-        <p class="req-hero__sub">2da Cohorte · Inicio septiembre 2027 — Conoce todo lo que necesitas para postularte</p>
+        <p class="req-hero__sub">2da Cohorte · Septiembre 2027 – Mayo 2028 — Conoce todo lo que necesitas para postularte</p>
         <a href="/registro" class="btn-cta-naranja">
             <i class="fas fa-user-plus"></i> Iniciar postulación
         </a>
@@ -304,7 +304,7 @@
         <div style="text-align:center; margin-top:2rem; padding:1.25rem; background:var(--blanco); border-radius:var(--radio-lg); border:1px solid #e5e7eb;">
             <i class="fas fa-calendar-alt" style="color:var(--dorado); margin-right:0.5rem;"></i>
             <strong>Convocatoria abierta</strong>
-            <span style="color:var(--verde); font-weight:700; margin-left:0.4rem;">2da Cohorte · inicia en septiembre 2027</span>
+            <span style="color:var(--verde); font-weight:700; margin-left:0.4rem;">2da Cohorte · septiembre 2027 a mayo 2028</span>
             &nbsp;·&nbsp;
             <a href="/registro" style="color:var(--naranja); font-weight:700;">Postularme ahora →</a>
         </div>

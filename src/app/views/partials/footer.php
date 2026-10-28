@@ -40,7 +40,7 @@
         <div class="footer__postulate">
             <h4>¿Sientes el llamado?</h4>
             <p style="font-size:0.85rem;color:rgba(255,255,255,0.7);margin-bottom:1rem;line-height:1.5">
-                Postúlate para la 2da Cohorte<br>que inicia en <strong style="color:var(--dorado)">Septiembre 2027</strong>
+                Postúlate para la 2da Cohorte<br><strong style="color:var(--dorado)">Septiembre 2027 – Mayo 2028</strong>
             </p>
             <a href="/registro" class="btn btn--naranja btn--block">
                 <i class="fas fa-user-plus"></i> Postularme

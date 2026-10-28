@@ -352,7 +352,7 @@
         <span class="seccion-label" style="color:var(--dorado)">2da Cohorte · 2027</span>
         <h2 class="seccion__titulo">Postúlate para la 2da Cohorte</h2>
         <p class="seccion__subtitulo" style="max-width:500px; margin:0 auto 2rem;">
-            Inicia en septiembre 2027. Cada año se abre una nueva cohorte.
+            De septiembre 2027 a mayo 2028. Cada año se abre una nueva cohorte.
         </p>
         <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
             <a href="/registro" class="btn-cta-naranja">
