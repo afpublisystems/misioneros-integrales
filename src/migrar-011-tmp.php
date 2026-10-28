@@ -33,11 +33,11 @@ $RETRATOS = [
     'diosmely.jpg' => "nombres LIKE 'Diosmel%'",
     'eric.jpg'     => "nombres LIKE 'Eric%'",
     'jose.jpg'     => "nombres LIKE 'Jos_ %' AND apellidos LIKE 'Hern_ndez%'",
-    'josh.jpg'     => "nombres LIKE 'Josh%'",
-    'josue.jpg'    => "nombres LIKE 'Josu_%'",
+    'josh.jpg'     => "apellidos LIKE 'Galindo%'",   // Eliezer Josué
+    'josue.jpg'    => "apellidos LIKE 'Heredia%'",   // Jonathan Josué
     'juan.jpg'     => "nombres LIKE 'Juan%'",
     'meiver.jpg'   => "nombres LIKE 'Meiver%'",
-    'natasha.jpg'  => "nombres LIKE 'Natasha%'",
+    'natasha.jpg'  => "nombres LIKE '%Natasha%'",    // Schneider Natasha
     'samuel.jpg'   => "nombres LIKE 'Samuel%'",
 ];
 

@@ -28,8 +28,10 @@ ALTER TABLE aspirantes
 -- Todo lo que ya estaba registrado es la 1era cohorte
 UPDATE aspirantes SET cohorte = 1;
 
--- Retratos de los 14, por nombre de pila. Si alguno no coincide
--- se le asigna desde el panel, en la ficha del participante.
+-- Retratos de los 14. Casi todos van por nombre de pila; tres no,
+-- porque el nombre de la foto no es el primero de su cédula:
+-- Schneider Natasha, Eliezer Josué (Galindo) y Jonathan Josué (Heredia).
+-- Si alguno queda sin retrato, se corrige con un UPDATE por cédula.
 UPDATE aspirantes SET foto_publica = 'abraham.jpg'  WHERE cohorte = 1 AND nombres LIKE 'Abraham%';
 UPDATE aspirantes SET foto_publica = 'adrian.jpg'   WHERE cohorte = 1 AND nombres LIKE 'Adri_n%';
 UPDATE aspirantes SET foto_publica = 'anais.jpg'    WHERE cohorte = 1 AND (nombres LIKE '%Ana_s%' OR nombres LIKE 'Marianyeli%');
@@ -38,11 +40,11 @@ UPDATE aspirantes SET foto_publica = 'deilimar.jpg' WHERE cohorte = 1 AND nombre
 UPDATE aspirantes SET foto_publica = 'diosmely.jpg' WHERE cohorte = 1 AND nombres LIKE 'Diosmel%';
 UPDATE aspirantes SET foto_publica = 'eric.jpg'     WHERE cohorte = 1 AND nombres LIKE 'Eric%';
 UPDATE aspirantes SET foto_publica = 'jose.jpg'     WHERE cohorte = 1 AND nombres LIKE 'Jos_ %' AND apellidos LIKE 'Hern_ndez%';
-UPDATE aspirantes SET foto_publica = 'josh.jpg'     WHERE cohorte = 1 AND nombres LIKE 'Josh%';
-UPDATE aspirantes SET foto_publica = 'josue.jpg'    WHERE cohorte = 1 AND nombres LIKE 'Josu_%';
+UPDATE aspirantes SET foto_publica = 'josh.jpg'     WHERE cohorte = 1 AND apellidos LIKE 'Galindo%';
+UPDATE aspirantes SET foto_publica = 'josue.jpg'    WHERE cohorte = 1 AND apellidos LIKE 'Heredia%';
 UPDATE aspirantes SET foto_publica = 'juan.jpg'     WHERE cohorte = 1 AND nombres LIKE 'Juan%';
 UPDATE aspirantes SET foto_publica = 'meiver.jpg'   WHERE cohorte = 1 AND nombres LIKE 'Meiver%';
-UPDATE aspirantes SET foto_publica = 'natasha.jpg'  WHERE cohorte = 1 AND nombres LIKE 'Natasha%';
+UPDATE aspirantes SET foto_publica = 'natasha.jpg'  WHERE cohorte = 1 AND nombres LIKE '%Natasha%';
 UPDATE aspirantes SET foto_publica = 'samuel.jpg'   WHERE cohorte = 1 AND nombres LIKE 'Samuel%';
 
 -- Revisar que los 14 quedaron con su retrato:
