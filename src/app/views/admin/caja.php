@@ -6,10 +6,12 @@
  */
 $hoy = date('Y-m-d');
 $tasa_txt = $ultima_tasa ? rtrim(rtrim(number_format($ultima_tasa, 4, '.', ''), '0'), '.') : '';
+// Con $enlace la pantalla la usa un responsable sin cuenta: solo gastos, sin menú ni saldos
+$enlace = $enlace ?? null;
 ?>
-<div class="admin-layout">
+<div class="<?= $enlace ? 'caja-solo' : 'admin-layout' ?>">
 
-    <?php include __DIR__ . '/../partials/admin_sidebar.php'; ?>
+    <?php if (!$enlace) include __DIR__ . '/../partials/admin_sidebar.php'; ?>
 
     <main class="admin-main caja">
 
@@ -20,6 +22,12 @@ $tasa_txt = $ultima_tasa ? rtrim(rtrim(number_format($ultima_tasa, 4, '.', ''), 
         </div>
         <?php unset($_SESSION['flash']); endif; ?>
 
+        <?php if ($enlace): ?>
+        <div class="caja-saludo">
+            <strong>Hola, <?= htmlspecialchars($enlace['nombre']) ?></strong>
+            <span>Carga aquí los gastos del programa. Con foto del recibo, mejor.</span>
+        </div>
+        <?php else: ?>
         <div class="caja-cifras">
             <div>
                 <span>En caja</span>
@@ -34,15 +42,19 @@ $tasa_txt = $ultima_tasa ? rtrim(rtrim(number_format($ultima_tasa, 4, '.', ''), 
                 <strong class="caja-rojo"><?= usd($salio) ?></strong>
             </div>
         </div>
+        <?php endif; ?>
 
-        <form method="POST" action="/admin/caja" enctype="multipart/form-data" id="caja-form" class="admin-panel caja-form">
+        <form method="POST" action="<?= $enlace ? '/gastos' : '/admin/caja' ?>" enctype="multipart/form-data" id="caja-form" class="admin-panel caja-form">
             <?= csrf_field() ?>
+            <?php if ($enlace): ?>
+            <input type="hidden" name="k" value="<?= htmlspecialchars($token) ?>">
+            <?php endif; ?>
             <input type="hidden" name="tipo" id="caja-tipo" value="<?= $tipo ?>">
             <input type="hidden" name="monto_usd" id="caja-usd">
             <input type="hidden" name="monto_ves" id="caja-ves">
             <input type="hidden" name="metodo_pago" id="caja-metodo" value="efectivo">
 
-            <div class="caja-switch">
+            <div class="caja-switch" <?= $enlace ? 'hidden' : '' ?>>
                 <button type="button" data-tipo="gasto" class="<?= $tipo === 'gasto' ? 'activo' : '' ?>">
                     <i class="fas fa-arrow-up"></i> Gasto
                 </button>
@@ -161,7 +173,7 @@ $tasa_txt = $ultima_tasa ? rtrim(rtrim(number_format($ultima_tasa, 4, '.', ''), 
         </form>
 
         <div class="admin-panel">
-            <h3 class="caja-titulo">Esta semana</h3>
+            <h3 class="caja-titulo"><?= $enlace ? 'Lo que cargaste esta semana' : 'Esta semana' ?></h3>
             <?php if (!$semana): ?>
             <p class="caja-vacio">Nada cargado desde el lunes.</p>
             <?php else: ?>
@@ -183,14 +195,23 @@ $tasa_txt = $ultima_tasa ? rtrim(rtrim(number_format($ultima_tasa, 4, '.', ''), 
                 <?php endforeach; ?>
             </ul>
             <?php endif; ?>
+            <?php if (!$enlace): ?>
             <a href="/admin/finanzas/movimientos" class="caja-ver-todo">Ver todo en Finanzas <i class="fas fa-arrow-right"></i></a>
+            <?php endif; ?>
         </div>
+
+        <?php if (!$enlace) include __DIR__ . '/../partials/enlaces_caja.php'; ?>
 
     </main>
 </div>
 
 <style>
 .caja { max-width: 560px; }
+.caja-solo { min-height: 100vh; background: #f8fafc; }
+.caja-solo .caja { margin: 0 auto; padding: 1.25rem 1rem 2rem; }
+.caja-saludo { margin-bottom: 1rem; }
+.caja-saludo strong { display: block; font-size: 1.15rem; }
+.caja-saludo span   { font-size: .85rem; color: var(--gris); }
 .caja [hidden] { display: none !important; }
 .caja-verde { color: var(--verde); }
 .caja-rojo  { color: #b91c1c; }

@@ -14,6 +14,7 @@ require_once APP_PATH . '/models/IngresoModel.php';
 require_once APP_PATH . '/models/PrestamoModel.php';
 require_once APP_PATH . '/models/FinanzasModel.php';
 require_once APP_PATH . '/models/PresupuestoModel.php';
+require_once APP_PATH . '/models/EnlaceCajaModel.php';
 require_once APP_PATH . '/helpers/TestScorer.php';
 
 class AdminController extends Controller {
@@ -1152,7 +1153,171 @@ class AdminController extends Controller {
             'origenes'    => array_diff_key(IngresoModel::ORIGENES, ['matricula' => 1, 'prestamo' => 1]),
             'ultima_tasa' => $fin->ultimaTasa(),
             'tipo'        => ($_GET['tipo'] ?? '') === 'ingreso' ? 'ingreso' : 'gasto',
+            'enlaces'     => (new EnlaceCajaModel())->listar(),
+            'enlace_nuevo'=> $this->tomarEnlaceNuevo(),
         ], 'admin');
+    }
+
+    // ── POST /admin/caja/enlace ───────────────────────────────
+    // Crear, regenerar, desactivar o reactivar un enlace de carga
+    public function gestionarEnlaceCaja(): void {
+        $this->requireAdminOEvaluador();
+
+        $volver  = '/admin/caja#enlaces';
+        $enlaces = new EnlaceCajaModel();
+        $accion  = $_POST['accion'] ?? '';
+        $id      = (int) ($_POST['id'] ?? 0);
+
+        if ($accion === 'crear') {
+            $nombre = mb_substr(trim($_POST['nombre'] ?? ''), 0, 100);
+            if ($nombre === '') {
+                $this->flash('error', 'Escribe el nombre de quien va a usar el enlace.');
+                $this->redirigir($volver);
+            }
+            $_SESSION['enlace_nuevo'] = ['nombre' => $nombre, 'token' => $enlaces->crear($nombre, (int) $_SESSION['usuario_id'])];
+            $this->redirigir($volver);
+        }
+
+        $enlace = $id ? $enlaces->porId($id) : false;
+        if (!$enlace) {
+            $this->flash('error', 'No se encontró ese enlace.');
+            $this->redirigir($volver);
+        }
+
+        switch ($accion) {
+            case 'regenerar':
+                $_SESSION['enlace_nuevo'] = ['nombre' => $enlace['nombre'], 'token' => $enlaces->regenerar($id)];
+                break;
+            case 'desactivar':
+                $enlaces->activar($id, false);
+                $this->flash('exito', "{$enlace['nombre']} ya no puede cargar gastos.");
+                break;
+            case 'activar':
+                $enlaces->activar($id, true);
+                $this->flash('exito', "{$enlace['nombre']} puede volver a cargar gastos con el mismo enlace.");
+                break;
+        }
+        $this->redirigir($volver);
+    }
+
+    /** El enlace recién creado se muestra una sola vez */
+    private function tomarEnlaceNuevo(): ?array {
+        $nuevo = $_SESSION['enlace_nuevo'] ?? null;
+        unset($_SESSION['enlace_nuevo']);
+        if (!$nuevo) return null;
+
+        $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        return [
+            'nombre' => $nuevo['nombre'],
+            'url'    => ($https ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/gastos?k=' . $nuevo['token'],
+        ];
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // GASTOS POR ENLACE (sin cuenta)
+    // ══════════════════════════════════════════════════════════
+
+    /** Lo del Seminario y los préstamos se carga por Finanzas, no por enlace */
+    private const RUBROS_ENLACE_EXCLUIDOS = [
+        'devolucion_prestamo' => 1, 'seminario_inscripcion' => 1, 'seminario_mensualidad' => 1,
+    ];
+
+    // ── GET /gastos?k=... ─────────────────────────────────────
+    public function gastosEnlace(): void {
+        $token   = (string) ($_GET['k'] ?? '');
+        $enlaces = new EnlaceCajaModel();
+        $enlace  = $enlaces->porToken($token);
+        if (!$enlace) $this->enlaceInactivo();
+
+        $lunes  = date('Y-m-d', strtotime('monday this week'));
+        $semana = array_map(fn($g) => [
+            'tipo'      => 'gasto',
+            'concepto'  => $g['concepto'],
+            'fecha'     => $g['fecha_gasto'],
+            'cuenta'    => $g['estatus'] === 'activo',
+            'estatus'   => $g['estatus'],
+            'monto_usd' => $g['monto_usd'],
+            'monto_ves' => $g['monto_ves'],
+        ], $enlaces->gastosDesde((int) $enlace['id'], $lunes));
+
+        $fin = new FinanzasModel();
+        $this->render('admin/caja', [
+            'titulo'      => 'Gastos',
+            'es_app'      => true,
+            'manifest'    => '/gastos/manifest?k=' . $token,
+            'enlace'      => $enlace,
+            'token'       => $token,
+            'semana'      => $semana,
+            'cuentas'     => $fin->cuentas(),
+            'fondos'      => [],
+            'categorias'  => array_diff_key(GastoModel::CATEGORIAS, self::RUBROS_ENLACE_EXCLUIDOS),
+            'origenes'    => [],
+            'ultima_tasa' => $fin->ultimaTasa(),
+            'tipo'        => 'gasto',
+        ], 'admin');
+    }
+
+    // ── POST /gastos ──────────────────────────────────────────
+    public function registrarGastoEnlace(): void {
+        $token   = (string) ($_POST['k'] ?? '');
+        $enlaces = new EnlaceCajaModel();
+        $enlace  = $enlaces->porToken($token);
+        if (!$enlace) $this->enlaceInactivo();
+
+        $volver = '/gastos?k=' . $token;
+
+        if (array_key_exists($_POST['categoria'] ?? '', self::RUBROS_ENLACE_EXCLUIDOS)) {
+            $this->flash('error', 'Ese rubro se carga desde Finanzas.');
+            $this->redirigir($volver);
+        }
+        if (trim($_POST['concepto'] ?? '') === '') {
+            $_POST['concepto'] = GastoModel::CATEGORIAS[$_POST['categoria'] ?? ''] ?? '';
+        }
+
+        $datos = $this->datosGastoDesdePost($volver);
+        if ($datos === null) return;
+
+        $datos['fondo_id']    = 0;
+        $datos['prestamo_id'] = 0;
+        $datos['enlace_id']   = (int) $enlace['id'];
+
+        (new GastoModel())->registrar($datos, (int) $enlace['creado_por']);
+        $enlaces->marcarUso((int) $enlace['id']);
+
+        $this->flash('exito', 'Gasto de ' . usd($datos['monto_usd']) . ' guardado.');
+        $this->redirigir($volver);
+    }
+
+    // ── GET /gastos/manifest?k=... ────────────────────────────
+    // Para que el ícono en la pantalla de inicio abra con el enlace de cada quien
+    public function manifestEnlace(): void {
+        $token = (string) ($_GET['k'] ?? '');
+        if (!(new EnlaceCajaModel())->porToken($token)) {
+            http_response_code(404);
+            exit;
+        }
+
+        header('Content-Type: application/manifest+json; charset=utf-8');
+        echo json_encode([
+            'name'             => 'Gastos · Misioneros Integrales',
+            'short_name'       => 'Gastos MI',
+            'start_url'        => '/gastos?k=' . $token,
+            'scope'            => '/gastos',
+            'display'          => 'standalone',
+            'background_color' => '#ffffff',
+            'theme_color'      => '#167a5e',
+            'icons'            => [
+                ['src' => '/public/assets/icons/caja-192.png', 'sizes' => '192x192', 'type' => 'image/png'],
+                ['src' => '/public/assets/icons/caja-512.png', 'sizes' => '512x512', 'type' => 'image/png'],
+            ],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    private function enlaceInactivo(): never {
+        http_response_code(404);
+        $this->render('admin/enlace_inactivo', ['titulo' => 'Enlace no disponible'], 'admin');
+        exit;
     }
 
     // ── POST /admin/caja ──────────────────────────────────────

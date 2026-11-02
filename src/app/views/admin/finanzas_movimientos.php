@@ -193,6 +193,9 @@
                         <?php if (!empty($g['prestamista'])): ?>
                         <br><small class="texto-muted">Devolución a <?= htmlspecialchars($g['prestamista']) ?></small>
                         <?php endif; ?>
+                        <?php if (!empty($g['enlace_nombre'])): ?>
+                        <br><small class="texto-muted"><i class="fas fa-link"></i> Cargado por <?= htmlspecialchars($g['enlace_nombre']) ?></small>
+                        <?php endif; ?>
                     </td>
                     <td>
                         <span class="badge badge--neutro"><?= htmlspecialchars($categorias[$g['categoria']] ?? $g['categoria']) ?></span>

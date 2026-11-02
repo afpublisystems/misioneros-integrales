@@ -28,7 +28,7 @@ Gestiona registro de candidatos, subida de documentos y evaluación de postulant
 - Nombre local (Docker): `misioneros_integrales_db`
 - Nombre en producción (cPanel): `hosting63201us_misioneros`
 - Conexión: `Database::getConnection()` (Singleton PDO)
-- Migraciones en `database/`, se aplican a mano por phpMyAdmin. La última es la 012.
+- Migraciones en `database/`, se aplican a mano por phpMyAdmin. La última es la 013.
 
 ## Estructura (producción)
 ```
@@ -62,6 +62,7 @@ public_html/misionerosintegrales.com/
 | `/admin/finanzas/traslados` | AdminController — solicitudes de traslado a tesorería CNBV |
 | `/admin/finanzas/seminario` | AdminController — cargos del STBV por participante |
 | `/admin/finanzas/presupuesto` | AdminController — presupuesto contra lo real, gastos adicionales |
+| `/gastos?k=...` | AdminController — carga de gastos por enlace, sin cuenta (enlaces en `/admin/caja`) |
 | `/cohorte-1` | PublicoController — los participantes de la 1era cohorte |
 | `/candidato/pagos` | CandidatoController |
 | `/admin/evangelismo` | EvangelismoController — personas alcanzadas, PIN |

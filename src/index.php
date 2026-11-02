@@ -96,6 +96,8 @@ $rutas = [
         '/cohorte-1'            => ['PublicoController', 'cohorte'],
         '/contacto'             => ['PublicoController', 'contacto'],
         '/evangelismo'          => ['EvangelismoController', 'publico'],
+        '/gastos'               => ['AdminController', 'gastosEnlace'],
+        '/gastos/manifest'      => ['AdminController', 'manifestEnlace'],
         // Auth
         '/login'                => ['AuthController',    'loginForm'],
         '/registro'             => ['AuthController',    'registroForm'],
@@ -168,6 +170,8 @@ $rutas = [
         '/admin/evangelismo/pin'      => ['EvangelismoController', 'pin'],
         '/admin/evangelismo/sede'     => ['EvangelismoController', 'sede'],
         '/evangelismo'                => ['EvangelismoController', 'registrarPublico'],
+        '/gastos'                     => ['AdminController', 'registrarGastoEnlace'],
+        '/admin/caja/enlace'          => ['AdminController', 'gestionarEnlaceCaja'],
         '/evangelismo/pin'            => ['EvangelismoController', 'entrar'],
         '/evangelismo/salir'          => ['EvangelismoController', 'salir'],
         // Candidato — pagos

@@ -50,6 +50,7 @@ class GastoModel extends Model {
             'referencia'       => $d['referencia']  ?: null,
             'comprobante_ruta' => $d['comprobante_ruta'] ?? null,
             'registrado_por'   => $usuario_id,
+            'enlace_id'        => $d['enlace_id'] ?? null,
             'notas'            => $d['notas'] ?: null,
         ]);
 
@@ -175,12 +176,14 @@ class GastoModel extends Model {
                    CONCAT(u.nombre, ' ', u.apellido) AS registrado_por_nombre,
                    f.nombre AS fondo_nombre,
                    c.nombre AS cuenta_nombre,
-                   p.prestamista
+                   p.prestamista,
+                   e.nombre AS enlace_nombre
             FROM gastos g
             LEFT JOIN usuarios  u ON u.id = g.registrado_por
             LEFT JOIN fondos    f ON f.id = g.fondo_id
             LEFT JOIN cuentas   c ON c.id = g.cuenta_id
             LEFT JOIN prestamos p ON p.id = g.prestamo_id
+            LEFT JOIN enlaces_caja e ON e.id = g.enlace_id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY g.fecha_gasto DESC, g.id DESC
             LIMIT :lim
@@ -230,12 +233,13 @@ class GastoModel extends Model {
                    f.nombre AS fondo, c.nombre AS cuenta,
                    g.beneficiario, g.monto_usd, g.monto_ves, g.tasa_cambio,
                    g.metodo_pago, g.referencia,
-                   CONCAT(u.nombre, ' ', u.apellido) AS registrado_por,
+                   COALESCE(e.nombre, CONCAT(u.nombre, ' ', u.apellido)) AS registrado_por,
                    g.notas
             FROM gastos g
-            LEFT JOIN usuarios u ON u.id = g.registrado_por
-            LEFT JOIN fondos   f ON f.id = g.fondo_id
-            LEFT JOIN cuentas  c ON c.id = g.cuenta_id
+            LEFT JOIN usuarios     u ON u.id = g.registrado_por
+            LEFT JOIN enlaces_caja e ON e.id = g.enlace_id
+            LEFT JOIN fondos       f ON f.id = g.fondo_id
+            LEFT JOIN cuentas      c ON c.id = g.cuenta_id
             ORDER BY g.fecha_gasto ASC, g.id ASC
         ")->fetchAll();
     }

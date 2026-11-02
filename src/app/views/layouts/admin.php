@@ -11,10 +11,10 @@
     <link rel="stylesheet" href="/public/css/app.css?v=<?= filemtime(BASE_PATH . '/public/css/app.css') ?>">
     <?php if (!empty($es_app)): ?>
     <!-- Para instalar la caja en el teléfono como si fuera una app -->
-    <link rel="manifest" href="/public/caja.webmanifest">
+    <link rel="manifest" href="<?= htmlspecialchars($manifest ?? '/public/caja.webmanifest') ?>">
     <meta name="theme-color" content="#167a5e">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Caja MI">
+    <meta name="apple-mobile-web-app-title" content="<?= !empty($enlace) ? 'Gastos MI' : 'Caja MI' ?>">
     <link rel="apple-touch-icon" href="/public/assets/icons/caja-192.png">
     <?php endif; ?>
 </head>

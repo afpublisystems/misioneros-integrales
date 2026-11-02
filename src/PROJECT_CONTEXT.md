@@ -650,6 +650,28 @@ de `GastoModel::CATEGORIAS` caen en cada rubro (las dos del Seminario van juntas
 contingencia es solo presupuesto; las devoluciones de préstamos no entran, porque no son
 gasto del programa.
 
+### Enlaces para cargar gastos (sin cuenta)
+
+Coordinadores y responsables cargan gastos desde el teléfono con un enlace propio,
+`/gastos?k=<token>`, sin usuario ni clave. Se crean al pie de **Caja** (`/admin/caja`).
+
+**Solo pueden cargar.** La pantalla es la misma vista de la caja (`admin/caja.php` con
+`$enlace`), sin menú, sin saldos y sin ingresos. Lo único que ven es lo que cargaron
+desde el lunes. Los rubros del Seminario y las devoluciones de préstamos no salen: esos
+se cargan por Finanzas, y el controlador los rechaza aunque lleguen por POST.
+
+**El token no se guarda.** `enlaces_caja.token_hash` es su SHA-256; el enlace completo
+se muestra una sola vez, al crearlo o regenerarlo, con botón para copiar y para mandarlo
+por WhatsApp. Si se pierde, se regenera y el anterior deja de servir. Desactivar lo corta
+al instante; reactivar devuelve el mismo enlace.
+
+**Quién lo cargó.** El gasto lleva `enlace_id` y como `registrado_por` al admin que creó
+el enlace. En Ingresos y gastos sale «Cargado por <nombre>» y en el CSV de gastos ese
+nombre reemplaza al del admin. Entran directo a los totales, sin revisión previa.
+
+**Ícono en el teléfono.** `/gastos/manifest?k=` devuelve un manifest cuyo `start_url`
+trae el token, para que el ícono abra el enlace de cada quien.
+
 ### Anular, no borrar
 
 Un movimiento cargado por error no se elimina: se marca anulado. Se queda en la tabla,
@@ -684,6 +706,7 @@ ahí el anulado tiene que verse.
 | `FinanzasModel` | Catálogos de fondos y cuentas, KPIs y consolidados |
 | `TrasladoModel` | Solicitudes de traslado: qué pagos se reportaron, en qué estado van y cómo se agrupan por transacción |
 | `SeminarioModel` | Cargos del STBV por participante, plantilla del ciclo y conciliación con el gasto que los paga |
+| `EnlaceCajaModel` | Enlaces de carga sin cuenta: crear, regenerar, activar y buscar por token |
 | `PresupuestoModel` | Fases y montos del presupuesto, cuadro presupuestado/previsto/adicional por fase y rubro, y la lista de gastos adicionales |
 
 ### Vistas
@@ -927,6 +950,24 @@ admin de la galería (`/admin/galeria`) está hecha.
 ---
 
 ## REGISTRO DE CAMBIOS EN PRODUCCIÓN
+
+### v12 — 02/11/2026 — Enlaces para cargar gastos sin contraseña
+
+**Contexto:** José y Yohanna, y después el responsable de los traslados a las prácticas,
+necesitan cargar gastos desde el teléfono sin entrar al sistema.
+
+| Archivo | Cambio |
+|---------|--------|
+| `database/migracion_013_enlaces_caja.sql` | **Nueva** — tabla `enlaces_caja` y `gastos.enlace_id` |
+| `models/EnlaceCajaModel.php` | **Nuevo** |
+| `controllers/AdminController.php` | `gastosEnlace()`, `registrarGastoEnlace()`, `manifestEnlace()` y `gestionarEnlaceCaja()` |
+| `views/admin/caja.php` | Modo enlace: sin menú, saldos ni ingresos |
+| `views/partials/enlaces_caja.php`, `views/admin/enlace_inactivo.php` | **Nuevas** — gestión de enlaces y aviso de enlace vencido |
+| `views/layouts/admin.php` | Manifest variable para el ícono de cada enlace |
+| `views/admin/finanzas_movimientos.php`, `models/GastoModel.php` | «Cargado por» en el listado y en el CSV |
+| `index.php` | Rutas `/gastos`, `/gastos/manifest` y `/admin/caja/enlace` |
+
+**Al subir:** aplicar la 013 (o `migrar-013-tmp.php`) antes del código, igual que la 012.
 
 ### v11 — 02/11/2026 — Presupuesto contra lo real y gastos adicionales
 
