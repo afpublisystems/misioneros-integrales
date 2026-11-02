@@ -37,6 +37,8 @@ class GastoModel extends Model {
             'fecha_gasto'      => $d['fecha_gasto'],
             'concepto'         => $d['concepto'],
             'categoria'        => $d['categoria'],
+            'cobertura'        => $d['cobertura'] ?? 'presupuesto',
+            'cobertura_motivo' => ($d['cobertura_motivo'] ?? '') ?: null,
             'fondo_id'         => $d['fondo_id']    ?: null,
             'cuenta_id'        => $d['cuenta_id']   ?: null,
             'prestamo_id'      => $d['prestamo_id'] ?: null,
@@ -74,6 +76,8 @@ class GastoModel extends Model {
             'fecha_gasto'  => $d['fecha_gasto'],
             'concepto'     => $d['concepto'],
             'categoria'    => $d['categoria'],
+            'cobertura'    => $d['cobertura'],
+            'cobertura_motivo' => $d['cobertura_motivo'] ?: null,
             'fondo_id'     => $d['fondo_id']  ?: null,
             'cuenta_id'    => $d['cuenta_id'] ?: null,
             'prestamo_id'  => $prestamo_id,
@@ -222,6 +226,7 @@ class GastoModel extends Model {
     public function todosParaExportar(): array {
         return $this->db->query("
             SELECT g.fecha_gasto, g.concepto, g.categoria,
+                   g.cobertura, g.cobertura_motivo,
                    f.nombre AS fondo, c.nombre AS cuenta,
                    g.beneficiario, g.monto_usd, g.monto_ves, g.tasa_cambio,
                    g.metodo_pago, g.referencia,

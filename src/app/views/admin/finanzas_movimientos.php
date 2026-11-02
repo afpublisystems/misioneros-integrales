@@ -194,7 +194,12 @@
                         <br><small class="texto-muted">Devolución a <?= htmlspecialchars($g['prestamista']) ?></small>
                         <?php endif; ?>
                     </td>
-                    <td><span class="badge badge--neutro"><?= htmlspecialchars($categorias[$g['categoria']] ?? $g['categoria']) ?></span></td>
+                    <td>
+                        <span class="badge badge--neutro"><?= htmlspecialchars($categorias[$g['categoria']] ?? $g['categoria']) ?></span>
+                        <?php if ($g['cobertura'] === 'adicional'): ?>
+                        <br><span class="badge badge--warning badge--xs" title="<?= htmlspecialchars($g['cobertura_motivo'] ?? '') ?>">Adicional</span>
+                        <?php endif; ?>
+                    </td>
                     <td><?= htmlspecialchars($g['beneficiario'] ?? '—') ?></td>
                     <td class="texto-muted"><?= htmlspecialchars($g['fondo_nombre'] ?? '—') ?></td>
                     <td style="white-space:nowrap">
@@ -231,6 +236,8 @@
                                     'fecha_gasto'  => $g['fecha_gasto'],
                                     'concepto'     => $g['concepto'],
                                     'categoria'    => $g['categoria'],
+                                    'cobertura'    => $g['cobertura'],
+                                    'cobertura_motivo' => $g['cobertura_motivo'],
                                     'fondo_id'     => $g['fondo_id'],
                                     'cuenta_id'    => $g['cuenta_id'],
                                     'prestamo_id'  => $g['prestamo_id'],
@@ -423,6 +430,25 @@
                     </div>
                 </div>
 
+                <div class="form-grid-2">
+                    <div class="form-grupo">
+                        <label>¿Estaba en el presupuesto? <span class="req">*</span></label>
+                        <select name="cobertura" id="gasto-cobertura">
+                            <option value="presupuesto">Sí, estaba previsto</option>
+                            <option value="adicional">No, es un gasto adicional</option>
+                        </select>
+                    </div>
+                    <div class="form-grupo" id="gasto-motivo" style="display:none">
+                        <label>¿Por qué se pagó? <span class="req">*</span></label>
+                        <input type="text" name="cobertura_motivo" maxlength="200"
+                               placeholder="Ej: la iglesia no pudo cubrir el fin de semana">
+                    </div>
+                </div>
+                <span class="fin-nota" id="gasto-aviso-fds" style="display:none;margin:-.5rem 0 1rem">
+                    Esta fecha cae en fin de semana. Si es comida o traslado que debía cubrir la iglesia
+                    anfitriona, márcalo como adicional. La cena del domingo y el desayuno del viernes sí están en el presupuesto.
+                </span>
+
                 <div class="form-grupo" id="gasto-prestamo" style="display:none">
                     <label>¿Qué préstamo estás devolviendo? <span class="req">*</span></label>
                     <select name="prestamo_id">
@@ -560,6 +586,23 @@ function alternarPrestamo() {
 catSel.addEventListener('change', alternarPrestamo);
 alternarPrestamo();
 
+// Un gasto adicional tiene que decir por qué, para el informe
+var formGasto = document.getElementById('form-gasto');
+var cobSel    = document.getElementById('gasto-cobertura');
+function alternarCobertura() {
+    var adicional = cobSel.value === 'adicional';
+    document.getElementById('gasto-motivo').style.display = adicional ? 'block' : 'none';
+    formGasto.elements['cobertura_motivo'].required = adicional;
+
+    // getDay() sobre "AAAA-MM-DD" en hora local: 5 viernes, 6 sábado, 0 domingo
+    var f   = formGasto.elements['fecha_gasto'].value;
+    var dia = f ? new Date(f + 'T12:00:00').getDay() : -1;
+    document.getElementById('gasto-aviso-fds').style.display = [5, 6, 0].indexOf(dia) >= 0 ? 'block' : 'none';
+}
+cobSel.addEventListener('change', alternarCobertura);
+formGasto.elements['fecha_gasto'].addEventListener('change', alternarCobertura);
+alternarCobertura();
+
 // ── Editar: se reusa el mismo modal, precargado ─────────────
 function llenarForm(form, datos) {
     Object.keys(datos).forEach(function (campo) {
@@ -601,6 +644,7 @@ function modoGasto(datos) {
         document.getElementById('gasto-id').value = '';
     }
     alternarPrestamo();
+    alternarCobertura();
     document.getElementById('modal-gasto').classList.add('abierto');
 }
 

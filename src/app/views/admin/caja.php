@@ -74,6 +74,22 @@ $tasa_txt = $ultima_tasa ? rtrim(rtrim(number_format($ultima_tasa, 4, '.', ''), 
                     <span><?= htmlspecialchars($nombre) ?></span></label>
                 <?php endforeach; ?>
             </div>
+            <div data-grupo="gasto">
+                <p class="caja-etiqueta">¿Estaba en el presupuesto?</p>
+                <div class="caja-chips">
+                    <label><input type="radio" name="cobertura" value="presupuesto" checked>
+                        <span>Sí, previsto</span></label>
+                    <label><input type="radio" name="cobertura" value="adicional">
+                        <span>No, es adicional</span></label>
+                </div>
+                <p class="caja-aviso" id="caja-aviso-fds" hidden>
+                    Es fin de semana: si lo debía cubrir la iglesia anfitriona, es adicional.
+                </p>
+                <div class="form-grupo" id="caja-motivo" hidden>
+                    <input type="text" name="cobertura_motivo" maxlength="200"
+                           placeholder="¿Por qué? Ej: la iglesia no cubrió el fin de semana">
+                </div>
+            </div>
             <div class="caja-chips" data-grupo="ingreso">
                 <?php foreach ($origenes as $clave => $nombre): ?>
                 <label><input type="radio" name="origen" value="<?= $clave ?>" required>
@@ -225,6 +241,7 @@ $tasa_txt = $ultima_tasa ? rtrim(rtrim(number_format($ultima_tasa, 4, '.', ''), 
 .caja-chips input:focus-visible + span { outline: 2px solid var(--dorado); }
 
 .caja-form .form-grupo { margin-top: 1rem; }
+.caja-aviso { font-size: .78rem; color: #92400e; margin: .5rem 0 0; }
 .caja-foto { margin-top: .75rem; }
 .caja-foto.listo { border-color: var(--verde); color: var(--verde); }
 .caja-mas { margin: 1rem 0; }
@@ -314,6 +331,22 @@ $tasa_txt = $ultima_tasa ? rtrim(rtrim(number_format($ultima_tasa, 4, '.', ''), 
         r.addEventListener('change', () => elegirCuenta(r)));
     monto.addEventListener('input', calcular);
     tasa.addEventListener('input', calcular);
+
+    // Un gasto adicional tiene que decir por qué, para el informe
+    const fechaGasto = form.querySelector('input[name="fecha_gasto"]');
+    function alternarCobertura() {
+        const adicional = form.querySelector('input[name="cobertura"]:checked').value === 'adicional';
+        const motivo    = form.elements['cobertura_motivo'];
+        document.getElementById('caja-motivo').hidden = !adicional;
+        motivo.required = adicional;
+        // 5 viernes, 6 sábado, 0 domingo
+        const dia = fechaGasto.value ? new Date(fechaGasto.value + 'T12:00:00').getDay() : -1;
+        document.getElementById('caja-aviso-fds').hidden = ![5, 6, 0].includes(dia);
+    }
+    form.querySelectorAll('input[name="cobertura"]').forEach(r =>
+        r.addEventListener('change', alternarCobertura));
+    fechaGasto.addEventListener('change', alternarCobertura);
+    alternarCobertura();
 
     foto.addEventListener('change', () => {
         const hay = foto.files.length > 0;

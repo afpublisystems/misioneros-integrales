@@ -13,6 +13,7 @@ require_once APP_PATH . '/models/GastoModel.php';
 require_once APP_PATH . '/models/IngresoModel.php';
 require_once APP_PATH . '/models/PrestamoModel.php';
 require_once APP_PATH . '/models/FinanzasModel.php';
+require_once APP_PATH . '/models/PresupuestoModel.php';
 require_once APP_PATH . '/helpers/TestScorer.php';
 
 class AdminController extends Controller {
@@ -1568,6 +1569,41 @@ class AdminController extends Controller {
         ], 'admin');
     }
 
+    // ══════════════════════════════════════════════════════════
+    // PRESUPUESTO CONTRA LO REAL
+    // ══════════════════════════════════════════════════════════
+
+    // ── GET /admin/finanzas/presupuesto ───────────────────────
+    public function presupuesto(): void {
+        $this->requireAdminOEvaluador();
+
+        $pre    = new PresupuestoModel();
+        $fases  = $pre->fases();
+        $cuadro = $pre->cuadro();
+        [$ids, $etiqueta, $ver] = $pre->seleccion($fases, (string) ($_GET['fase'] ?? ''));
+
+        $por_fase = [];
+        foreach ($fases as $f) {
+            $por_fase[] = $f + PresupuestoModel::totales($pre->filas($cuadro, [(int) $f['id']]));
+        }
+        $fuera = PresupuestoModel::totales($pre->filas($cuadro, [0]));
+
+        $filas = $pre->filas($cuadro, $ids);
+
+        $this->render('admin/finanzas_presupuesto', [
+            'titulo'      => 'Presupuesto',
+            'fases'       => $fases,
+            'por_fase'    => $por_fase,
+            'fuera'       => $fuera,
+            'ver'         => $ver,
+            'etiqueta'    => $etiqueta,
+            'filas'       => $filas,
+            'totales'     => PresupuestoModel::totales($filas),
+            'adicionales' => $pre->adicionales($fases, $ids),
+            'categorias'  => GastoModel::CATEGORIAS,
+        ], 'admin');
+    }
+
     // ── POST /admin/finanzas/seminario/generar ────────────────
     public function generarCargosSeminario(): void {
         $this->requireAdminOEvaluador();
@@ -1758,6 +1794,14 @@ class AdminController extends Controller {
             return null;
         }
 
+        $cobertura = ($_POST['cobertura'] ?? '') === 'adicional' ? 'adicional' : 'presupuesto';
+        $motivo    = $cobertura === 'adicional' ? trim($_POST['cobertura_motivo'] ?? '') : '';
+        if ($cobertura === 'adicional' && $motivo === '') {
+            $this->flash('error', 'Di por qué es un gasto adicional, para que conste en el informe.');
+            $this->redirigir($volver);
+            return null;
+        }
+
         $ruta = null;
         if (!empty($_FILES['comprobante']['name'])) {
             $ruta = $this->subirComprobante($_FILES['comprobante'], 'gasto');
@@ -1772,6 +1816,8 @@ class AdminController extends Controller {
             'fecha_gasto'      => $_POST['fecha_gasto'] ?: date('Y-m-d'),
             'concepto'         => $concepto,
             'categoria'        => $categoria,
+            'cobertura'        => $cobertura,
+            'cobertura_motivo' => mb_substr($motivo, 0, 200),
             'fondo_id'         => (int) ($_POST['fondo_id']  ?? 0),
             'cuenta_id'        => (int) ($_POST['cuenta_id'] ?? 0),
             'prestamo_id'      => $prestamo_id,
@@ -1913,11 +1959,12 @@ class AdminController extends Controller {
             header("Content-Disposition: attachment; filename=gastos_{$fecha}.csv");
             $out = fopen('php://output', 'w');
             fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM UTF-8
-            fputcsv($out, ['Fecha','Concepto','Categoría','Fondo','Cuenta','Beneficiario','Monto USD','Monto Bs','Tasa','Método','Referencia','Registrado por','Notas'], ';');
+            fputcsv($out, ['Fecha','Concepto','Categoría','Cobertura','Motivo','Fondo','Cuenta','Beneficiario','Monto USD','Monto Bs','Tasa','Método','Referencia','Registrado por','Notas'], ';');
             foreach ((new GastoModel())->todosParaExportar() as $r) {
                 fputcsv($out, [
                     $r['fecha_gasto'], $r['concepto'],
                     GastoModel::CATEGORIAS[$r['categoria']] ?? $r['categoria'],
+                    $r['cobertura'] === 'adicional' ? 'Adicional' : 'Presupuestado', $r['cobertura_motivo'],
                     $r['fondo'], $r['cuenta'], $r['beneficiario'],
                     $r['monto_usd'], $r['monto_ves'], $r['tasa_cambio'],
                     $r['metodo_pago'], $r['referencia'], $r['registrado_por'], $r['notas'],
@@ -1973,6 +2020,44 @@ class AdminController extends Controller {
                         $c['descripcion'], $c['monto_usd'], $c['estatus'], $c['fecha_pago'],
                     ], ';');
                 }
+            }
+        } elseif ($tipo === 'presupuesto') {
+            $pre    = new PresupuestoModel();
+            $fases  = $pre->fases();
+            [$ids, $etiqueta, $ver] = $pre->seleccion($fases, (string) ($_GET['fase'] ?? ''));
+            $filas  = $pre->filas($pre->cuadro(), $ids);
+            $t      = PresupuestoModel::totales($filas);
+
+            header("Content-Disposition: attachment; filename=presupuesto-{$ver}_{$fecha}.csv");
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($out, ['Presupuesto contra lo real — ' . $etiqueta], ';');
+            fputcsv($out, ['Rubro','Presupuestado USD','Gastado previsto USD','Gastado adicional USD','Total gastado USD','Diferencia USD'], ';');
+            foreach ($filas as $f) {
+                $gastado = $f['previsto'] + $f['adicional'];
+                fputcsv($out, [
+                    $f['nombre'],
+                    number_format($f['presupuesto'], 2, '.', ''), number_format($f['previsto'], 2, '.', ''),
+                    number_format($f['adicional'], 2, '.', ''), number_format($gastado, 2, '.', ''),
+                    number_format($f['presupuesto'] - $gastado, 2, '.', ''),
+                ], ';');
+            }
+            fputcsv($out, [
+                'TOTAL',
+                number_format($t['presupuesto'], 2, '.', ''), number_format($t['previsto'], 2, '.', ''),
+                number_format($t['adicional'], 2, '.', ''), number_format($t['gastado'], 2, '.', ''),
+                number_format($t['diferencia'], 2, '.', ''),
+            ], ';');
+
+            fputcsv($out, [], ';');
+            fputcsv($out, ['Gastos adicionales'], ';');
+            fputcsv($out, ['Fecha','Concepto','Rubro','A quién','Motivo','Monto USD','Monto Bs'], ';');
+            foreach ($pre->adicionales($fases, $ids) as $g) {
+                fputcsv($out, [
+                    $g['fecha_gasto'], $g['concepto'],
+                    GastoModel::CATEGORIAS[$g['categoria']] ?? $g['categoria'],
+                    $g['beneficiario'], $g['cobertura_motivo'], $g['monto_usd'], $g['monto_ves'],
+                ], ';');
             }
         } elseif ($tipo === 'matriculas') {
             header("Content-Disposition: attachment; filename=matriculas_{$fecha}.csv");

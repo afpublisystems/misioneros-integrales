@@ -13,6 +13,7 @@ $secciones = [
     '/admin/finanzas/prestamos'   => ['fa-hand-holding-dollar',  'Préstamos'],
     '/admin/finanzas/traslados'   => ['fa-money-bill-transfer',  'Traslados'],
     '/admin/finanzas/seminario'   => ['fa-school',               'Seminario'],
+    '/admin/finanzas/presupuesto' => ['fa-scale-balanced',       'Presupuesto'],
 ];
 ?>
 <nav class="fin-tabs">

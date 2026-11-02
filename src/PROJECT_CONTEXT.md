@@ -622,6 +622,34 @@ elimina: para corregirlo hay que anular el gasto primero.
 Después de transferirle al Seminario hay que reportar el pago a
 `directorstbv2026@gmail.com` — el modal lo recuerda en las notas.
 
+### Presupuesto contra lo real
+
+En **Finanzas → Presupuesto** se compara el presupuesto entregado a la DIME con lo que de
+verdad salió, fase por fase y rubro por rubro. Nació porque el plan contaba con que las
+iglesias anfitrionas cubrieran la comida y los traslados internos de viernes a domingo, y
+en la práctica de Carayaca el programa terminó pagándolo todo. El informe tiene que poder
+mostrar ese gasto aparte.
+
+**Cada gasto dice si estaba previsto.** `gastos.cobertura` es `presupuesto` (por defecto) o
+`adicional`; el adicional exige `cobertura_motivo`, que sale tal cual en el informe. El
+formulario avisa cuando la fecha cae de viernes a domingo, pero no marca nada solo: la
+cena del domingo y el desayuno del viernes sí están en el presupuesto.
+
+**La fase la da la fecha.** `presupuesto_fases` tiene las 7 fases del Ciclo 1 con sus
+fechas; un gasto pertenece a la fase en cuyo rango cae. Lo que queda fuera (preparación
+antes del 15/09, pausa de diciembre) sale en una fila aparte y solo cuenta en las vistas
+de varias fases. Estas fases son las del presupuesto, no la tabla `sedes`: La Guaira son
+tres fases ahí y una sola sede aquí.
+
+**Lo presupuestado no se edita desde el panel.** `presupuesto_montos` guarda fase × rubro
+con los montos de la hoja «Resumen Mensual» del Excel corregido (12 participantes). Si el
+presupuesto se reformula, se corrige con SQL; el informe compara contra lo que se aprobó.
+
+**Rubros y categorías no son lo mismo.** `PresupuestoModel::RUBROS` dice qué categorías
+de `GastoModel::CATEGORIAS` caen en cada rubro (las dos del Seminario van juntas). La
+contingencia es solo presupuesto; las devoluciones de préstamos no entran, porque no son
+gasto del programa.
+
 ### Anular, no borrar
 
 Un movimiento cargado por error no se elimina: se marca anulado. Se queda en la tabla,
@@ -656,13 +684,14 @@ ahí el anulado tiene que verse.
 | `FinanzasModel` | Catálogos de fondos y cuentas, KPIs y consolidados |
 | `TrasladoModel` | Solicitudes de traslado: qué pagos se reportaron, en qué estado van y cómo se agrupan por transacción |
 | `SeminarioModel` | Cargos del STBV por participante, plantilla del ciclo y conciliación con el gasto que los paga |
+| `PresupuestoModel` | Fases y montos del presupuesto, cuadro presupuestado/previsto/adicional por fase y rubro, y la lista de gastos adicionales |
 
 ### Vistas
 
 `admin/finanzas.php` (resumen), `finanzas_movimientos.php` (ingresos y gastos),
 `finanzas_matriculas.php` (becas, cuotas y carga de abonos), `finanzas_prestamos.php`,
-`finanzas_traslados.php` (solicitudes a tesorería) y `finanzas_seminario.php` (cargos del
-STBV), más el partial `partials/finanzas_nav.php` con las pestañas y los estilos que
+`finanzas_traslados.php` (solicitudes a tesorería), `finanzas_seminario.php` (cargos del
+STBV) y `finanzas_presupuesto.php` (presupuesto contra lo real, imprimible), más el partial `partials/finanzas_nav.php` con las pestañas y los estilos que
 `app.css` no cubre.
 
 `admin/traslado_imprimir.php` es la única vista que no usa el layout `admin`: va con
@@ -898,6 +927,24 @@ admin de la galería (`/admin/galeria`) está hecha.
 ---
 
 ## REGISTRO DE CAMBIOS EN PRODUCCIÓN
+
+### v11 — 02/11/2026 — Presupuesto contra lo real y gastos adicionales
+
+**Contexto:** en la práctica de Carayaca las iglesias no pudieron cubrir los fines de
+semana y el programa pagó comida y traslados que el presupuesto no contemplaba. Hacía falta
+llevar esa plata aparte para el informe a la DIME.
+
+| Archivo | Cambio |
+|---------|--------|
+| `database/migracion_012_presupuesto.sql` | **Nueva** — `gastos.cobertura` y `cobertura_motivo`; tablas `presupuesto_fases` y `presupuesto_montos` con el presupuesto del Ciclo 1 cargado |
+| `models/PresupuestoModel.php` | **Nuevo** — cuadro por fase y rubro, selección de fases y gastos adicionales |
+| `views/admin/finanzas_presupuesto.php` | **Nueva** — KPIs, cuadro por rubro, lista de adicionales con su motivo y resumen fase por fase; se imprime sin el menú |
+| `controllers/AdminController.php` | `presupuesto()`, CSV `tipo=presupuesto`, validación de cobertura y motivo; el CSV de gastos trae la cobertura |
+| `views/admin/finanzas_movimientos.php`, `caja.php` | Campo «¿Estaba en el presupuesto?» con motivo y aviso de fin de semana; badge «Adicional» en el listado |
+| `views/partials/finanzas_nav.php`, `index.php` | Pestaña y ruta `/admin/finanzas/presupuesto` |
+
+**Al subir:** aplicar la 012 antes de subir el código. Sin la columna `cobertura`, guardar
+un gasto falla.
 
 ### v10 — 28/10/2026 — Página de la 1era cohorte y convocatoria de la 2da
 
