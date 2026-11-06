@@ -36,3 +36,6 @@
 
 # Clave del admin para la subida automática de fotos
 /tools/subir-galeria/config.ini
+
+# Informes semanales de prácticas (nombres de personas alcanzadas, no van al repo)
+/informes/

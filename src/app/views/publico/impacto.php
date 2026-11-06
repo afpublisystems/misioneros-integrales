@@ -89,6 +89,28 @@
             Lo registra el equipo en cada sede y se actualiza solo.
         </p>
         <?php endif; ?>
+
+        <?php if ($practicas['iglesias'] > 0): ?>
+        <h3 class="imp-campo__titulo">Prácticas en iglesias de Carayaca</h3>
+        <div class="imp-stats-grid">
+            <?php foreach ([
+                ['fa-church',    $practicas['iglesias'],      'Iglesias acompañadas'],
+                ['fa-bullhorn',  $practicas['evangelizados'], 'Personas evangelizadas'],
+                ['fa-heart',     $practicas['decisiones'],    'Decisiones de fe'],
+                ['fa-book-open', $practicas['discipulado'],   'Personas en discipulado'],
+            ] as [$icono, $valor, $etiqueta]): ?>
+            <div class="imp-stat-card">
+                <div class="imp-stat-card__icono"><i class="fas <?= $icono ?>"></i></div>
+                <div class="imp-stat-card__valor" data-target="<?= $valor ?>">0</div>
+                <div class="imp-stat-card__label"><?= $etiqueta ?></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <p class="imp-stats-nota">
+            <i class="fas fa-info-circle"></i>
+            Sale de los reportes semanales de cada grupo misionero en su iglesia.
+        </p>
+        <?php endif; ?>
     </div>
 </section>
 

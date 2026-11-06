@@ -129,6 +129,8 @@ $rutas = [
         '/admin/finanzas/presupuesto'=> ['AdminController', 'presupuesto'],
         '/admin/finanzas/exportar'   => ['AdminController', 'exportarFinanzas'],
         '/admin/evangelismo'         => ['EvangelismoController', 'index'],
+        '/admin/practicas'           => ['PracticasController', 'index'],
+        '/admin/practicas/informe'   => ['PracticasController', 'informe'],
         // Candidato — pagos
         '/candidato/pagos'      => ['CandidatoController', 'pagos'],
     ],
@@ -169,6 +171,8 @@ $rutas = [
         '/admin/evangelismo/eliminar' => ['EvangelismoController', 'eliminar'],
         '/admin/evangelismo/pin'      => ['EvangelismoController', 'pin'],
         '/admin/evangelismo/sede'     => ['EvangelismoController', 'sede'],
+        '/admin/practicas'            => ['PracticasController', 'guardar'],
+        '/admin/practicas/eliminar'   => ['PracticasController', 'eliminar'],
         '/evangelismo'                => ['EvangelismoController', 'registrarPublico'],
         '/gastos'                     => ['AdminController', 'registrarGastoEnlace'],
         '/admin/caja/enlace'          => ['AdminController', 'gestionarEnlaceCaja'],

@@ -52,11 +52,13 @@ class PublicoController extends Controller {
         $stats = $stmt->fetchAll();
 
         require_once APP_PATH . '/models/EvangelismoModel.php';
+        require_once APP_PATH . '/models/PracticaModel.php';
 
         $this->render('publico/impacto', [
-            'titulo' => 'Impacto',
-            'stats'  => $stats,
-            'campo'  => (new EvangelismoModel())->totales(),
+            'titulo'    => 'Impacto',
+            'stats'     => $stats,
+            'campo'     => (new EvangelismoModel())->totales(),
+            'practicas' => (new PracticaModel())->totales(),
         ]);
     }
 
