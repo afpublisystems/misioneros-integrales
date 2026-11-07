@@ -191,6 +191,7 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                 'decision'     => 'Decisión de fe',
                 'discipulado'  => 'En discipulado',
                 'contacto'     => 'Contactos espirituales',
+                'visita'       => 'Piden visita',
             ];
             foreach ($etapas as $val => $label):
                 $qs = http_build_query(array_filter(['etapa' => $val, 'sede_id' => $filtros['sede_id'], 'q' => $filtros['q']]));
@@ -240,10 +241,19 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                     <?php foreach ($personas as $p): ?>
                         <tr>
                             <td>
-                                <strong><?= htmlspecialchars(trim($p['nombres'] . ' ' . $p['apellidos'])) ?></strong>
-                                <?php if ($p['responsable']): ?>
-                                <br><small class="texto-muted">Por <?= htmlspecialchars($p['responsable']) ?></small>
-                                <?php endif; ?>
+                                <div class="evg-persona">
+                                    <?php if ($p['foto']): ?>
+                                    <a href="/admin/evangelismo/foto?id=<?= $p['id'] ?>" target="_blank" title="Ver la foto">
+                                        <img src="/admin/evangelismo/foto?id=<?= $p['id'] ?>" alt="" class="evg-persona__foto">
+                                    </a>
+                                    <?php endif; ?>
+                                    <div>
+                                        <strong><?= htmlspecialchars(trim($p['nombres'] . ' ' . $p['apellidos'])) ?></strong>
+                                        <?php if ($p['responsable']): ?>
+                                        <br><small class="texto-muted">Por <?= htmlspecialchars($p['responsable']) ?></small>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </td>
                             <td><?= $p['edad'] ?? '—' ?></td>
                             <td style="white-space:nowrap"><?= htmlspecialchars($p['telefono'] ?? '—') ?></td>
@@ -261,7 +271,10 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                                 <?php elseif ($p['decision_fe']): ?>
                                 <span class="badge badge--en_revision">Decisión de fe</span>
                                 <?php else: ?>
-                                <span class="badge badge--enviada">Evangelizado</span>
+                                <span class="badge badge--enviada">Sin decisión</span>
+                                <?php endif; ?>
+                                <?php if ($p['desea_visita']): ?>
+                                <br><span class="badge badge--visita"><i class="fas fa-house-chimney"></i> Pide visita</span>
                                 <?php endif; ?>
                             </td>
                             <td style="white-space:nowrap">
@@ -284,8 +297,9 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                                                 'fecha_contacto' => $p['fecha_contacto'],
                                                 'tipo'           => $p['tipo'],
                                                 'acompanamiento' => $p['acompanamiento'],
-                                                'decision_fe'    => (int) $p['decision_fe'],
-                                                'discipulado'    => (int) $p['discipulado'],
+                                                'etapa'          => $p['discipulado'] ? 'discipulado' : ($p['decision_fe'] ? 'decision' : 'ninguna'),
+                                                'desea_visita'   => (int) $p['desea_visita'],
+                                                'foto'           => $p['foto'],
                                                 'responsable'    => $p['responsable'],
                                                 'notas'          => $p['notas'],
                                             ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
@@ -321,11 +335,22 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
             <h3><i class="fas fa-user-plus"></i> <span id="persona-titulo">Registrar persona</span></h3>
             <button type="button" class="modal__cerrar" onclick="cerrarPersona()">&times;</button>
         </div>
-        <form method="POST" action="/admin/evangelismo" id="form-persona">
+        <form method="POST" action="/admin/evangelismo" id="form-persona" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <input type="hidden" name="id" value="">
             <div class="modal__body" style="max-height:70vh;overflow-y:auto">
                 <?php include __DIR__ . '/../partials/evangelismo_campos.php'; ?>
+                <div class="evg-foto-actual" id="evg-foto-actual" hidden>
+                    <img src="" alt="" id="evg-foto-img">
+                    <div>
+                        <strong>Ya tiene foto</strong>
+                        <small>Si subes otra, reemplaza a esta.</small>
+                        <label class="check-label">
+                            <input type="checkbox" name="quitar_foto" value="1">
+                            <span>Quitar la foto</span>
+                        </label>
+                    </div>
+                </div>
                 <div class="form-grupo">
                     <label>Quién hizo el contacto</label>
                     <input type="text" name="responsable" maxlength="150" placeholder="Nombre del participante o del equipo">
@@ -354,7 +379,8 @@ function abrirPersona(datos) {
     if (datos) {
         Object.keys(datos).forEach(function (campo) {
             var el = form.elements[campo];
-            if (!el) return;
+            // El input de archivo no se puede rellenar por código
+            if (!el || el.type === 'file') return;
             if (el.type === 'checkbox') el.checked = datos[campo] == 1;
             else el.value = datos[campo] === null ? '' : datos[campo];
         });
@@ -365,6 +391,12 @@ function abrirPersona(datos) {
     } else if (sedeActual) {
         form.elements.sede_id.value = sedeActual;
     }
+    var caja = document.getElementById('evg-foto-actual');
+    caja.hidden = !(datos && datos.foto);
+    if (!caja.hidden) {
+        document.getElementById('evg-foto-img').src = '/admin/evangelismo/foto?id=' + datos.id;
+    }
+
     evgTipo(form);
     document.getElementById('modal-persona').style.display = 'flex';
 }
@@ -405,6 +437,21 @@ function copiarLink() {
     padding: 0.6rem 0.75rem; border: 2px solid #e5e7eb;
     border-radius: var(--radio); font-family: inherit; background: var(--blanco);
 }
+.evg-persona { display: flex; align-items: center; gap: 0.6rem; }
+.evg-persona__foto {
+    width: 38px; height: 38px; border-radius: 50%;
+    object-fit: cover; flex-shrink: 0; border: 2px solid #e5e7eb;
+}
+.badge--visita { background: #fef3c7; color: #92400e; }
+.evg-foto-actual {
+    display: flex; gap: 0.85rem; align-items: center;
+    padding: 0.85rem; margin-bottom: 1.25rem;
+    background: #f8fafc; border: 1px solid #e5e7eb; border-radius: var(--radio);
+}
+.evg-foto-actual[hidden] { display: none; }
+.evg-foto-actual img { width: 56px; height: 56px; border-radius: var(--radio); object-fit: cover; }
+.evg-foto-actual strong { display: block; font-size: 0.85rem; color: var(--gris-dark); }
+.evg-foto-actual small  { display: block; font-size: 0.75rem; color: var(--gris); margin-bottom: 0.35rem; }
 .evg-rojo { color: #dc2626; border-color: #fca5a5; }
 .evg-rojo:hover { background: #fee2e2; color: #b91c1c; }
 .tabla__acciones form { display: inline; margin: 0; }

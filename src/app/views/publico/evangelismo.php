@@ -48,7 +48,7 @@
             </form>
         </div>
 
-        <form method="POST" action="/evangelismo">
+        <form method="POST" action="/evangelismo" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <?php include __DIR__ . '/../partials/evangelismo_campos.php'; ?>
             <div class="form-grupo">

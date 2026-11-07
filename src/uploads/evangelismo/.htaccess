@@ -1,0 +1,8 @@
+# Fotos de personas alcanzadas: no se sirven por URL.
+# Se ven solo desde el panel, por /admin/evangelismo/foto, que pide sesión.
+#
+# Va en <FilesMatch> y no suelto porque el .htaccess de uploads/ concede
+# las imágenes con un <FilesMatch>, y esa regla gana sobre una suelta.
+<FilesMatch ".*">
+    Require all denied
+</FilesMatch>

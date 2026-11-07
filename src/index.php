@@ -129,6 +129,7 @@ $rutas = [
         '/admin/finanzas/presupuesto'=> ['AdminController', 'presupuesto'],
         '/admin/finanzas/exportar'   => ['AdminController', 'exportarFinanzas'],
         '/admin/evangelismo'         => ['EvangelismoController', 'index'],
+        '/admin/evangelismo/foto'    => ['EvangelismoController', 'foto'],
         '/admin/practicas'           => ['PracticasController', 'index'],
         '/admin/practicas/informe'   => ['PracticasController', 'informe'],
         // Candidato — pagos

@@ -62,16 +62,36 @@
 </div>
 
 <div class="evg-etapas evg-solo-evangelizada">
+    <span class="evg-etapas__titulo">¿Hasta dónde llegó?</span>
     <label class="check-label">
-        <input type="checkbox" name="decision_fe" value="1"
-               onchange="if (!this.checked) this.form.discipulado.checked = false">
+        <input type="radio" name="etapa" value="ninguna" checked>
+        <span>
+            <strong>Sin decisión</strong>
+            <small>Escuchó el evangelio y no tomó decisión</small>
+        </span>
+    </label>
+    <label class="check-label">
+        <input type="radio" name="etapa" value="decision">
         <span><strong>Tomó decisión de fe</strong></span>
     </label>
     <label class="check-label">
-        <input type="checkbox" name="discipulado" value="1"
-               onchange="if (this.checked) this.form.decision_fe.checked = true">
+        <input type="radio" name="etapa" value="discipulado">
         <span><strong>Está en discipulado</strong></span>
     </label>
+</div>
+
+<label class="check-label evg-visita">
+    <input type="checkbox" name="desea_visita" value="1">
+    <span>
+        <strong>Desea ser visitado</strong>
+        <small>Pidió que lo visiten. Vale igual si tomó decisión o no</small>
+    </span>
+</label>
+
+<div class="form-grupo">
+    <label>Foto (opcional)</label>
+    <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" class="evg-foto__input">
+    <small class="evg-ayuda">JPG, PNG o WEBP, hasta 5 MB. Pídele permiso a la persona antes de tomarla.</small>
 </div>
 
 <div class="evg-etapas evg-solo-contacto">
@@ -106,6 +126,15 @@ document.querySelectorAll('form').forEach(function (f) {
 }
 .evg-etapas[hidden], .evg-solo-evangelizada[hidden] { display: none; }
 .evg-etapas__titulo { font-size: 0.85rem; font-weight: 600; color: var(--gris-dark); }
+.evg-etapas .check-label small,
+.evg-visita small { display: block; font-size: 0.75rem; color: var(--gris); line-height: 1.35; margin-top: 0.1rem; }
+.evg-visita {
+    padding: 0.85rem 1rem; margin-bottom: 1.25rem;
+    background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radio);
+}
+.evg-visita input { accent-color: var(--dorado); }
+.evg-foto__input { width: 100%; font-size: 0.85rem; }
+.evg-ayuda { display: block; margin-top: 0.3rem; font-size: 0.75rem; color: var(--gris); line-height: 1.35; }
 .evg-tipo { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
 .evg-tipo__opcion {
     display: flex; gap: 0.6rem; align-items: flex-start; cursor: pointer;

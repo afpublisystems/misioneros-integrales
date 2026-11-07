@@ -46,6 +46,7 @@ class EvangelismoModel extends Model {
             'decision'     => 'p.decision_fe = 1',
             'discipulado'  => 'p.discipulado = 1',
             'contacto'     => "p.tipo = 'contacto'",
+            'visita'       => 'p.desea_visita = 1',
             default        => '1 = 1',
         };
         if (!empty($filtros['q'])) {
