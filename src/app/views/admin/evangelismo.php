@@ -99,6 +99,61 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                     </div>
                 </section>
 
+                <!-- Ciudades y sectores ─────────────────────────── -->
+                <section class="admin-panel">
+                    <div class="admin-panel__header">
+                        <h2><i class="fas fa-map-pin"></i> Ciudades y sectores</h2>
+                    </div>
+                    <div class="evg-pin">
+                        <p class="texto-muted">
+                            Dentro de cada sede, los lugares donde trabaja el equipo. Salen en el
+                            formulario según la sede que se elija.
+                        </p>
+
+                        <?php if (empty($sectores_todos)): ?>
+                        <p class="evg-vacio" style="padding:0.5rem 0">Todavía no hay sectores cargados.</p>
+                        <?php else: ?>
+                        <ul class="evg-sectores">
+                            <?php foreach ($sectores_todos as $sec): ?>
+                            <li class="<?= $sec['activo'] ? '' : 'evg-sectores--off' ?>">
+                                <div>
+                                    <strong><?= htmlspecialchars($sec['nombre']) ?></strong>
+                                    <small><?= htmlspecialchars($sec['sede_nombre']) ?> · <?= $sec['registros'] ?> registro<?= $sec['registros'] == 1 ? '' : 's' ?></small>
+                                </div>
+                                <?php if ($es_admin): ?>
+                                <form method="POST" action="/admin/evangelismo/sector">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="accion" value="alternar">
+                                    <input type="hidden" name="sector_id" value="<?= $sec['id'] ?>">
+                                    <button type="submit" class="btn btn--xs btn--outline"
+                                            title="<?= $sec['activo'] ? 'Dejar de ofrecerlo en el formulario' : 'Volver a ofrecerlo' ?>">
+                                        <?= $sec['activo'] ? 'Ocultar' : 'Activar' ?>
+                                    </button>
+                                </form>
+                                <?php endif; ?>
+                            </li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <?php endif; ?>
+
+                        <?php if ($es_admin): ?>
+                        <form method="POST" action="/admin/evangelismo/sector" class="evg-sede">
+                            <?= csrf_field() ?>
+                            <select name="sede_id" class="evg-select">
+                                <?php foreach ($sedes as $s): ?>
+                                <option value="<?= $s['id'] ?>" <?= (int) $s['id'] === (int) $sede_actual ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($s['nombre']) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input type="text" name="nombre" maxlength="120" required
+                                   placeholder="Ej. Carayaca" class="evg-select" style="flex:1">
+                            <button type="submit" class="btn btn--sm btn--verde"><i class="fas fa-plus"></i> Agregar</button>
+                        </form>
+                        <?php endif; ?>
+                    </div>
+                </section>
+
                 <!-- Por sede ────────────────────────────────────── -->
                 <section class="admin-panel">
                     <div class="admin-panel__header">
@@ -231,12 +286,12 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                     <thead>
                         <tr>
                             <th>Persona</th><th>Edad</th><th>Teléfono</th><th>Dirección</th>
-                            <th>Sede</th><th>Etapa</th><th>Contacto</th><th></th>
+                            <th>Sede</th><th>Sector</th><th>Etapa</th><th>Contacto</th><th></th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php if (empty($personas)): ?>
-                        <tr><td colspan="8" class="tabla__vacio"><i class="fas fa-inbox"></i> No hay registros con ese filtro.</td></tr>
+                        <tr><td colspan="9" class="tabla__vacio"><i class="fas fa-inbox"></i> No hay registros con ese filtro.</td></tr>
                     <?php endif; ?>
                     <?php foreach ($personas as $p): ?>
                         <tr>
@@ -259,6 +314,7 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                             <td style="white-space:nowrap"><?= htmlspecialchars($p['telefono'] ?? '—') ?></td>
                             <td><?= htmlspecialchars($p['direccion'] ?? '—') ?></td>
                             <td><?= htmlspecialchars($p['sede_nombre'] ?? '—') ?></td>
+                            <td><?= htmlspecialchars($p['sector_nombre'] ?? '—') ?></td>
                             <td>
                                 <?php if ($p['tipo'] === 'contacto'): ?>
                                 <span class="badge badge--admin">Contacto espiritual</span>
@@ -267,7 +323,9 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                                     array_filter(explode(',', (string) $p['acompanamiento']))
                                 ))) ?></small>
                                 <?php elseif ($p['discipulado']): ?>
+                                <?php $dadas = count(array_filter(explode(',', (string) $p['lecciones']))); ?>
                                 <span class="badge badge--aprobada">Discipulado</span>
+                                <br><small class="texto-muted"><?= $dadas ?> de <?= count($lecciones) ?> lecciones</small>
                                 <?php elseif ($p['decision_fe']): ?>
                                 <span class="badge badge--en_revision">Decisión de fe</span>
                                 <?php else: ?>
@@ -294,12 +352,14 @@ $link_pin  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' 
                                                 'telefono'       => $p['telefono'],
                                                 'direccion'      => $p['direccion'],
                                                 'sede_id'        => $p['sede_id'],
+                                                'sector_id'      => $p['sector_id'],
                                                 'fecha_contacto' => $p['fecha_contacto'],
                                                 'tipo'           => $p['tipo'],
                                                 'acompanamiento' => $p['acompanamiento'],
                                                 'etapa'          => $p['discipulado'] ? 'discipulado' : ($p['decision_fe'] ? 'decision' : 'ninguna'),
                                                 'desea_visita'   => (int) $p['desea_visita'],
                                                 'foto'           => $p['foto'],
+                                                'lecciones'      => $p['lecciones'],
                                                 'responsable'    => $p['responsable'],
                                                 'notas'          => $p['notas'],
                                             ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
@@ -388,6 +448,10 @@ function abrirPersona(datos) {
         form.querySelectorAll('[name="acompanamiento[]"]').forEach(function (c) {
             c.checked = hechos.indexOf(c.value) !== -1;
         });
+        var dadas = String(datos.lecciones || '').split(',');
+        form.querySelectorAll('[name="lecciones[]"]').forEach(function (c) {
+            c.checked = dadas.indexOf(c.value) !== -1;
+        });
     } else if (sedeActual) {
         form.elements.sede_id.value = sedeActual;
     }
@@ -398,6 +462,8 @@ function abrirPersona(datos) {
     }
 
     evgTipo(form);
+    evgSectores(form);
+    if (datos && datos.sector_id) form.elements.sector_id.value = datos.sector_id;
     document.getElementById('modal-persona').style.display = 'flex';
 }
 function cerrarPersona() {
@@ -437,6 +503,16 @@ function copiarLink() {
     padding: 0.6rem 0.75rem; border: 2px solid #e5e7eb;
     border-radius: var(--radio); font-family: inherit; background: var(--blanco);
 }
+.evg-sectores { list-style: none; margin: 0 0 1rem; padding: 0; }
+.evg-sectores li {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9;
+}
+.evg-sectores li:last-child { border-bottom: none; }
+.evg-sectores strong { display: block; font-size: 0.86rem; color: var(--gris-dark); }
+.evg-sectores small  { display: block; font-size: 0.75rem; color: var(--gris); }
+.evg-sectores form   { margin: 0; }
+.evg-sectores--off strong { text-decoration: line-through; color: var(--gris); }
 .evg-persona { display: flex; align-items: center; gap: 0.6rem; }
 .evg-persona__foto {
     width: 38px; height: 38px; border-radius: 50%;

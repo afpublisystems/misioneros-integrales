@@ -56,9 +56,21 @@
         </select>
     </div>
     <div class="form-grupo">
-        <label>Fecha del contacto</label>
-        <input type="date" name="fecha_contacto" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>">
+        <label>Ciudad o sector</label>
+        <select name="sector_id" class="evg-sector">
+            <option value="">Sin sector</option>
+            <?php foreach ($sectores as $sec): ?>
+            <option value="<?= $sec['id'] ?>" data-sede="<?= $sec['sede_id'] ?>">
+                <?= htmlspecialchars($sec['nombre']) ?>
+            </option>
+            <?php endforeach; ?>
+        </select>
     </div>
+</div>
+
+<div class="form-grupo">
+    <label>Fecha del contacto</label>
+    <input type="date" name="fecha_contacto" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>">
 </div>
 
 <div class="evg-etapas evg-solo-evangelizada">
@@ -78,6 +90,18 @@
         <input type="radio" name="etapa" value="discipulado">
         <span><strong>Está en discipulado</strong></span>
     </label>
+
+    <div class="evg-lecciones" hidden>
+        <?php $nivel_previo = null; foreach ($lecciones as $lec): ?>
+            <?php if ($lec['nivel'] !== $nivel_previo): ?>
+            <span class="evg-lecciones__nivel"><?= htmlspecialchars($lec['nivel']) ?></span>
+            <?php $nivel_previo = $lec['nivel']; endif; ?>
+        <label class="check-label">
+            <input type="checkbox" name="lecciones[]" value="<?= $lec['id'] ?>">
+            <span><?= $lec['numero'] ?>. <?= htmlspecialchars($lec['titulo']) ?></span>
+        </label>
+        <?php endforeach; ?>
+    </div>
 </div>
 
 <label class="check-label evg-visita">
@@ -112,9 +136,41 @@ function evgTipo(form) {
     form.querySelectorAll('.evg-solo-evangelizada').forEach(function (el) { el.hidden = contacto; });
     form.querySelectorAll('.evg-solo-contacto').forEach(function (el) { el.hidden = !contacto; });
     form.elements.apellidos.required = !contacto;
+    evgLecciones(form);
 }
+
+// Las lecciones salen solo cuando la persona está en discipulado
+function evgLecciones(form) {
+    var caja = form.querySelector('.evg-lecciones');
+    if (!caja) return;
+    caja.hidden = form.elements.tipo.value === 'contacto'
+               || form.elements.etapa.value !== 'discipulado';
+}
+
+// Cada sede tiene sus sectores: se muestran solo los de la sede elegida
+function evgSectores(form) {
+    var sel = form.elements.sector_id;
+    if (!sel) return;
+    var sede = form.elements.sede_id.value;
+    var vale = false;
+
+    Array.prototype.forEach.call(sel.options, function (op) {
+        if (!op.value) return;
+        var suya = op.dataset.sede === sede;
+        op.hidden = op.disabled = !suya;
+        if (suya && op.value === sel.value) vale = true;
+    });
+    if (!vale) sel.value = '';
+}
+
 document.querySelectorAll('form').forEach(function (f) {
-    if (f.elements.tipo) evgTipo(f);
+    if (!f.elements.tipo) return;
+    evgTipo(f);
+    evgSectores(f);
+    f.querySelectorAll('[name="etapa"]').forEach(function (r) {
+        r.addEventListener('change', function () { evgLecciones(f); });
+    });
+    f.elements.sede_id.addEventListener('change', function () { evgSectores(f); });
 });
 </script>
 
@@ -128,6 +184,17 @@ document.querySelectorAll('form').forEach(function (f) {
 .evg-etapas__titulo { font-size: 0.85rem; font-weight: 600; color: var(--gris-dark); }
 .evg-etapas .check-label small,
 .evg-visita small { display: block; font-size: 0.75rem; color: var(--gris); line-height: 1.35; margin-top: 0.1rem; }
+.evg-lecciones {
+    display: flex; flex-direction: column; gap: 0.6rem;
+    padding: 0.85rem 1rem; margin-top: 0.25rem;
+    background: var(--blanco); border: 1px solid #bbf7d0; border-radius: var(--radio);
+}
+.evg-lecciones[hidden] { display: none; }
+.evg-lecciones__nivel {
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--verde);
+}
+.evg-lecciones .check-label { font-size: 0.84rem; align-items: center; }
 .evg-visita {
     padding: 0.85rem 1rem; margin-bottom: 1.25rem;
     background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radio);

@@ -32,9 +32,10 @@ class EvangelismoController extends Controller {
         $this->requireAnyRole(['admin', 'evaluador']);
 
         $filtros = [
-            'sede_id' => $_GET['sede_id'] ?? '',
-            'etapa'   => $_GET['etapa']   ?? '',
-            'q'       => trim($_GET['q']  ?? ''),
+            'sede_id'   => $_GET['sede_id']   ?? '',
+            'sector_id' => $_GET['sector_id'] ?? '',
+            'etapa'     => $_GET['etapa']     ?? '',
+            'q'         => trim($_GET['q']    ?? ''),
         ];
 
         $this->render('admin/evangelismo', [
@@ -44,6 +45,9 @@ class EvangelismoController extends Controller {
             'totales'         => $this->modelo->totales(),
             'por_sede'        => $this->modelo->totalesPorSede(),
             'sedes'           => $this->modelo->sedes(),
+            'sectores'        => $this->modelo->sectores(),
+            'sectores_todos'  => $this->modelo->sectoresTodos(),
+            'lecciones'       => $this->modelo->lecciones(),
             'sede_actual'     => $this->modelo->sedeActual(),
             'sede_fija'       => $this->modelo->sedeFija(),
             'sede_itinerario' => $this->modelo->sedeEnFecha(date('Y-m-d')),
@@ -85,9 +89,11 @@ class EvangelismoController extends Controller {
         } else {
             $datos['registrado_via'] = 'admin';
             $datos['registrado_por'] = (int) $_SESSION['usuario_id'];
-            $this->modelo->registrar($datos);
+            $id = $this->modelo->registrar($datos);
             $this->flash('exito', 'Persona registrada.');
         }
+
+        $this->guardarLecciones($id, $datos['discipulado']);
 
         // La anterior se borra recién acá, con el registro ya guardado
         if ($foto !== null && $foto['anterior']) {
@@ -179,6 +185,30 @@ class EvangelismoController extends Controller {
         exit;
     }
 
+    // ── POST /admin/evangelismo/sector ────────────────────────
+    public function sector(): void {
+        $this->requireAuth('admin');
+        $volver = '/admin/evangelismo';
+
+        if (($_POST['accion'] ?? '') === 'alternar') {
+            $this->modelo->alternarSector((int) ($_POST['sector_id'] ?? 0));
+            $this->redirigir($volver);
+        }
+
+        $sede_id = (int) ($_POST['sede_id'] ?? 0);
+        $nombre  = trim($_POST['nombre'] ?? '');
+
+        if ($nombre === '' || mb_strlen($nombre) > 120) {
+            $this->flash('error', 'Escribe el nombre de la ciudad o sector.');
+        } elseif (!in_array($sede_id, array_column($this->modelo->sedes(), 'id'))) {
+            $this->flash('error', 'Elige a qué sede pertenece.');
+        } else {
+            $this->modelo->agregarSector($sede_id, $nombre);
+            $this->flash('exito', 'Sector agregado: ' . $nombre . '.');
+        }
+        $this->redirigir($volver);
+    }
+
     // ══════════════════════════════════════════════════════════
     // ACCESO PÚBLICO CON PIN
     // ══════════════════════════════════════════════════════════
@@ -193,6 +223,8 @@ class EvangelismoController extends Controller {
             'dentro'      => $this->pinVigente($hash),
             'responsable' => $_SESSION['evangelismo']['responsable'] ?? '',
             'sedes'       => $this->modelo->sedes(),
+            'sectores'    => $this->modelo->sectores(),
+            'lecciones'   => $this->modelo->lecciones(),
             'sede_actual' => $this->modelo->sedeActual(),
         ]);
     }
@@ -259,7 +291,7 @@ class EvangelismoController extends Controller {
         // Si no escribió otro responsable, cuenta quien entró con el PIN
         $datos['responsable']    = $datos['responsable'] ?? $_SESSION['evangelismo']['responsable'];
         $datos['registrado_via'] = 'pin';
-        $this->modelo->registrar($datos);
+        $this->guardarLecciones($this->modelo->registrar($datos), $datos['discipulado']);
 
         $this->flash('exito', 'Listo, quedó registrado ' . trim($datos['nombres'] . ' ' . $datos['apellidos']) . '.');
         $this->redirigir('/evangelismo');
@@ -282,6 +314,16 @@ class EvangelismoController extends Controller {
         return $hash !== null && $s
             && hash_equals($hash, $s['hash'])
             && $s['hasta'] > time();
+    }
+
+    /**
+     * El avance solo se toca mientras la persona esté en discipulado.
+     * Si sale, lo dado queda guardado: es historia, no se borra.
+     */
+    private function guardarLecciones(int $persona_id, int $discipulado): void {
+        if ($persona_id && $discipulado) {
+            $this->modelo->guardarAvance($persona_id, (array) ($_POST['lecciones'] ?? []));
+        }
     }
 
     /**
@@ -392,6 +434,12 @@ class EvangelismoController extends Controller {
             $sede_id = 0;
         }
 
+        // El sector tiene que ser de la sede elegida, no de otra
+        $sector_id = (int) ($_POST['sector_id'] ?? 0);
+        if ($sector_id && !($sede_id && $this->modelo->sectorValido($sector_id, $sede_id))) {
+            $sector_id = 0;
+        }
+
         // La etapa solo aplica a quien escuchó el evangelio. Se elige una
         // sola: sin decisión, decisión de fe o discipulado. Quien está en
         // discipulado decidió antes, así que arrastra decision_fe.
@@ -407,6 +455,7 @@ class EvangelismoController extends Controller {
             'telefono'       => mb_substr(trim($_POST['telefono'] ?? ''), 0, 30) ?: null,
             'direccion'      => mb_substr(trim($_POST['direccion'] ?? ''), 0, 255) ?: null,
             'sede_id'        => $sede_id ?: null,
+            'sector_id'      => $sector_id ?: null,
             'fecha_contacto' => $fecha,
             'tipo'           => $tipo,
             'acompanamiento' => $es_evangelizada ? null : implode(',', $acompanamiento),

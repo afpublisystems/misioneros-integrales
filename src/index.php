@@ -172,6 +172,7 @@ $rutas = [
         '/admin/evangelismo/eliminar' => ['EvangelismoController', 'eliminar'],
         '/admin/evangelismo/pin'      => ['EvangelismoController', 'pin'],
         '/admin/evangelismo/sede'     => ['EvangelismoController', 'sede'],
+        '/admin/evangelismo/sector'   => ['EvangelismoController', 'sector'],
         '/admin/practicas'            => ['PracticasController', 'guardar'],
         '/admin/practicas/eliminar'   => ['PracticasController', 'eliminar'],
         '/evangelismo'                => ['EvangelismoController', 'registrarPublico'],

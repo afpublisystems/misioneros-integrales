@@ -41,6 +41,10 @@ class EvangelismoModel extends Model {
             $where[] = 'p.sede_id = :sede';
             $params[':sede'] = (int) $filtros['sede_id'];
         }
+        if (!empty($filtros['sector_id'])) {
+            $where[] = 'p.sector_id = :sector';
+            $params[':sector'] = (int) $filtros['sector_id'];
+        }
         $where[] = match ($filtros['etapa'] ?? '') {
             'evangelizada' => "p.tipo = 'evangelizada'",
             'decision'     => 'p.decision_fe = 1',
@@ -56,9 +60,14 @@ class EvangelismoModel extends Model {
         }
 
         $stmt = $this->db->prepare("
-            SELECT p.*, s.nombre AS sede_nombre
+            SELECT p.*,
+                   s.nombre  AS sede_nombre,
+                   sec.nombre AS sector_nombre,
+                   (SELECT GROUP_CONCAT(a.leccion_id)
+                      FROM discipulado_avance a WHERE a.persona_id = p.id) AS lecciones
             FROM personas_alcanzadas p
-            LEFT JOIN sedes s ON s.id = p.sede_id
+            LEFT JOIN sedes s           ON s.id   = p.sede_id
+            LEFT JOIN sede_sectores sec ON sec.id = p.sector_id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY p.fecha_contacto DESC, p.id DESC
         ");
@@ -140,6 +149,97 @@ class EvangelismoModel extends Model {
         $stmt->execute([':f' => $fecha]);
         $id = $stmt->fetchColumn();
         return $id ? (int) $id : null;
+    }
+
+    // ── Sectores de cada sede ─────────────────────────────────
+
+    /** Sectores activos, para armar los selects del formulario */
+    public function sectores(): array {
+        return $this->db->query("
+            SELECT id, sede_id, nombre FROM sede_sectores
+            WHERE activo = 1 ORDER BY sede_id, orden, nombre
+        ")->fetchAll();
+    }
+
+    /** Todos, incluidos los inactivos: es la lista que administra el admin */
+    public function sectoresTodos(): array {
+        return $this->db->query("
+            SELECT sec.*, s.nombre AS sede_nombre,
+                   (SELECT COUNT(*) FROM personas_alcanzadas p
+                     WHERE p.sector_id = sec.id) AS registros
+            FROM sede_sectores sec
+            JOIN sedes s ON s.id = sec.sede_id
+            ORDER BY s.orden, sec.orden, sec.nombre
+        ")->fetchAll();
+    }
+
+    /** El nuevo va al final de los de su sede, no al principio */
+    public function agregarSector(int $sede_id, string $nombre): bool {
+        return $this->db->prepare("
+            INSERT INTO sede_sectores (sede_id, nombre, orden)
+            SELECT :s, :n, COALESCE(MAX(orden), 0) + 1
+              FROM sede_sectores WHERE sede_id = :s2
+            ON DUPLICATE KEY UPDATE activo = 1
+        ")->execute([':s' => $sede_id, ':n' => $nombre, ':s2' => $sede_id]);
+    }
+
+    /**
+     * Los sectores no se borran: se desactivan. Si se borraran, los
+     * registros viejos perderían dónde fueron.
+     */
+    public function alternarSector(int $id): bool {
+        return $this->db->prepare(
+            "UPDATE sede_sectores SET activo = 1 - activo WHERE id = :id"
+        )->execute([':id' => $id]);
+    }
+
+    public function sectorValido(int $id, int $sede_id): bool {
+        $stmt = $this->db->prepare(
+            "SELECT 1 FROM sede_sectores WHERE id = :id AND sede_id = :s AND activo = 1"
+        );
+        $stmt->execute([':id' => $id, ':s' => $sede_id]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    // ── Discipulado ───────────────────────────────────────────
+
+    /** Lecciones de los niveles activos, en orden */
+    public function lecciones(): array {
+        return $this->db->query("
+            SELECT l.id, l.numero, l.titulo, n.id AS nivel_id, n.nombre AS nivel
+            FROM discipulado_lecciones l
+            JOIN discipulado_niveles n ON n.id = l.nivel_id
+            WHERE l.activa = 1 AND n.activo = 1
+            ORDER BY n.orden, l.numero
+        ")->fetchAll();
+    }
+
+    /**
+     * Deja marcadas exactamente las lecciones que vinieron del
+     * formulario. La fecha es la del día en que se marcó; si ya
+     * estaba dada, se respeta la que tenía.
+     */
+    public function guardarAvance(int $persona_id, array $lecciones): void {
+        $validas = array_column($this->lecciones(), 'id');
+        $marcar  = array_values(array_intersect($validas, array_map('intval', $lecciones)));
+
+        if ($marcar) {
+            $in = implode(',', array_fill(0, count($marcar), '?'));
+            $this->db->prepare(
+                "DELETE FROM discipulado_avance WHERE persona_id = ? AND leccion_id NOT IN ({$in})"
+            )->execute([$persona_id, ...$marcar]);
+
+            $stmt = $this->db->prepare("
+                INSERT IGNORE INTO discipulado_avance (persona_id, leccion_id, completada)
+                VALUES (:p, :l, CURDATE())
+            ");
+            foreach ($marcar as $leccion_id) {
+                $stmt->execute([':p' => $persona_id, ':l' => $leccion_id]);
+            }
+        } else {
+            $this->db->prepare("DELETE FROM discipulado_avance WHERE persona_id = ?")
+                     ->execute([$persona_id]);
+        }
     }
 
     // ── PIN del acceso público ────────────────────────────────
