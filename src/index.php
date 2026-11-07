@@ -130,6 +130,7 @@ $rutas = [
         '/admin/finanzas/exportar'   => ['AdminController', 'exportarFinanzas'],
         '/admin/evangelismo'         => ['EvangelismoController', 'index'],
         '/admin/evangelismo/foto'    => ['EvangelismoController', 'foto'],
+        '/admin/migraciones'         => ['MigracionesController', 'index'],
         '/admin/practicas'           => ['PracticasController', 'index'],
         '/admin/practicas/informe'   => ['PracticasController', 'informe'],
         // Candidato — pagos
@@ -173,6 +174,8 @@ $rutas = [
         '/admin/evangelismo/pin'      => ['EvangelismoController', 'pin'],
         '/admin/evangelismo/sede'     => ['EvangelismoController', 'sede'],
         '/admin/evangelismo/sector'   => ['EvangelismoController', 'sector'],
+        '/admin/migraciones'          => ['MigracionesController', 'aplicar'],
+        '/admin/migraciones/olvidar'  => ['MigracionesController', 'olvidar'],
         '/admin/practicas'            => ['PracticasController', 'guardar'],
         '/admin/practicas/eliminar'   => ['PracticasController', 'eliminar'],
         '/evangelismo'                => ['EvangelismoController', 'registrarPublico'],

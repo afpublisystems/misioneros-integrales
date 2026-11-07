@@ -1,0 +1,5 @@
+# Los .sql de esta carpeta no se sirven por web.
+# Se ejecutan desde el panel, en /admin/migraciones.
+<FilesMatch ".*">
+    Require all denied
+</FilesMatch>

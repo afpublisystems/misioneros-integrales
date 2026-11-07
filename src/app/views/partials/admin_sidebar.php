@@ -59,6 +59,11 @@
         <a href="/admin/perfil" class="admin-nav__item <?= str_starts_with($uri, '/admin/perfil') ? 'activo' : '' ?>">
             <i class="fas fa-user-cog"></i> Mi Perfil
         </a>
+        <?php if ($_SESSION['usuario_rol'] === 'admin'): ?>
+        <a href="/admin/migraciones" class="admin-nav__item <?= str_starts_with($uri, '/admin/migraciones') ? 'activo' : '' ?>">
+            <i class="fas fa-database"></i> Migraciones
+        </a>
+        <?php endif; ?>
         <div class="admin-nav__sep"></div>
         <a href="/" class="admin-nav__item" target="_blank">
             <i class="fas fa-globe"></i> Ver sitio público
