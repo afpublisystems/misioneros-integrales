@@ -14,6 +14,7 @@ $secciones = [
     '/admin/finanzas/traslados'   => ['fa-money-bill-transfer',  'Traslados'],
     '/admin/finanzas/seminario'   => ['fa-school',               'Seminario'],
     '/admin/finanzas/presupuesto' => ['fa-scale-balanced',       'Presupuesto'],
+    '/admin/finanzas/reportes'    => ['fa-file-lines',           'Informes'],
 ];
 ?>
 <nav class="fin-tabs">
