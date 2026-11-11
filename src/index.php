@@ -136,6 +136,7 @@ $rutas = [
         '/admin/migraciones'         => ['MigracionesController', 'index'],
         '/admin/practicas'           => ['PracticasController', 'index'],
         '/admin/practicas/informe'   => ['PracticasController', 'informe'],
+        '/admin/practicas/cierre'    => ['PracticasController', 'cierre'],
         // Candidato — pagos
         '/candidato/pagos'      => ['CandidatoController', 'pagos'],
     ],

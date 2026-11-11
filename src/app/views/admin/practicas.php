@@ -29,6 +29,10 @@ $t        = $resumen['total'];
                 <a href="/admin/practicas/informe?semana=<?= $lunes ?>" target="_blank" class="btn btn--outline">
                     <i class="fas fa-print"></i> Informe de la semana
                 </a>
+                <a href="/admin/practicas/cierre" target="_blank" class="btn btn--outline"
+                   title="Todo lo logrado en el lugar: fruto, alcances y avance del discipulado">
+                    <i class="fas fa-flag-checkered"></i> Informe de cierre
+                </a>
                 <button type="button" class="btn btn--primario" onclick="abrirActividad(null)">
                     <i class="fas fa-plus"></i> Registrar actividad
                 </button>
@@ -118,6 +122,7 @@ $t        = $resumen['total'];
                                     data-actividad="<?= htmlspecialchars(json_encode(array_intersect_key($a, array_flip([
                                         'id', 'iglesia_id', 'fecha', 'tipo', 'descripcion', 'adultos', 'jovenes', 'ninos',
                                         'comunidad', 'equipo', 'evangelizados', 'decisiones', 'discipulado',
+                                        'dirigida_a', 'leccion_id',
                                     ])), JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
                                 <i class="fas fa-pen"></i>
                             </button>
@@ -205,6 +210,17 @@ $t        = $resumen['total'];
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="form-grupo prac-solo-organizacion" hidden>
+                    <label>¿A quién fue dirigida?</label>
+                    <div class="prac-orgs">
+                        <?php foreach (PracticaModel::ORGANIZACIONES as $clave => $etiqueta): ?>
+                        <label class="check-label">
+                            <input type="checkbox" name="dirigida_a[]" value="<?= $clave ?>">
+                            <span><?= $etiqueta ?></span>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
                 <div class="form-grupo">
                     <label>Qué se hizo <small class="texto-muted">(opcional)</small></label>
                     <input type="text" name="descripcion" maxlength="255" placeholder="Ej.: Reflexiones de esperanza con las damas">
@@ -229,6 +245,21 @@ $t        = $resumen['total'];
                     <div class="form-grupo"><label>Decisiones de fe</label><input type="number" name="decisiones" min="0" inputmode="numeric"></div>
                     <div class="form-grupo"><label>En discipulado</label><input type="number" name="discipulado" min="0" inputmode="numeric"></div>
                 </div>
+                <div class="form-grupo">
+                    <label>Lección que se dio <small class="texto-muted">(opcional)</small></label>
+                    <select name="leccion_id">
+                        <option value="">Ninguna o no aplica</option>
+                        <?php $nivel_previo = null; foreach ($lecciones as $l): ?>
+                            <?php if ($l['nivel'] !== $nivel_previo): ?>
+                            <?php if ($nivel_previo !== null): ?></optgroup><?php endif; ?>
+                            <optgroup label="<?= htmlspecialchars($l['nivel']) ?>">
+                            <?php $nivel_previo = $l['nivel']; endif; ?>
+                        <option value="<?= $l['id'] ?>"><?= $l['numero'] ?>. <?= htmlspecialchars($l['titulo']) ?></option>
+                        <?php endforeach; ?>
+                        <?php if ($nivel_previo !== null): ?></optgroup><?php endif; ?>
+                    </select>
+                    <span class="texto-muted">Así el informe de cierre arma solo el avance por lección.</span>
+                </div>
             </div>
             <div class="modal__footer">
                 <button type="button" class="btn btn--outline" onclick="cerrarActividad()">Cancelar</button>
@@ -238,6 +269,12 @@ $t        = $resumen['total'];
     </div>
 </div>
 
+<style>
+.prac-orgs { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; }
+.prac-orgs .check-label { font-size: 0.85rem; align-items: center; }
+.prac-solo-organizacion[hidden] { display: none; }
+</style>
+
 <script>
 var formAct = document.getElementById('form-actividad');
 
@@ -246,16 +283,26 @@ function abrirActividad(datos) {
     formAct.elements.id.value = '';
     formAct.elements.fecha.value = '<?= min($domingo, date('Y-m-d')) ?>';
     document.getElementById('actividad-titulo').textContent = datos ? 'Editar actividad' : 'Registrar actividad';
+    formAct.querySelectorAll('[name="dirigida_a[]"]').forEach(function (c) { c.checked = false; });
+
     if (datos) {
         Object.keys(datos).forEach(function (campo) {
-            if (formAct.elements[campo]) formAct.elements[campo].value = datos[campo] === null ? '' : datos[campo];
+            var el = formAct.elements[campo];
+            // dirigida_a son varias casillas, no un campo con valor
+            if (!el || campo === 'dirigida_a') return;
+            el.value = datos[campo] === null ? '' : datos[campo];
         });
         // Un cero guardado es "no aplica": se muestra vacío para no confundir
         ['comunidad', 'equipo', 'evangelizados', 'decisiones', 'discipulado'].forEach(function (c) {
             if (formAct.elements[c].value === '0') formAct.elements[c].value = '';
         });
+        var orgs = String(datos.dirigida_a || '').split(',');
+        formAct.querySelectorAll('[name="dirigida_a[]"]').forEach(function (c) {
+            c.checked = orgs.indexOf(c.value) !== -1;
+        });
     }
     sumarDesglose();
+    verOrganizaciones();
     document.getElementById('modal-actividad').style.display = 'flex';
 }
 function cerrarActividad() {
@@ -272,6 +319,13 @@ function sumarDesglose() {
     }
 }
 ['adultos', 'jovenes', 'ninos'].forEach(function (c) { formAct.elements[c].addEventListener('input', sumarDesglose); });
+
+// A quién va dirigida solo tiene sentido en las reuniones por organización
+function verOrganizaciones() {
+    var es = formAct.elements.tipo.value === 'organizacion';
+    formAct.querySelectorAll('.prac-solo-organizacion').forEach(function (el) { el.hidden = !es; });
+}
+formAct.elements.tipo.addEventListener('change', verOrganizaciones);
 
 document.querySelectorAll('[data-actividad]').forEach(function (b) {
     b.addEventListener('click', function () { abrirActividad(JSON.parse(b.dataset.actividad)); });

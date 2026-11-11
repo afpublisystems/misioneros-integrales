@@ -35,6 +35,7 @@ class PracticasController extends Controller {
             'resumen'     => $this->resumen($actividades),
             'acumulado'   => $this->modelo->acumuladoPorIglesia(),
             'iglesias'    => $this->modelo->iglesias(),
+            'lecciones'   => (new EvangelismoModel())->lecciones(),
         ], 'admin');
     }
 
@@ -52,6 +53,40 @@ class PracticasController extends Controller {
             'numero'      => $this->numeroSemana($lunes),
             'actividades' => $actividades,
             'resumen'     => $this->resumen($actividades),
+        ], 'impresion');
+    }
+
+    // ── GET /admin/practicas/cierre ───────────────────────────
+    // Informe de todo lo logrado en un lugar. Por defecto toma el
+    // rango completo con actividades; se puede acotar con ?desde y
+    // ?hasta para cerrar un lugar sin arrastrar el anterior.
+    public function cierre(): void {
+        $this->requireAnyRole(['admin', 'evaluador']);
+
+        $rango = $this->modelo->rango();
+        if (!$rango) {
+            $this->flash('error', 'Todavía no hay actividades cargadas.');
+            $this->redirigir('/admin/practicas');
+        }
+
+        $desde = $this->fecha($_GET['desde'] ?? '') ?: $rango['desde'];
+        $hasta = $this->fecha($_GET['hasta'] ?? '') ?: $rango['hasta'];
+        if ($desde > $hasta) {
+            [$desde, $hasta] = [$hasta, $desde];
+        }
+
+        $this->render('admin/practicas_cierre', [
+            'titulo'       => 'Informe de cierre',
+            'lugar'        => trim((string) ($_GET['lugar'] ?? '')) ?: 'Carayaca, La Guaira',
+            'desde'        => $desde,
+            'hasta'        => $hasta,
+            'totales'      => $this->modelo->totalesEntre($desde, $hasta),
+            'por_iglesia'  => $this->modelo->porIglesiaEntre($desde, $hasta),
+            'alcances'     => $this->modelo->alcancesEntre($desde, $hasta),
+            'organiza'     => $this->modelo->organizacionesEntre($desde, $hasta),
+            'lecciones'    => $this->modelo->discipuladoPorLeccion($desde, $hasta),
+            'semanas'      => $this->modelo->porSemanaEntre($desde, $hasta),
+            'actividades'  => $this->modelo->entre($desde, $hasta),
         ], 'impresion');
     }
 
@@ -176,6 +211,12 @@ class PracticasController extends Controller {
     /**
      * Arma los datos del formulario o devuelve el mensaje de error
      */
+    /** Una fecha de la URL, o null si no sirve */
+    private function fecha(string $f): ?string {
+        $d = DateTime::createFromFormat('!Y-m-d', $f);
+        return $d && $d->format('Y-m-d') === $f ? $f : null;
+    }
+
     private function datosDesdePost(): array|string {
         $iglesia_id = (int) ($_POST['iglesia_id'] ?? 0);
         if (!in_array($iglesia_id, array_map('intval', array_column($this->modelo->iglesias(), 'id')), true)) {
@@ -215,11 +256,26 @@ class PracticasController extends Controller {
             $numeros['comunidad'] = $numeros['adultos'] + $numeros['jovenes'] + $numeros['ninos'];
         }
 
+        // A quién fue dirigida solo aplica a las reuniones por organización
+        $dirigida = [];
+        if ($tipo === 'organizacion') {
+            $dirigida = array_values(array_intersect(
+                array_keys(PracticaModel::ORGANIZACIONES),
+                (array) ($_POST['dirigida_a'] ?? [])
+            ));
+        }
+
+        $leccion_id = (int) ($_POST['leccion_id'] ?? 0);
+        if ($leccion_id && !in_array($leccion_id, array_map('intval', array_column((new EvangelismoModel())->lecciones(), 'id')), true)) {
+            $leccion_id = 0;
+        }
+
         return [
             'iglesia_id'    => $iglesia_id,
             'fecha'         => $fecha,
             'tipo'          => $tipo,
             'descripcion'   => mb_substr(trim($_POST['descripcion'] ?? ''), 0, 255) ?: null,
+            'dirigida_a'    => $dirigida ? implode(',', $dirigida) : null,
             'adultos'       => $numeros['adultos'],
             'jovenes'       => $numeros['jovenes'],
             'ninos'         => $numeros['ninos'],
@@ -228,6 +284,7 @@ class PracticasController extends Controller {
             'evangelizados' => $numeros['evangelizados'] ?? 0,
             'decisiones'    => $numeros['decisiones'] ?? 0,
             'discipulado'   => $numeros['discipulado'] ?? 0,
+            'leccion_id'    => $leccion_id ?: null,
         ];
     }
 }
